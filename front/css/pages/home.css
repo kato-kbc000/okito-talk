@@ -1,0 +1,660 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+
+    color: #172033;
+    background: #f4f7fb;
+
+    font-family:
+        "Yu Gothic",
+        "Hiragino Kaku Gothic ProN",
+        sans-serif;
+}
+
+button,
+textarea,
+select {
+    font: inherit;
+}
+
+.home-page {
+    width: min(1380px, calc(100% - 40px));
+    margin: 0 auto;
+
+    display: grid;
+    grid-template-columns: 240px minmax(0, 680px) 320px;
+    gap: 24px;
+
+    padding: 24px 0 60px;
+}
+
+/* 左メニュー */
+
+.side-menu {
+    position: sticky;
+    top: 94px;
+
+    height: fit-content;
+}
+
+.user-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    margin-bottom: 20px;
+    padding: 18px;
+
+    background: #ffffff;
+
+    border: 1px solid #e4e9f0;
+    border-radius: 16px;
+
+    box-shadow: 0 8px 24px rgba(29, 61, 100, 0.05);
+}
+
+.user-icon,
+.post-form-icon,
+.post-user-icon,
+.recommend-icon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+
+    color: #ffffff;
+    background: linear-gradient(
+        135deg,
+        #2589ff,
+        #28c6d8
+    );
+
+    border-radius: 50%;
+
+    font-weight: bold;
+}
+
+.user-icon {
+    width: 48px;
+    height: 48px;
+
+    font-size: 18px;
+}
+
+.user-information {
+    min-width: 0;
+}
+
+.user-name,
+.user-id {
+    margin: 0;
+}
+
+.user-name {
+    font-weight: bold;
+}
+
+.user-id {
+    margin-top: 3px;
+
+    color: #7d8796;
+
+    font-size: 13px;
+}
+
+.side-navigation {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.side-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 14px 16px;
+
+    color: #3c4655;
+
+    border-radius: 12px;
+
+    font-weight: bold;
+    text-decoration: none;
+
+    transition:
+        color 0.2s ease,
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.side-link:hover {
+    color: #2589ff;
+    background: #eaf4ff;
+
+    transform: translateX(3px);
+}
+
+.side-link.active {
+    color: #2589ff;
+    background: #eaf4ff;
+}
+
+.side-icon {
+    width: 24px;
+
+    text-align: center;
+}
+
+/* タイムライン */
+
+.timeline {
+    min-width: 0;
+}
+
+.timeline-header {
+    margin-bottom: 16px;
+    padding: 20px 24px;
+
+    background: #ffffff;
+
+    border: 1px solid #e4e9f0;
+    border-radius: 16px;
+
+    box-shadow: 0 8px 24px rgba(29, 61, 100, 0.05);
+}
+
+.timeline-header h1 {
+    margin: 0;
+
+    font-size: 25px;
+}
+
+.timeline-header p {
+    margin: 6px 0 0;
+
+    color: #7d8796;
+}
+
+/* 投稿フォーム */
+
+.post-form-area {
+    display: flex;
+    gap: 14px;
+
+    margin-bottom: 18px;
+    padding: 22px;
+
+    background: #ffffff;
+
+    border: 1px solid #e4e9f0;
+    border-radius: 18px;
+
+    box-shadow: 0 8px 24px rgba(29, 61, 100, 0.05);
+}
+
+.post-form-icon {
+    width: 48px;
+    height: 48px;
+}
+
+.post-form {
+    flex: 1;
+    min-width: 0;
+}
+
+.post-form textarea {
+    display: block;
+
+    width: 100%;
+    min-height: 105px;
+    padding: 14px;
+
+    resize: vertical;
+
+    color: #172033;
+    background: #f8fafc;
+
+    border: 1px solid #dce3ec;
+    border-radius: 12px;
+    outline: none;
+
+    font-size: 16px;
+    line-height: 1.7;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+.post-form textarea:focus {
+    background: #ffffff;
+    border-color: #2589ff;
+
+    box-shadow: 0 0 0 4px rgba(37, 137, 255, 0.12);
+}
+
+.post-form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+
+    margin-top: 14px;
+}
+
+.post-options {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.post-options label {
+    color: #657184;
+
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.post-options select {
+    padding: 9px 12px;
+
+    color: #344052;
+    background: #ffffff;
+
+    border: 1px solid #dce3ec;
+    border-radius: 9px;
+    outline: none;
+}
+
+.post-options select:focus {
+    border-color: #2589ff;
+}
+
+.post-submit-area {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+#characterCount {
+    color: #8791a0;
+
+    font-size: 13px;
+}
+
+.post-button {
+    width: auto;
+    min-width: 110px;
+}
+
+/* 投稿一覧 */
+
+.post-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.post-card {
+    display: flex;
+    gap: 14px;
+
+    padding: 22px;
+
+    background: #ffffff;
+
+    border: 1px solid #e4e9f0;
+    border-radius: 18px;
+
+    box-shadow: 0 8px 24px rgba(29, 61, 100, 0.05);
+}
+
+.post-user-icon {
+    width: 48px;
+    height: 48px;
+}
+
+.post-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.post-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.post-user {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px;
+}
+
+.post-user-name {
+    font-weight: bold;
+}
+
+.post-user-id,
+.post-time {
+    color: #8a94a3;
+
+    font-size: 13px;
+}
+
+.post-text {
+    margin: 12px 0 10px;
+
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.post-area {
+    margin: 0 0 14px;
+
+    color: #2589ff;
+
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.post-actions {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+}
+
+.action-button {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    padding: 5px;
+
+    color: #707b8c;
+    background: transparent;
+
+    border: none;
+
+    cursor: pointer;
+
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.action-button:hover {
+    color: #2589ff;
+
+    transform: scale(1.08);
+}
+
+.like-button.liked {
+    color: #ef4e73;
+}
+
+/* 右側 */
+
+.right-area {
+    position: sticky;
+    top: 94px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+
+    height: fit-content;
+}
+
+.trend-card,
+.recommend-card {
+    overflow: hidden;
+
+    background: #ffffff;
+
+    border: 1px solid #e4e9f0;
+    border-radius: 18px;
+
+    box-shadow: 0 8px 24px rgba(29, 61, 100, 0.05);
+}
+
+.trend-card h2,
+.recommend-card h2 {
+    margin: 0;
+    padding: 20px;
+
+    border-bottom: 1px solid #edf0f4;
+
+    font-size: 19px;
+}
+
+.trend-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    padding: 16px 20px;
+
+    color: #172033;
+
+    border-bottom: 1px solid #edf0f4;
+
+    text-decoration: none;
+
+    transition: background 0.2s ease;
+}
+
+.trend-item:last-child {
+    border-bottom: none;
+}
+
+.trend-item:hover {
+    background: #f6f9fc;
+}
+
+.trend-category,
+.trend-count {
+    color: #8a94a3;
+
+    font-size: 12px;
+}
+
+.recommend-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 16px 18px;
+
+    border-bottom: 1px solid #edf0f4;
+}
+
+.recommend-user:last-child {
+    border-bottom: none;
+}
+
+.recommend-icon {
+    width: 42px;
+    height: 42px;
+}
+
+.recommend-information {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+
+    min-width: 0;
+}
+
+.recommend-information strong,
+.recommend-information span {
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.recommend-information span {
+    margin-top: 3px;
+
+    color: #8a94a3;
+
+    font-size: 12px;
+}
+
+.follow-button {
+    padding: 8px 12px;
+
+    color: #2589ff;
+    background: #ffffff;
+
+    border: 1px solid #2589ff;
+    border-radius: 999px;
+
+    font-size: 12px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition:
+        color 0.2s ease,
+        background 0.2s ease;
+}
+
+.follow-button:hover,
+.follow-button.following {
+    color: #ffffff;
+    background: #2589ff;
+}
+
+/* タブレット */
+
+@media (max-width: 1120px) {
+    .home-page {
+        grid-template-columns: 210px minmax(0, 680px);
+        justify-content: center;
+    }
+
+    .right-area {
+        display: none;
+    }
+}
+
+/* スマートフォン */
+
+@media (max-width: 780px) {
+    .home-page {
+        width: 100%;
+
+        grid-template-columns: 1fr;
+
+        padding: 0 0 80px;
+    }
+
+    .side-menu {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        top: auto;
+        z-index: 100;
+
+        background: #ffffff;
+
+        border-top: 1px solid #dfe5ec;
+    }
+
+    .user-card {
+        display: none;
+    }
+
+    .side-navigation {
+        flex-direction: row;
+        justify-content: space-around;
+        gap: 0;
+    }
+
+    .side-link {
+        flex: 1;
+        flex-direction: column;
+        gap: 3px;
+
+        padding: 10px 4px;
+
+        border-radius: 0;
+
+        font-size: 11px;
+    }
+
+    .side-link:hover {
+        transform: none;
+    }
+
+    .side-link:last-child {
+        display: none;
+    }
+
+    .timeline-header {
+        margin: 0;
+
+        border-right: none;
+        border-left: none;
+        border-radius: 0;
+    }
+
+    .post-form-area,
+    .post-card {
+        border-right: none;
+        border-left: none;
+        border-radius: 0;
+    }
+
+    .post-form-footer {
+        align-items: flex-end;
+    }
+}
+
+@media (max-width: 520px) {
+    .post-form-area {
+        padding: 16px;
+    }
+
+    .post-form-icon {
+        width: 42px;
+        height: 42px;
+    }
+
+    .post-form-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .post-options {
+        justify-content: space-between;
+    }
+
+    .post-options select {
+        flex: 1;
+    }
+
+    .post-submit-area {
+        justify-content: space-between;
+    }
+
+    .post-card {
+        padding: 17px;
+    }
+
+    .post-actions {
+        justify-content: space-between;
+        gap: 10px;
+    }
+}

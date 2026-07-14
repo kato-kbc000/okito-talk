@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>ホーム | おきとーーーーーーく</title>
+
+    <!-- 共通ヘッダー -->
+    <link
+        rel="stylesheet"
+        href="../css/header.css"
+    >
+
+    <!-- 共通ボタン -->
+    <link
+        rel="stylesheet"
+        href="../css/button.css"
+    >
+
+    <!-- ホーム画面専用 -->
+    <link
+        rel="stylesheet"
+        href="../css/pages/home.css"
+    >
+</head>
+
+<body>
+
+    <!-- ヘッダー -->
+    <header class="site-header">
+
+        <div class="header-inner">
+
+            <a
+                href="home.html"
+                class="site-logo"
+            >
+                おきとーーーーーーく
+            </a>
+
+            <nav class="header-nav">
+
+                <a
+                    href="#"
+                    class="header-link"
+                >
+                    検索
+                </a>
+
+                <a
+                    href="#"
+                    class="header-link"
+                >
+                    通知
+                </a>
+
+                <a
+                    href="home/profile.html"
+                    class="header-link"
+                >
+                    プロフィール
+                </a>
+
+            </nav>
+
+        </div>
+
+    </header>
+
+    <main class="home-page">
+
+        <!-- 左メニュー -->
+        <aside class="side-menu">
+
+            <div class="user-card">
+
+                <div class="user-icon">
+                    沖
+                </div>
+
+                <div class="user-information">
+
+                    <p class="user-name">
+                        沖縄 太郎
+                    </p>
+
+                    <p class="user-id">
+                        @okinawa_taro
+                    </p>
+
+                </div>
+
+            </div>
+
+            <nav class="side-navigation">
+
+                <a
+                    href="home.html"
+                    class="side-link active"
+                >
+                    <span class="side-icon">🏠</span>
+                    ホーム
+                </a>
+
+                <a
+                    href="#"
+                    class="side-link"
+                >
+                    <span class="side-icon">🔍</span>
+                    検索
+                </a>
+
+                <a
+                    href="#"
+                    class="side-link"
+                >
+                    <span class="side-icon">🔔</span>
+                    通知
+                </a>
+
+                <a
+                    href="home/profile.html"
+                    class="side-link"
+                >
+                    <span class="side-icon">👤</span>
+                    プロフィール
+                </a>
+
+                <a
+                    href="#"
+                    class="side-link"
+                >
+                    <span class="side-icon">⚙️</span>
+                    設定
+                </a>
+
+            </nav>
+
+        </aside>
+
+        <!-- 中央タイムライン -->
+        <section class="timeline">
+
+            <div class="timeline-header">
+
+                <h1>
+                    ホーム
+                </h1>
+
+                <p>
+                    沖縄の今を、みんなで。
+                </p>
+
+            </div>
+
+            <!-- 投稿フォーム -->
+            <section class="post-form-area">
+
+                <div class="post-form-icon">
+                    沖
+                </div>
+
+                <form id="postForm" class="post-form">
+
+                    <textarea
+                        id="postContent"
+                        maxlength="200"
+                        placeholder="沖縄の今をつぶやこう！"
+                        required
+                    ></textarea>
+
+                    <div class="post-form-footer">
+
+                        <div class="post-options">
+
+                            <label for="areaSelect">
+                                地域
+                            </label>
+
+                            <select id="areaSelect">
+
+                                <option value="沖縄県">
+                                    沖縄県
+                                </option>
+
+                                <option value="那覇市">
+                                    那覇市
+                                </option>
+
+                                <option value="浦添市">
+                                    浦添市
+                                </option>
+
+                                <option value="宜野湾市">
+                                    宜野湾市
+                                </option>
+
+                                <option value="沖縄市">
+                                    沖縄市
+                                </option>
+
+                                <option value="名護市">
+                                    名護市
+                                </option>
+
+                                <option value="糸満市">
+                                    糸満市
+                                </option>
+
+                                <option value="うるま市">
+                                    うるま市
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="post-submit-area">
+
+                            <span id="characterCount">
+                                0 / 200
+                            </span>
+
+                            <button
+                                type="submit"
+                                class="button post-button"
+                            >
+                                つぶやく
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </form>
+
+            </section>
+
+            <!-- 投稿一覧 -->
+            <div id="postList" class="post-list">
+
+                <article class="post-card">
+
+                    <div class="post-user-icon">
+                        海
+                    </div>
+
+                    <div class="post-main">
+
+                        <div class="post-header">
+
+                            <div class="post-user">
+
+                                <span class="post-user-name">
+                                    海が好きな人
+                                </span>
+
+                                <span class="post-user-id">
+                                    @okinawa_sea
+                                </span>
+
+                            </div>
+
+                            <span class="post-time">
+                                5分前
+                            </span>
+
+                        </div>
+
+                        <p class="post-text">
+                            今日の瀬長島、海がめちゃくちゃきれいでした！
+                            風も気持ちよくて最高です🌊
+                        </p>
+
+                        <p class="post-area">
+                            📍豊見城市
+                        </p>
+
+                        <div class="post-actions">
+
+                            <button
+                                type="button"
+                                class="action-button comment-button"
+                            >
+                                💬
+                                <span>2</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                class="action-button like-button"
+                            >
+                                ♡
+                                <span>12</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                class="action-button"
+                            >
+                                ↗
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+                <article class="post-card">
+
+                    <div class="post-user-icon">
+                        食
+                    </div>
+
+                    <div class="post-main">
+
+                        <div class="post-header">
+
+                            <div class="post-user">
+
+                                <span class="post-user-name">
+                                    沖縄グルメ巡り
+                                </span>
+
+                                <span class="post-user-id">
+                                    @okinawa_gourmet
+                                </span>
+
+                            </div>
+
+                            <span class="post-time">
+                                20分前
+                            </span>
+
+                        </div>
+
+                        <p class="post-text">
+                            国際通りの近くで沖縄そばを食べました！
+                            三枚肉がやわらかくておいしかったです。
+                        </p>
+
+                        <p class="post-area">
+                            📍那覇市
+                        </p>
+
+                        <div class="post-actions">
+
+                            <button
+                                type="button"
+                                class="action-button comment-button"
+                            >
+                                💬
+                                <span>5</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                class="action-button like-button"
+                            >
+                                ♡
+                                <span>25</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                class="action-button"
+                            >
+                                ↗
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+                <article class="post-card">
+
+                    <div class="post-user-icon">
+                        祭
+                    </div>
+
+                    <div class="post-main">
+
+                        <div class="post-header">
+
+                            <div class="post-user">
+
+                                <span class="post-user-name">
+                                    エイサー情報局
+                                </span>
+
+                                <span class="post-user-id">
+                                    @eisa_okinawa
+                                </span>
+
+                            </div>
+
+                            <span class="post-time">
+                                1時間前
+                            </span>
+
+                        </div>
+
+                        <p class="post-text">
+                            今週末は地域のエイサーイベントがあります！
+                            近くの方はぜひ遊びに来てください。
+                        </p>
+
+                        <p class="post-area">
+                            📍沖縄市
+                        </p>
+
+                        <div class="post-actions">
+
+                            <button
+                                type="button"
+                                class="action-button comment-button"
+                            >
+                                💬
+                                <span>8</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                class="action-button like-button"
+                            >
+                                ♡
+                                <span>41</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                class="action-button"
+                            >
+                                ↗
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+            </div>
+
+        </section>
+
+        <!-- 右サイド -->
+        <aside class="right-area">
+
+            <section class="trend-card">
+
+                <h2>
+                    沖縄のトレンド
+                </h2>
+
+                <a href="#" class="trend-item">
+
+                    <span class="trend-category">
+                        沖縄県のトレンド
+                    </span>
+
+                    <strong>
+                        #沖縄
+                    </strong>
+
+                    <span class="trend-count">
+                        1,250件の投稿
+                    </span>
+
+                </a>
+
+                <a href="#" class="trend-item">
+
+                    <span class="trend-category">
+                        那覇市のトレンド
+                    </span>
+
+                    <strong>
+                        #国際通り
+                    </strong>
+
+                    <span class="trend-count">
+                        530件の投稿
+                    </span>
+
+                </a>
+
+                <a href="#" class="trend-item">
+
+                    <span class="trend-category">
+                        イベント
+                    </span>
+
+                    <strong>
+                        #エイサー
+                    </strong>
+
+                    <span class="trend-count">
+                        320件の投稿
+                    </span>
+
+                </a>
+
+                <a href="#" class="trend-item">
+
+                    <span class="trend-category">
+                        グルメ
+                    </span>
+
+                    <strong>
+                        #沖縄そば
+                    </strong>
+
+                    <span class="trend-count">
+                        280件の投稿
+                    </span>
+
+                </a>
+
+            </section>
+
+            <section class="recommend-card">
+
+                <h2>
+                    おすすめユーザー
+                </h2>
+
+                <div class="recommend-user">
+
+                    <div class="recommend-icon">
+                        美
+                    </div>
+
+                    <div class="recommend-information">
+
+                        <strong>
+                            美ら海情報
+                        </strong>
+
+                        <span>
+                            @churaumi_info
+                        </span>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        class="follow-button"
+                    >
+                        フォロー
+                    </button>
+
+                </div>
+
+                <div class="recommend-user">
+
+                    <div class="recommend-icon">
+                        猫
+                    </div>
+
+                    <div class="recommend-information">
+
+                        <strong>
+                            沖縄ねこ部
+                        </strong>
+
+                        <span>
+                            @okinawa_cat
+                        </span>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        class="follow-button"
+                    >
+                        フォロー
+                    </button>
+
+                </div>
+
+            </section>
+
+        </aside>
+
+    </main>
+
+    <script src="../js/pages/home.js"></script>
+
+</body>
+
+</html>

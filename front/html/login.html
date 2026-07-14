@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>ログイン | おきとーーーーーーく</title>
+
+    <!-- 共通ボタン -->
+    <link
+        rel="stylesheet"
+        href="../css/button.css"
+    >
+
+    <!-- ログイン画面専用 -->
+    <link
+        rel="stylesheet"
+        href="../css/pages/login.css"
+    >
+</head>
+
+<body>
+
+    <main class="login-page">
+
+        <!-- 左側：ログインフォーム -->
+        <section class="login-area">
+
+            <div class="login-content">
+
+                <h1 class="catch-copy">
+                    沖縄の今を、みんなで。
+                </h1>
+
+                <p class="description">
+                    沖縄県民限定の地域密着型SNS
+                </p>
+
+                <form id="loginForm">
+
+                    <div class="form-group">
+
+                        <label for="email">
+                            メールアドレス
+                        </label>
+
+                        <input
+                            type="email"
+                            id="email"
+                            placeholder="メールアドレス"
+                            autocomplete="email"
+                            required
+                        >
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="password">
+                            パスワード
+                        </label>
+
+                        <input
+                            type="password"
+                            id="password"
+                            placeholder="パスワード"
+                            autocomplete="current-password"
+                            required
+                        >
+
+                    </div>
+
+                    <button type="submit" class="button">
+                    ログイン
+                    </button>
+
+                </form>
+
+                <div class="divider">
+                    <span>または</span>
+                </div>
+
+                <a
+                    class="register-button"
+                    href="register.html"
+                >
+                    新規会員登録
+                </a>
+
+            </div>
+
+        </section>
+
+        <!-- 右側：沖縄の画像 -->
+        <section class="brand-area">
+
+            <img
+                src="../../images/login-background.png"
+                alt="沖縄の地図、シーサー、ハイビスカス"
+                class="brand-image"
+            >
+
+        </section>
+
+    </main>
+
+    <script src="../js/pages/login.js"></script>
+
+</body>
+
+</html>

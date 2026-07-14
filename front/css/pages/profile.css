@@ -1,0 +1,304 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+
+    color: #172033;
+    background: #f4f7fb;
+
+    font-family:
+        "Yu Gothic",
+        "Hiragino Kaku Gothic ProN",
+        sans-serif;
+}
+
+button {
+    font: inherit;
+}
+
+.profile-page {
+    width: min(760px, calc(100% - 32px));
+    margin: 30px auto 70px;
+}
+
+/* プロフィール本体 */
+
+.profile-card {
+    overflow: hidden;
+
+    background: #ffffff;
+
+    border: 1px solid #e3e8ef;
+    border-radius: 18px;
+
+    box-shadow: 0 10px 30px rgba(29, 61, 100, 0.07);
+}
+
+.profile-cover {
+    height: 190px;
+
+    background: linear-gradient(
+        135deg,
+        #2589ff,
+        #25c8ca
+    );
+}
+
+.profile-content {
+    padding: 0 28px 28px;
+}
+
+.profile-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.profile-icon {
+    width: 120px;
+    height: 120px;
+    margin-top: -60px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #ffffff;
+    background: linear-gradient(
+        135deg,
+        #2589ff,
+        #25c8ca
+    );
+
+    border: 5px solid #ffffff;
+    border-radius: 50%;
+
+    font-size: 38px;
+    font-weight: bold;
+}
+
+.edit-button {
+    width: auto;
+    margin-top: 18px;
+    padding: 11px 20px;
+}
+
+.profile-information {
+    margin-top: 18px;
+}
+
+.profile-name {
+    margin: 0;
+
+    font-size: 28px;
+}
+
+.profile-id {
+    margin: 4px 0 0;
+
+    color: #7d8796;
+}
+
+.profile-description {
+    margin: 20px 0 0;
+
+    line-height: 1.8;
+}
+
+.profile-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+
+    margin-top: 18px;
+
+    color: #6c7685;
+
+    font-size: 14px;
+}
+
+.profile-count {
+    display: flex;
+    gap: 22px;
+
+    margin-top: 20px;
+}
+
+.profile-count a {
+    color: #697485;
+
+    text-decoration: none;
+}
+
+.profile-count strong {
+    margin-right: 5px;
+
+    color: #172033;
+}
+
+/* 投稿一覧 */
+
+.profile-posts {
+    margin-top: 20px;
+
+    overflow: hidden;
+
+    background: #ffffff;
+
+    border: 1px solid #e3e8ef;
+    border-radius: 18px;
+
+    box-shadow: 0 10px 30px rgba(29, 61, 100, 0.07);
+}
+
+.profile-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    border-bottom: 1px solid #e9edf2;
+}
+
+.profile-tab {
+    padding: 18px;
+
+    color: #707b8b;
+    background: #ffffff;
+
+    border: none;
+    border-bottom: 3px solid transparent;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.profile-tab.active {
+    color: #2589ff;
+    border-bottom-color: #2589ff;
+}
+
+.profile-tab:hover {
+    background: #f7faff;
+}
+
+.post-card {
+    display: flex;
+    gap: 14px;
+
+    padding: 22px;
+
+    border-bottom: 1px solid #edf0f4;
+}
+
+.post-card:last-child {
+    border-bottom: none;
+}
+
+.post-icon {
+    width: 48px;
+    height: 48px;
+
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+
+    color: #ffffff;
+    background: linear-gradient(
+        135deg,
+        #2589ff,
+        #25c8ca
+    );
+
+    border-radius: 50%;
+
+    font-weight: bold;
+}
+
+.post-content {
+    min-width: 0;
+}
+
+.post-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+
+    align-items: center;
+}
+
+.post-header span {
+    color: #8a94a3;
+
+    font-size: 13px;
+}
+
+.post-content p {
+    margin: 12px 0 0;
+
+    line-height: 1.8;
+}
+
+.post-location {
+    color: #2589ff;
+
+    font-size: 13px;
+    font-weight: bold;
+}
+
+/* スマートフォン */
+
+@media (max-width: 600px) {
+    .profile-page {
+        width: 100%;
+        margin: 0 0 60px;
+    }
+
+    .profile-card,
+    .profile-posts {
+        border-right: none;
+        border-left: none;
+        border-radius: 0;
+    }
+
+    .profile-cover {
+        height: 145px;
+    }
+
+    .profile-content {
+        padding: 0 18px 24px;
+    }
+
+    .profile-icon {
+        width: 95px;
+        height: 95px;
+        margin-top: -48px;
+
+        font-size: 30px;
+    }
+
+    .edit-button {
+        padding: 9px 14px;
+
+        font-size: 13px;
+    }
+
+    .profile-name {
+        font-size: 24px;
+    }
+
+    .profile-meta {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .profile-posts {
+        margin-top: 12px;
+    }
+
+    .post-card {
+        padding: 18px;
+    }
+}

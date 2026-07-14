@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 100" width="100%">
+  <defs>
+    <linearGradient id="wave-1783919952008" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="100">
+      <stop offset="0%" stop-color="#59afff"/>
+      <stop offset="100%" stop-color="#220080"/>
+    </linearGradient>
+  </defs>
+  <path d="M 0 46 Q 32 46 64 25 Q 128 -17 192 25 Q 224 46 256 46 Q 288 46 320 25 Q 384 -17 448 25 Q 480 46 512 46 Q 544 46 576 25 Q 640 -17 704 25 Q 736 46 768 46 Q 800 46 832 25 Q 896 -17 960 25 Q 992 46 1024 46 Q 1056 46 1088 25 Q 1152 -17 1216 25 Q 1248 46 1280 46" fill="none" stroke="url(#wave-1783919952008)" stroke-width="8" transform="translate(0, 25)"></path>
+</svg>

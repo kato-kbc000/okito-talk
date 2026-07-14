@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>新規登録 | おきとーーーーーーく</title>
+
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/header.css">
+    <link rel="stylesheet" href="../css/button.css">
+    <link rel="stylesheet" href="../css/pages/register.css">
+</head>
+
+<body>
+
+    <header class="site-header">
+        <div class="header-inner">
+            <a href="#" class="site-logo">
+                おきとーーーーーーく
+            </a>
+
+            <div class="header-actions">
+                <span>すでにアカウントをお持ちですか？</span>
+                <a href="./login.html" class="header-login-button">
+                    ログイン
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="register-main">
+
+        <div class="decoration decoration-left"></div>
+        <div class="decoration decoration-right"></div>
+
+        <section class="register-card">
+
+            <div class="register-heading">
+                <p class="register-label">WELCOME TO OKITALK</p>
+
+                <h1>新規アカウント作成</h1>
+
+                <p class="register-description">
+                    沖縄の話題や日常を、みんなと気軽に共有しよう。
+                </p>
+            </div>
+
+            <form id="register-form">
+
+                <div class="form-group">
+                    <label for="username">ユーザー名</label>
+
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        placeholder="例：okinawa_taro"
+                        autocomplete="username"
+                        required
+                    >
+
+                    <p class="input-note">
+                        半角英数字で入力してください
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label for="display-name">表示名</label>
+
+                    <input
+                        type="text"
+                        id="display-name"
+                        name="displayName"
+                        placeholder="例：沖縄たろう"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="email">メールアドレス</label>
+
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        placeholder="example@email.com"
+                        autocomplete="email"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password">パスワード</label>
+
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="8文字以上で入力"
+                        autocomplete="new-password"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password-confirm">
+                        パスワード（確認）
+                    </label>
+
+                    <input
+                        type="password"
+                        id="password-confirm"
+                        name="passwordConfirm"
+                        placeholder="もう一度入力してください"
+                        autocomplete="new-password"
+                        required
+                    >
+                </div>
+
+                <p id="error-message" class="error-message"></p>
+
+                <button type="submit" class="register-button">
+                    会員登録
+                </button>
+
+                <p class="terms-text">
+                    登録することで、利用規約とプライバシーポリシーに
+                    同意したものとみなされます。
+                </p>
+
+            </form>
+
+            <div class="mobile-login-link">
+                <span>すでに登録済みですか？</span>
+                <a href="./login.html">ログインはこちら</a>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script src="../js/pages/register.js"></script>
+
+</body>
+</html>
