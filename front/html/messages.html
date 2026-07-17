@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>メッセージ | おきとーーーーーーく</title>
+
+    <link
+        rel="stylesheet"
+        href="../css/header.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="../css/button.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="../css/pages/messages.css"
+    >
+</head>
+
+<body>
+
+    <header class="site-header">
+
+        <div class="header-inner">
+
+            <a
+                href="home.html"
+                class="site-logo"
+            >
+                おきとーーーーーーく
+            </a>
+
+            <nav class="header-nav">
+
+                <a
+                    href="home.html"
+                    class="header-link"
+                >
+                    ホーム
+                </a>
+
+                <a
+                    href="messages.html"
+                    class="header-link"
+                >
+                    メッセージ
+                </a>
+
+                <a
+                    href="home/profile.html"
+                    class="header-link"
+                >
+                    プロフィール
+                </a>
+
+            </nav>
+
+        </div>
+
+    </header>
+
+    <main class="messages-page">
+
+        <!-- 会話一覧 -->
+        <aside class="conversation-list">
+
+            <div class="conversation-list-header">
+
+                <div>
+                    <p class="page-label">
+                        DIRECT MESSAGE
+                    </p>
+
+                    <h1>
+                        メッセージ
+                    </h1>
+                </div>
+
+                <button
+                    type="button"
+                    id="newMessageButton"
+                    class="new-message-button"
+                    aria-label="新しいメッセージ"
+                >
+                    ＋
+                </button>
+
+            </div>
+
+            <div class="message-search">
+
+                <input
+                    type="search"
+                    id="messageSearch"
+                    placeholder="ユーザーを検索"
+                >
+
+            </div>
+
+            <div id="conversationItems">
+
+                <button
+                    type="button"
+                    class="conversation-item active"
+                    data-user="美ら海情報"
+                    data-id="@churaumi_info"
+                    data-icon="美"
+                >
+
+                    <span class="conversation-icon">
+                        美
+                    </span>
+
+                    <span class="conversation-summary">
+
+                        <strong>
+                            美ら海情報
+                        </strong>
+
+                        <span>
+                            明日の海もきれいそうですね！
+                        </span>
+
+                    </span>
+
+                    <time>
+                        10:30
+                    </time>
+
+                </button>
+
+                <button
+                    type="button"
+                    class="conversation-item"
+                    data-user="沖縄ねこ部"
+                    data-id="@okinawa_cat"
+                    data-icon="猫"
+                >
+
+                    <span class="conversation-icon">
+                        猫
+                    </span>
+
+                    <span class="conversation-summary">
+
+                        <strong>
+                            沖縄ねこ部
+                        </strong>
+
+                        <span>
+                            写真ありがとうございます！
+                        </span>
+
+                    </span>
+
+                    <time>
+                        昨日
+                    </time>
+
+                </button>
+
+                <button
+                    type="button"
+                    class="conversation-item"
+                    data-user="エイサー情報局"
+                    data-id="@eisa_okinawa"
+                    data-icon="祭"
+                >
+
+                    <span class="conversation-icon">
+                        祭
+                    </span>
+
+                    <span class="conversation-summary">
+
+                        <strong>
+                            エイサー情報局
+                        </strong>
+
+                        <span>
+                            イベントは18時からです。
+                        </span>
+
+                    </span>
+
+                    <time>
+                        月
+                    </time>
+
+                </button>
+
+            </div>
+
+        </aside>
+
+        <!-- チャット本体 -->
+        <section class="chat-area">
+
+            <div class="chat-header">
+
+                <div
+                    id="chatUserIcon"
+                    class="chat-user-icon"
+                >
+                    美
+                </div>
+
+                <div>
+
+                    <h2 id="chatUserName">
+                        美ら海情報
+                    </h2>
+
+                    <p id="chatUserId">
+                        @churaumi_info
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div
+                id="chatMessages"
+                class="chat-messages"
+            >
+
+                <div class="message received">
+                    <p>
+                        こんにちは！瀬長島の投稿を見ました。
+                    </p>
+                    <time>10:20</time>
+                </div>
+
+                <div class="message sent">
+                    <p>
+                        こんにちは！今日は海がとてもきれいでした！
+                    </p>
+                    <time>10:24</time>
+                </div>
+
+                <div class="message received">
+                    <p>
+                        明日の海もきれいそうですね！
+                    </p>
+                    <time>10:30</time>
+                </div>
+
+            </div>
+
+            <form
+                id="messageForm"
+                class="message-form"
+            >
+
+                <textarea
+                    id="messageInput"
+                    rows="1"
+                    maxlength="500"
+                    placeholder="メッセージを入力"
+                    required
+                ></textarea>
+
+                <button
+                    type="submit"
+                    class="button send-button"
+                >
+                    送信
+                </button>
+
+            </form>
+
+        </section>
+
+    </main>
+
+    <script src="../js/pages/messages.js"></script>
+
+</body>
+
+</html>
