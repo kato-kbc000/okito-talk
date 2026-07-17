@@ -11,19 +11,19 @@
 
     <title>プロフィール | おきとーーーーーーく</title>
 
-    <!-- 共通ヘッダー -->
+    <!-- 共通ヘッダー用CSS -->
     <link
         rel="stylesheet"
         href="../../css/header.css"
     >
 
-    <!-- 共通ボタン -->
+    <!-- 共通ボタン用CSS -->
     <link
         rel="stylesheet"
         href="../../css/button.css"
     >
 
-    <!-- プロフィール画面専用 -->
+    <!-- プロフィールページ専用CSS -->
     <link
         rel="stylesheet"
         href="../../css/pages/profile.css"
@@ -32,7 +32,9 @@
 
 <body>
 
-    <!-- 共通ヘッダー -->
+    <!-- ========================================
+         共通ヘッダー
+    ======================================== -->
     <header class="site-header">
 
         <div class="header-inner">
@@ -77,7 +79,7 @@
     <main class="profile-page">
 
         <!-- ========================================
-             プロフィール本体
+             プロフィール情報
         ======================================== -->
         <section class="profile-card">
 
@@ -85,7 +87,6 @@
             <div
                 class="profile-cover"
                 id="profileCover"
-                aria-label="プロフィールのヘッダー画像"
             ></div>
 
             <div class="profile-content">
@@ -96,14 +97,13 @@
                     <div
                         class="profile-icon"
                         id="profileIcon"
-                        aria-label="プロフィールアイコン"
                     >
                         沖
                     </div>
 
                     <div class="profile-top-buttons">
 
-                        <!-- プロフィールURLコピー -->
+                        <!-- 現在のプロフィールURLをコピー -->
                         <button
                             type="button"
                             class="profile-copy-button"
@@ -112,7 +112,7 @@
                             URLをコピー
                         </button>
 
-                        <!-- プロフィール編集 -->
+                        <!-- プロフィール編集モーダルを開く -->
                         <button
                             type="button"
                             class="button edit-button"
@@ -127,20 +127,42 @@
 
                 <div class="profile-information">
 
-                    <h1
-                        class="profile-name"
-                        id="profileName"
-                    >
-                        沖縄 太郎
-                    </h1>
+                    <div class="profile-name-row">
 
-                    <p
-                        class="profile-id"
-                        id="profileUserId"
-                    >
-                        @okinawa_taro
-                    </p>
+                        <div>
 
+                            <!-- ユーザー名 -->
+                            <h1
+                                class="profile-name"
+                                id="profileName"
+                            >
+                                沖縄 太郎
+                            </h1>
+
+                            <!-- ユーザーID -->
+                            <p
+                                class="profile-id"
+                                id="profileUserId"
+                            >
+                                @okinawa_taro
+                            </p>
+
+                        </div>
+
+                        <!-- 設定モーダルを開く -->
+                        <button
+                            type="button"
+                            class="profile-setting-button"
+                            id="openProfileSettingButton"
+                            aria-label="プロフィール設定を開く"
+                            title="プロフィール設定"
+                        >
+                            ⚙
+                        </button>
+
+                    </div>
+
+                    <!-- 自己紹介 -->
                     <p
                         class="profile-description"
                         id="profileDescription"
@@ -149,6 +171,7 @@
                         地元のおすすめ情報を発信します！
                     </p>
 
+                    <!-- 地域・利用開始日 -->
                     <div class="profile-meta">
 
                         <span id="profileLocation">
@@ -161,7 +184,7 @@
 
                     </div>
 
-                    <!-- 投稿数・フォロー数・フォロワー数 -->
+                    <!-- 投稿数・フォロー中・フォロワー -->
                     <div class="profile-count">
 
                         <button
@@ -170,7 +193,7 @@
                             id="postCountButton"
                         >
                             <strong id="postCount">
-                                2
+                                0
                             </strong>
 
                             投稿
@@ -182,7 +205,7 @@
                             id="openFollowingButton"
                         >
                             <strong id="followingCount">
-                                3
+                                0
                             </strong>
 
                             フォロー中
@@ -194,11 +217,27 @@
                             id="openFollowerButton"
                         >
                             <strong id="followerCount">
-                                3
+                                0
                             </strong>
 
                             フォロワー
                         </button>
+
+                    </div>
+
+                    <!-- 位置情報共有の現在状態 -->
+                    <div
+                        class="location-share-status"
+                        id="locationShareStatus"
+                    >
+
+                        <span>
+                            📍
+                        </span>
+
+                        <span id="locationShareStatusText">
+                            位置情報は共有していません
+                        </span>
 
                     </div>
 
@@ -209,12 +248,14 @@
         </section>
 
         <!-- ========================================
-             投稿・いいね一覧
+             投稿・いいね・保存・スポット
         ======================================== -->
         <section class="profile-posts">
 
-            <!-- タブ -->
-            <div class="profile-tabs">
+            <div
+                class="profile-tabs"
+                role="tablist"
+            >
 
                 <button
                     type="button"
@@ -234,15 +275,37 @@
                     いいね
                 </button>
 
+                <button
+                    type="button"
+                    class="profile-tab"
+                    data-tab="saved"
+                    aria-selected="false"
+                >
+                    保存
+                </button>
+
+                <button
+                    type="button"
+                    class="profile-tab"
+                    data-tab="spots"
+                    aria-selected="false"
+                >
+                    スポット
+                </button>
+
             </div>
 
             <!-- 投稿検索・並び替え -->
-            <div class="post-tools">
+            <div
+                class="post-tools"
+                id="postTools"
+            >
 
                 <label
                     class="post-search"
                     for="postSearchInput"
                 >
+
                     <span>
                         🔍
                     </span>
@@ -252,12 +315,14 @@
                         id="postSearchInput"
                         placeholder="投稿内容や場所を検索"
                     >
+
                 </label>
 
                 <select
                     id="postSortSelect"
                     aria-label="投稿の並び順"
                 >
+
                     <option value="pinned">
                         固定優先
                     </option>
@@ -269,6 +334,7 @@
                     <option value="popular">
                         人気順
                     </option>
+
                 </select>
 
             </div>
@@ -279,14 +345,13 @@
                 id="postsTabContent"
             >
 
-                <!-- JavaScriptで投稿を表示 -->
                 <div id="myPostList"></div>
 
-                <!-- 投稿がない場合 -->
                 <div
                     class="empty-state"
                     id="postEmptyMessage"
                 >
+
                     <div class="empty-state-icon">
                         🌺
                     </div>
@@ -298,6 +363,7 @@
                     <p>
                         投稿すると、ここに表示されます。
                     </p>
+
                 </div>
 
             </div>
@@ -308,14 +374,13 @@
                 id="likesTabContent"
             >
 
-                <!-- JavaScriptでいいね済み投稿を表示 -->
                 <div id="likedPostList"></div>
 
-                <!-- いいねがない場合 -->
                 <div
                     class="empty-state"
                     id="likeEmptyMessage"
                 >
+
                     <div class="empty-state-icon">
                         ♡
                     </div>
@@ -327,7 +392,113 @@
                     <p>
                         いいねした投稿がここに表示されます。
                     </p>
+
                 </div>
+
+            </div>
+
+            <!-- 保存タブ -->
+            <div
+                class="profile-tab-content"
+                id="savedTabContent"
+            >
+
+                <div id="savedPostList"></div>
+
+                <div
+                    class="empty-state"
+                    id="savedEmptyMessage"
+                >
+
+                    <div class="empty-state-icon">
+                        🔖
+                    </div>
+
+                    <strong>
+                        まだ保存した投稿はありません
+                    </strong>
+
+                    <p>
+                        保存した投稿がここに表示されます。
+                    </p>
+
+                </div>
+
+            </div>
+
+            <!-- スポットタブ -->
+            <div
+                class="profile-tab-content"
+                id="spotsTabContent"
+            >
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <h2>
+                            お気に入りスポット
+                        </h2>
+
+                        <p>
+                            よく行くお店や、おすすめの場所を登録できます。
+                        </p>
+
+                    </div>
+
+                    <!-- スポット追加モーダルを開く -->
+                    <button
+                        type="button"
+                        class="add-spot-button"
+                        id="openSpotAddButton"
+                    >
+                        ＋ スポット追加
+                    </button>
+
+                </div>
+
+                <!-- JavaScriptでスポット一覧を表示 -->
+                <div
+                    class="spot-list"
+                    id="favoriteSpotList"
+                ></div>
+
+                <div
+                    class="empty-state"
+                    id="spotEmptyMessage"
+                >
+
+                    <div class="empty-state-icon">
+                        📍
+                    </div>
+
+                    <strong>
+                        お気に入りスポットはありません
+                    </strong>
+
+                    <p>
+                        おすすめのお店や場所を追加できます。
+                    </p>
+
+                </div>
+
+                <!-- 投稿の位置情報から場所を自動表示 -->
+                <section class="visited-place-section">
+
+                    <h3>
+                        訪れた場所の履歴
+                    </h3>
+
+                    <p>
+                        位置情報を付けて投稿した場所が表示されます。
+                    </p>
+
+                    <div
+                        class="visited-place-list"
+                        id="visitedPlaceList"
+                    ></div>
+
+                </section>
 
             </div>
 
@@ -344,7 +515,6 @@
         aria-hidden="true"
     >
 
-        <!-- 背景部分 -->
         <div
             class="modal-overlay"
             data-close-modal="profile"
@@ -379,10 +549,9 @@
                 novalidate
             >
 
-                <!-- 画像編集部分 -->
+                <!-- アイコン・ヘッダー画像の変更 -->
                 <div class="image-edit-area">
 
-                    <!-- ヘッダー画像 -->
                     <div
                         class="edit-cover-preview"
                         id="editCoverPreview"
@@ -414,7 +583,6 @@
 
                     </div>
 
-                    <!-- アイコン画像 -->
                     <div class="edit-icon-wrapper">
 
                         <div
@@ -452,16 +620,13 @@
 
                 </div>
 
-                <!-- 画像読み込み表示 -->
                 <div
                     class="image-loading"
                     id="imageLoading"
-                    aria-live="polite"
                 >
                     画像を読み込んでいます…
                 </div>
 
-                <!-- 名前 -->
                 <div class="form-group">
 
                     <label for="editName">
@@ -472,7 +637,6 @@
                         type="text"
                         id="editName"
                         maxlength="30"
-                        autocomplete="name"
                         required
                     >
 
@@ -482,7 +646,6 @@
 
                 </div>
 
-                <!-- ユーザーID -->
                 <div class="form-group">
 
                     <label for="editUserId">
@@ -499,19 +662,17 @@
                             type="text"
                             id="editUserId"
                             maxlength="20"
-                            autocomplete="username"
                             required
                         >
 
                     </div>
 
                     <small>
-                        3〜20文字の半角英数字とアンダーバーが使えます。
+                        半角英数字とアンダーバーが使用できます。
                     </small>
 
                 </div>
 
-                <!-- 自己紹介 -->
                 <div class="form-group">
 
                     <label for="editDescription">
@@ -536,7 +697,6 @@
 
                 </div>
 
-                <!-- 地域 -->
                 <div class="form-group">
 
                     <label for="editLocation">
@@ -552,14 +712,11 @@
 
                 </div>
 
-                <!-- エラー表示 -->
                 <p
                     class="form-error-message"
                     id="profileFormError"
-                    role="alert"
                 ></p>
 
-                <!-- 操作ボタン -->
                 <div class="modal-actions">
 
                     <button
@@ -587,6 +744,292 @@
     </div>
 
     <!-- ========================================
+         プロフィール設定モーダル
+    ======================================== -->
+    <div
+        class="modal"
+        id="profileSettingModal"
+        aria-hidden="true"
+    >
+
+        <div
+            class="modal-overlay"
+            data-close-modal="setting"
+        ></div>
+
+        <section
+            class="modal-content profile-setting-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="profileSettingTitle"
+        >
+
+            <div class="modal-header">
+
+                <h2 id="profileSettingTitle">
+                    プロフィール設定
+                </h2>
+
+                <button
+                    type="button"
+                    class="modal-close-button"
+                    data-close-modal="setting"
+                    aria-label="プロフィール設定を閉じる"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <form id="profileSettingForm">
+
+                <!-- テーマカラー設定 -->
+                <section class="setting-section">
+
+                    <div class="setting-section-heading">
+
+                        <div class="setting-section-icon">
+                            🎨
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                テーマカラー
+                            </h3>
+
+                            <p>
+                                プロフィールページのメインカラーを変更できます。
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="theme-color-picker-area">
+
+                        <!-- input type="color"でカラーホイールを開く -->
+                        <label
+                            class="theme-color-picker"
+                            for="themeColorInput"
+                        >
+
+                            <span
+                                class="theme-color-preview"
+                                id="themeColorPreview"
+                            ></span>
+
+                            <span class="theme-color-picker-text">
+
+                                <strong>
+                                    カラーを選択
+                                </strong>
+
+                                <small>
+                                    押すとカラーホイールが開きます
+                                </small>
+
+                            </span>
+
+                            <input
+                                type="color"
+                                id="themeColorInput"
+                                value="#2589ff"
+                            >
+
+                        </label>
+
+                        <div class="theme-color-information">
+
+                            <span>
+                                選択中の色
+                            </span>
+
+                            <strong id="themeColorValue">
+                                #2589FF
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                    <!-- 選択した色の確認用 -->
+                    <div class="theme-preview-card">
+
+                        <span class="theme-preview-icon">
+                            沖
+                        </span>
+
+                        <div class="theme-preview-information">
+
+                            <strong>
+                                テーマカラーのプレビュー
+                            </strong>
+
+                            <span>
+                                ボタンやタブなどに反映されます。
+                            </span>
+
+                        </div>
+
+                        <button
+                            type="button"
+                            class="theme-preview-button"
+                            tabindex="-1"
+                        >
+                            ボタン
+                        </button>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        class="theme-reset-button"
+                        id="resetThemeColorButton"
+                    >
+                        初期カラーへ戻す
+                    </button>
+
+                </section>
+
+                <!-- 位置情報共有設定 -->
+                <section class="setting-section">
+
+                    <div class="setting-section-heading">
+
+                        <div class="setting-section-icon">
+                            📍
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                位置情報の共有
+                            </h3>
+
+                            <p>
+                                相互フォロー中のユーザーに位置情報を共有できます。
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="privacy-note">
+                        Instagramの「親しい友達」のように、選択した相手だけに共有します。
+                    </div>
+
+                    <label class="setting-radio-card">
+
+                        <input
+                            type="radio"
+                            name="locationShare"
+                            value="share"
+                            id="locationShareOn"
+                        >
+
+                        <span>
+
+                            <strong>
+                                位置を共有する
+                            </strong>
+
+                            <small>
+                                選択した相互フォロー中のユーザーに共有します。
+                            </small>
+
+                        </span>
+
+                    </label>
+
+                    <label class="setting-radio-card">
+
+                        <input
+                            type="radio"
+                            name="locationShare"
+                            value="private"
+                            id="locationShareOff"
+                        >
+
+                        <span>
+
+                            <strong>
+                                位置を共有しない
+                            </strong>
+
+                            <small>
+                                位置情報をほかのユーザーへ表示しません。
+                            </small>
+
+                        </span>
+
+                    </label>
+
+                </section>
+
+                <!-- 位置情報を共有する相手 -->
+                <section
+                    class="setting-section share-user-section"
+                    id="shareUserSection"
+                >
+
+                    <div class="setting-section-title-row">
+
+                        <div>
+
+                            <h3>
+                                共有する相手
+                            </h3>
+
+                            <p>
+                                相互フォロー中のユーザーから選択してください。
+                            </p>
+
+                        </div>
+
+                        <span
+                            class="selected-user-count"
+                            id="selectedShareUserCount"
+                        >
+                            0人選択
+                        </span>
+
+                    </div>
+
+                    <div
+                        class="share-user-list"
+                        id="shareUserList"
+                    ></div>
+
+                </section>
+
+                <div class="modal-actions">
+
+                    <button
+                        type="button"
+                        class="cancel-button"
+                        data-close-modal="setting"
+                    >
+                        キャンセル
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="save-button"
+                        id="saveSettingButton"
+                    >
+                        設定を保存
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+    </div>
+
+    <!-- ========================================
          投稿編集モーダル
     ======================================== -->
     <div
@@ -600,16 +1043,11 @@
             data-close-modal="post"
         ></div>
 
-        <section
-            class="modal-content"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="postEditTitle"
-        >
+        <section class="modal-content">
 
             <div class="modal-header">
 
-                <h2 id="postEditTitle">
+                <h2>
                     投稿を編集
                 </h2>
 
@@ -617,7 +1055,6 @@
                     type="button"
                     class="modal-close-button"
                     data-close-modal="post"
-                    aria-label="投稿編集を閉じる"
                 >
                     ×
                 </button>
@@ -635,7 +1072,6 @@
                     id="editPostId"
                 >
 
-                <!-- 投稿本文 -->
                 <div class="form-group">
 
                     <label for="editPostText">
@@ -661,7 +1097,6 @@
 
                 </div>
 
-                <!-- 位置情報 -->
                 <div class="form-group">
 
                     <label for="editPostLocation">
@@ -676,11 +1111,33 @@
 
                 </div>
 
-                <!-- エラー表示 -->
+                <div class="form-group">
+
+                    <label for="editPostVisibility">
+                        公開範囲
+                    </label>
+
+                    <select id="editPostVisibility">
+
+                        <option value="public">
+                            全体公開
+                        </option>
+
+                        <option value="followers">
+                            フォロワーのみ
+                        </option>
+
+                        <option value="private">
+                            自分のみ
+                        </option>
+
+                    </select>
+
+                </div>
+
                 <p
                     class="form-error-message"
                     id="postFormError"
-                    role="alert"
                 ></p>
 
                 <div class="modal-actions">
@@ -710,6 +1167,156 @@
     </div>
 
     <!-- ========================================
+         スポット追加モーダル
+    ======================================== -->
+    <div
+        class="modal"
+        id="spotAddModal"
+        aria-hidden="true"
+    >
+
+        <div
+            class="modal-overlay"
+            data-close-modal="spot"
+        ></div>
+
+        <section class="modal-content">
+
+            <div class="modal-header">
+
+                <h2>
+                    お気に入りスポット追加
+                </h2>
+
+                <button
+                    type="button"
+                    class="modal-close-button"
+                    data-close-modal="spot"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <form
+                id="spotAddForm"
+                novalidate
+            >
+
+                <div class="form-group">
+
+                    <label for="spotNameInput">
+                        スポット名
+                    </label>
+
+                    <input
+                        type="text"
+                        id="spotNameInput"
+                        maxlength="50"
+                        placeholder="例：海風カフェ"
+                        required
+                    >
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="spotCategoryInput">
+                        カテゴリ
+                    </label>
+
+                    <select id="spotCategoryInput">
+
+                        <option value="カフェ">
+                            カフェ
+                        </option>
+
+                        <option value="飲食店">
+                            飲食店
+                        </option>
+
+                        <option value="観光">
+                            観光
+                        </option>
+
+                        <option value="公園">
+                            公園
+                        </option>
+
+                        <option value="買い物">
+                            買い物
+                        </option>
+
+                        <option value="その他">
+                            その他
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="spotLocationInput">
+                        場所
+                    </label>
+
+                    <input
+                        type="text"
+                        id="spotLocationInput"
+                        maxlength="50"
+                        placeholder="例：那覇市"
+                    >
+
+                </div>
+
+                <div class="form-group">
+
+                    <label for="spotMemoInput">
+                        メモ
+                    </label>
+
+                    <textarea
+                        id="spotMemoInput"
+                        maxlength="120"
+                        rows="4"
+                        placeholder="おすすめポイントなど"
+                    ></textarea>
+
+                </div>
+
+                <p
+                    class="form-error-message"
+                    id="spotFormError"
+                ></p>
+
+                <div class="modal-actions">
+
+                    <button
+                        type="button"
+                        class="cancel-button"
+                        data-close-modal="spot"
+                    >
+                        キャンセル
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="save-button"
+                        id="saveSpotButton"
+                    >
+                        追加
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+    </div>
+
+    <!-- ========================================
          投稿削除確認モーダル
     ======================================== -->
     <div
@@ -723,16 +1330,11 @@
             data-close-modal="delete"
         ></div>
 
-        <section
-            class="modal-content delete-confirm-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="deleteConfirmTitle"
-        >
+        <section class="modal-content delete-confirm-modal">
 
             <div class="modal-header">
 
-                <h2 id="deleteConfirmTitle">
+                <h2>
                     投稿を削除
                 </h2>
 
@@ -740,14 +1342,12 @@
                     type="button"
                     class="modal-close-button"
                     data-close-modal="delete"
-                    aria-label="削除確認を閉じる"
                 >
                     ×
                 </button>
 
             </div>
 
-            <!-- 削除対象投稿の内容 -->
             <div
                 class="delete-post-preview"
                 id="deletePostPreview"
@@ -783,7 +1383,7 @@
     </div>
 
     <!-- ========================================
-         フォロー・フォロワー一覧モーダル
+         フォロー・フォロワー一覧
     ======================================== -->
     <div
         class="modal"
@@ -796,12 +1396,7 @@
             data-close-modal="user-list"
         ></div>
 
-        <section
-            class="modal-content user-list-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="userListTitle"
-        >
+        <section class="modal-content user-list-modal">
 
             <div class="modal-header">
 
@@ -813,21 +1408,19 @@
                     type="button"
                     class="modal-close-button"
                     data-close-modal="user-list"
-                    aria-label="ユーザー一覧を閉じる"
                 >
                     ×
                 </button>
 
             </div>
 
-            <!-- JavaScriptでユーザー一覧を表示 -->
             <div id="userList"></div>
 
         </section>
 
     </div>
 
-    <!-- 保存完了・エラーなどの通知 -->
+    <!-- 操作完了時の通知 -->
     <div
         class="toast"
         id="toast"
@@ -835,7 +1428,7 @@
         aria-live="polite"
     ></div>
 
-    <!-- プロフィール画面専用JavaScript -->
+    <!-- プロフィール専用JavaScript -->
     <script src="../../js/pages/profile.js"></script>
 
 </body>

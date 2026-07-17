@@ -1,3 +1,21 @@
+/* ========================================
+   プロフィールページで使用するテーマカラー
+   JavaScriptから値を変更できます
+======================================== */
+
+:root {
+    --profile-primary: #2589ff;
+    --profile-secondary: #25c8ca;
+    --profile-soft: #eaf4ff;
+    --profile-primary-dark: #1478e9;
+    --profile-primary-shadow: rgba(37, 137, 255, 0.18);
+}
+
+
+/* ========================================
+   基本設定
+======================================== */
+
 * {
     box-sizing: border-box;
 }
@@ -30,15 +48,17 @@ button {
 }
 
 .profile-page {
-    width: min(760px, calc(100% - 32px));
+    width: min(820px, calc(100% - 32px));
     margin: 30px auto 70px;
 }
 
+
 /* ========================================
-   プロフィール本体
+   プロフィールカード
 ======================================== */
 
-.profile-card {
+.profile-card,
+.profile-posts {
     overflow: hidden;
 
     background: #ffffff;
@@ -46,7 +66,9 @@ button {
     border: 1px solid #e3e8ef;
     border-radius: 18px;
 
-    box-shadow: 0 10px 30px rgba(29, 61, 100, 0.07);
+    box-shadow:
+        0 10px 30px
+        rgba(29, 61, 100, 0.07);
 }
 
 .profile-cover {
@@ -55,8 +77,8 @@ button {
     background:
         linear-gradient(
             135deg,
-            #2589ff,
-            #25c8ca
+            var(--profile-primary),
+            var(--profile-secondary)
         );
 
     background-position: center;
@@ -71,6 +93,7 @@ button {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
+    gap: 20px;
 }
 
 .profile-icon {
@@ -79,6 +102,7 @@ button {
     margin-top: -60px;
 
     display: flex;
+    flex-shrink: 0;
     align-items: center;
     justify-content: center;
 
@@ -89,8 +113,8 @@ button {
     background:
         linear-gradient(
             135deg,
-            #2589ff,
-            #25c8ca
+            var(--profile-primary),
+            var(--profile-secondary)
         );
 
     background-position: center;
@@ -99,15 +123,12 @@ button {
     border: 5px solid #ffffff;
     border-radius: 50%;
 
-    box-shadow: 0 5px 15px rgba(29, 61, 100, 0.15);
-
     font-size: 38px;
     font-weight: bold;
 }
 
 .profile-top-buttons {
     display: flex;
-    align-items: center;
     gap: 10px;
 
     margin-top: 18px;
@@ -122,10 +143,10 @@ button {
 .profile-copy-button {
     padding: 10px 16px;
 
-    color: #2589ff;
+    color: var(--profile-primary);
     background: #ffffff;
 
-    border: 1px solid #2589ff;
+    border: 1px solid var(--profile-primary);
     border-radius: 9px;
 
     font-weight: bold;
@@ -133,27 +154,49 @@ button {
 
 .profile-copy-button:hover {
     color: #ffffff;
-    background: #2589ff;
+    background: var(--profile-primary);
 }
 
 .profile-information {
     margin-top: 18px;
 }
 
+.profile-name-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
 .profile-name {
     margin: 0;
 
     font-size: 28px;
-
-    word-break: break-word;
 }
 
 .profile-id {
     margin: 4px 0 0;
 
     color: #7d8796;
+}
 
-    word-break: break-word;
+.profile-setting-button {
+    width: 44px;
+    height: 44px;
+
+    color: #5f6c7d;
+    background: #ffffff;
+
+    border: 1px solid #d6dee8;
+    border-radius: 12px;
+
+    font-size: 21px;
+}
+
+.profile-setting-button:hover {
+    color: var(--profile-primary);
+    background: var(--profile-soft);
+
+    border-color: var(--profile-primary);
 }
 
 .profile-description {
@@ -195,7 +238,7 @@ button {
 }
 
 .profile-count-button:hover {
-    color: #2589ff;
+    color: var(--profile-primary);
 }
 
 .profile-count-button strong {
@@ -204,32 +247,55 @@ button {
     color: #172033;
 }
 
+
 /* ========================================
-   投稿一覧・検索・並び替え
+   位置情報共有状態
+======================================== */
+
+.location-share-status {
+    width: fit-content;
+    margin-top: 20px;
+    padding: 9px 13px;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    color: #647184;
+    background: #f4f7fb;
+
+    border: 1px solid #e0e6ed;
+    border-radius: 20px;
+
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.location-share-status.sharing {
+    color: #087c58;
+    background: #edfff8;
+
+    border-color: #b7eedb;
+}
+
+
+/* ========================================
+   タブ
 ======================================== */
 
 .profile-posts {
     margin-top: 20px;
-
-    overflow: hidden;
-
-    background: #ffffff;
-
-    border: 1px solid #e3e8ef;
-    border-radius: 18px;
-
-    box-shadow: 0 10px 30px rgba(29, 61, 100, 0.07);
 }
 
 .profile-tabs {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(4, 1fr);
 
     border-bottom: 1px solid #e9edf2;
 }
 
 .profile-tab {
-    padding: 18px;
+    padding: 18px 8px;
 
     color: #707b8b;
     background: #ffffff;
@@ -241,14 +307,27 @@ button {
 }
 
 .profile-tab.active {
-    color: #2589ff;
+    color: var(--profile-primary);
 
-    border-bottom-color: #2589ff;
+    border-bottom-color: var(--profile-primary);
 }
 
 .profile-tab:hover {
     background: #f7faff;
 }
+
+.profile-tab-content {
+    display: none;
+}
+
+.profile-tab-content.active {
+    display: block;
+}
+
+
+/* ========================================
+   投稿検索・並び替え
+======================================== */
 
 .post-tools {
     display: grid;
@@ -276,16 +355,16 @@ button {
 }
 
 .post-search:focus-within {
-    border-color: #2589ff;
+    border-color: var(--profile-primary);
 
-    box-shadow: 0 0 0 3px rgba(37, 137, 255, 0.12);
+    box-shadow:
+        0 0 0 3px
+        var(--profile-primary-shadow);
 }
 
 .post-search input {
     width: 100%;
     padding: 11px 0;
-
-    background: transparent;
 
     border: none;
 
@@ -295,22 +374,16 @@ button {
 .post-tools select {
     padding: 11px 12px;
 
-    color: #344052;
     background: #ffffff;
 
     border: 1px solid #d8e1ea;
     border-radius: 10px;
-
-    outline: none;
 }
 
-.profile-tab-content {
-    display: none;
-}
 
-.profile-tab-content.active {
-    display: block;
-}
+/* ========================================
+   投稿カード
+======================================== */
 
 .post-card {
     display: flex;
@@ -319,8 +392,6 @@ button {
     padding: 22px;
 
     border-bottom: 1px solid #edf0f4;
-
-    animation: postFadeIn 0.24s ease;
 }
 
 .post-card:last-child {
@@ -329,47 +400,6 @@ button {
 
 .post-card.pinned-post {
     background: #f8fbff;
-}
-
-.post-card.deleting {
-    opacity: 0;
-
-    transform: translateX(20px);
-
-    transition:
-        opacity 0.2s,
-        transform 0.2s;
-}
-
-@keyframes postFadeIn {
-    from {
-        opacity: 0;
-
-        transform: translateY(8px);
-    }
-
-    to {
-        opacity: 1;
-
-        transform: translateY(0);
-    }
-}
-
-.pinned-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-
-    margin-bottom: 10px;
-    padding: 5px 10px;
-
-    color: #2589ff;
-    background: #eaf4ff;
-
-    border-radius: 20px;
-
-    font-size: 12px;
-    font-weight: bold;
 }
 
 .post-icon {
@@ -388,8 +418,8 @@ button {
     background:
         linear-gradient(
             135deg,
-            #2589ff,
-            #25c8ca
+            var(--profile-primary),
+            var(--profile-secondary)
         );
 
     background-position: center;
@@ -406,12 +436,33 @@ button {
     flex: 1;
 }
 
+.pinned-label,
+.visibility-label {
+    display: inline-block;
+
+    margin: 0 6px 10px 0;
+    padding: 5px 10px;
+
+    border-radius: 20px;
+
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.pinned-label {
+    color: var(--profile-primary);
+    background: var(--profile-soft);
+}
+
+.visibility-label {
+    color: #697485;
+    background: #f1f3f6;
+}
+
 .post-header {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-
     align-items: center;
+    gap: 6px;
 }
 
 .post-header-main {
@@ -419,12 +470,6 @@ button {
     flex: 1;
     flex-wrap: wrap;
     gap: 6px;
-
-    align-items: center;
-}
-
-.post-header strong {
-    word-break: break-word;
 }
 
 .post-header span {
@@ -432,6 +477,29 @@ button {
 
     font-size: 13px;
 }
+
+.post-text {
+    margin: 12px 0 0;
+
+    line-height: 1.8;
+
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.post-location {
+    margin: 12px 0 0;
+
+    color: var(--profile-primary);
+
+    font-size: 13px;
+    font-weight: bold;
+}
+
+
+/* ========================================
+   投稿メニュー
+======================================== */
 
 .post-menu-wrapper {
     position: relative;
@@ -441,10 +509,6 @@ button {
     width: 36px;
     height: 36px;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
     color: #7b8796;
     background: transparent;
 
@@ -452,13 +516,11 @@ button {
     border-radius: 50%;
 
     font-size: 21px;
-    line-height: 1;
 }
 
-.post-menu-button:hover,
-.post-menu-button:focus-visible {
-    color: #2589ff;
-    background: #f1f7ff;
+.post-menu-button:hover {
+    color: var(--profile-primary);
+    background: var(--profile-soft);
 }
 
 .post-menu {
@@ -467,7 +529,7 @@ button {
     top: 40px;
     right: 0;
 
-    width: 150px;
+    width: 170px;
     padding: 6px;
 
     display: none;
@@ -477,7 +539,9 @@ button {
     border: 1px solid #e2e7ed;
     border-radius: 10px;
 
-    box-shadow: 0 10px 25px rgba(29, 61, 100, 0.15);
+    box-shadow:
+        0 10px 25px
+        rgba(29, 61, 100, 0.15);
 }
 
 .post-menu.open {
@@ -496,32 +560,18 @@ button {
     border-radius: 7px;
 }
 
-.post-menu button:hover,
-.post-menu button:focus-visible {
+.post-menu button:hover {
     background: #f3f7fb;
 }
 
-.post-menu .delete-post-button {
+.delete-post-button {
     color: #e24646;
 }
 
-.post-text {
-    margin: 12px 0 0;
 
-    line-height: 1.8;
-
-    white-space: pre-wrap;
-    word-break: break-word;
-}
-
-.post-location {
-    margin: 12px 0 0;
-
-    color: #2589ff;
-
-    font-size: 13px;
-    font-weight: bold;
-}
+/* ========================================
+   いいね・保存
+======================================== */
 
 .post-action {
     display: flex;
@@ -539,13 +589,18 @@ button {
     border: none;
 }
 
-.post-action-button:hover {
-    color: #2589ff;
-}
-
 .post-action-button.liked {
     color: #f04f73;
 }
+
+.post-action-button.saved {
+    color: var(--profile-primary);
+}
+
+
+/* ========================================
+   空表示
+======================================== */
 
 .empty-state {
     display: none;
@@ -575,8 +630,137 @@ button {
     margin: 8px 0 0;
 }
 
+
 /* ========================================
-   モーダル共通
+   スポット
+======================================== */
+
+.section-heading {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+
+    padding: 24px;
+
+    border-bottom: 1px solid #edf0f4;
+}
+
+.section-heading h2 {
+    margin: 0;
+}
+
+.section-heading p {
+    margin: 7px 0 0;
+
+    color: #788494;
+
+    font-size: 13px;
+}
+
+.add-spot-button {
+    padding: 10px 15px;
+
+    color: #ffffff;
+    background: var(--profile-primary);
+
+    border: none;
+    border-radius: 9px;
+
+    font-weight: bold;
+}
+
+.add-spot-button:hover {
+    background: var(--profile-primary-dark);
+}
+
+.spot-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+
+    padding: 20px;
+}
+
+.spot-card {
+    padding: 17px;
+
+    border: 1px solid #e1e7ed;
+    border-radius: 13px;
+}
+
+.spot-card-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.spot-category {
+    color: var(--profile-primary);
+
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.spot-card h3 {
+    margin: 8px 0;
+}
+
+.spot-card p {
+    margin: 7px 0;
+
+    color: #687486;
+
+    line-height: 1.6;
+}
+
+.spot-delete-button {
+    color: #e24646;
+    background: transparent;
+
+    border: none;
+}
+
+.visited-place-section {
+    margin: 0 20px 25px;
+    padding: 20px;
+
+    background: #f8fbff;
+
+    border-radius: 13px;
+}
+
+.visited-place-section h3 {
+    margin: 0;
+}
+
+.visited-place-section p {
+    color: #788494;
+
+    font-size: 13px;
+}
+
+.visited-place-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+
+    margin-top: 14px;
+}
+
+.visited-place-item {
+    padding: 8px 11px;
+
+    background: #ffffff;
+
+    border: 1px solid #dce4ed;
+    border-radius: 20px;
+
+    font-size: 13px;
+}
+
+
+/* ========================================
+   モーダル
 ======================================== */
 
 .modal {
@@ -600,15 +784,13 @@ button {
     inset: 0;
 
     background: rgba(18, 31, 48, 0.55);
-
-    backdrop-filter: blur(2px);
 }
 
 .modal-content {
     position: relative;
     z-index: 1;
 
-    width: min(520px, 100%);
+    width: min(560px, 100%);
     max-height: calc(100vh - 40px);
 
     overflow-y: auto;
@@ -618,12 +800,11 @@ button {
     background: #ffffff;
 
     border-radius: 18px;
-
-    box-shadow: 0 25px 60px rgba(14, 35, 60, 0.3);
 }
 
-.profile-edit-modal {
-    width: min(600px, 100%);
+.profile-edit-modal,
+.profile-setting-modal {
+    width: min(640px, 100%);
 }
 
 .modal-header {
@@ -636,19 +817,12 @@ button {
 
 .modal-header h2 {
     margin: 0;
-
-    font-size: 23px;
 }
 
 .modal-close-button {
     width: 38px;
     height: 38px;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    color: #758191;
     background: #f3f6f9;
 
     border: none;
@@ -657,13 +831,9 @@ button {
     font-size: 25px;
 }
 
-.modal-close-button:hover {
-    color: #172033;
-    background: #e9eef4;
-}
 
 /* ========================================
-   プロフィール編集
+   画像編集
 ======================================== */
 
 .image-edit-area {
@@ -682,8 +852,8 @@ button {
     background:
         linear-gradient(
             135deg,
-            #2589ff,
-            #25c8ca
+            var(--profile-primary),
+            var(--profile-secondary)
         );
 
     background-position: center;
@@ -692,8 +862,6 @@ button {
 
 .cover-edit-buttons {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
     gap: 8px;
 }
 
@@ -718,8 +886,8 @@ button {
     background:
         linear-gradient(
             135deg,
-            #2589ff,
-            #25c8ca
+            var(--profile-primary),
+            var(--profile-secondary)
         );
 
     background-position: center;
@@ -727,8 +895,6 @@ button {
 
     border: 5px solid #ffffff;
     border-radius: 50%;
-
-    box-shadow: 0 7px 20px rgba(29, 61, 100, 0.18);
 
     font-size: 34px;
     font-weight: bold;
@@ -748,10 +914,6 @@ button {
 
 .image-change-button,
 .image-remove-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
     padding: 9px 14px;
 
     border-radius: 8px;
@@ -767,34 +929,19 @@ button {
     cursor: pointer;
 }
 
-.image-change-button:hover {
-    background: rgba(20, 32, 49, 0.88);
-}
-
 .image-change-button input {
     display: none;
 }
 
 .image-remove-button {
     color: #e24646;
-    background: rgba(255, 255, 255, 0.94);
+    background: #ffffff;
 
     border: 1px solid #f0caca;
 }
 
-.image-remove-button:hover {
-    background: #fff2f2;
-}
-
 .icon-change-button {
-    color: #2589ff;
-    background: #ffffff;
-
-    border: 1px solid #dbe5ef;
-}
-
-.icon-change-button:hover {
-    background: #f2f8ff;
+    color: var(--profile-primary);
 }
 
 .image-loading {
@@ -802,15 +949,17 @@ button {
 
     margin: -58px 0 22px;
 
-    color: #2589ff;
-
-    font-size: 13px;
-    font-weight: bold;
+    color: var(--profile-primary);
 }
 
 .image-loading.show {
     display: block;
 }
+
+
+/* ========================================
+   フォーム
+======================================== */
 
 .form-group {
     margin-top: 20px;
@@ -825,12 +974,10 @@ button {
 }
 
 .form-group input,
-.form-group textarea {
+.form-group textarea,
+.form-group select {
     width: 100%;
     padding: 12px 14px;
-
-    color: #172033;
-    background: #ffffff;
 
     border: 1px solid #d6dde6;
     border-radius: 9px;
@@ -838,58 +985,30 @@ button {
     outline: none;
 }
 
-.form-group textarea {
-    resize: vertical;
-
-    line-height: 1.7;
-}
-
 .form-group input:focus,
-.form-group textarea:focus {
-    border-color: #2589ff;
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: var(--profile-primary);
 
-    box-shadow: 0 0 0 3px rgba(37, 137, 255, 0.12);
-}
-
-.form-group small {
-    display: block;
-
-    margin-top: 7px;
-
-    color: #8691a0;
-
-    font-size: 12px;
+    box-shadow:
+        0 0 0 3px
+        var(--profile-primary-shadow);
 }
 
 .user-id-input {
     display: flex;
     align-items: center;
 
-    overflow: hidden;
-
     border: 1px solid #d6dde6;
     border-radius: 9px;
 }
 
-.user-id-input:focus-within {
-    border-color: #2589ff;
-
-    box-shadow: 0 0 0 3px rgba(37, 137, 255, 0.12);
-}
-
 .user-id-input span {
     padding-left: 14px;
-
-    color: #7a8694;
 }
 
 .user-id-input input {
     border: none;
-
-    box-shadow: none;
-}
-
-.user-id-input input:focus {
     box-shadow: none;
 }
 
@@ -905,12 +1024,355 @@ button {
 
 .form-error-message {
     min-height: 20px;
-    margin: 15px 0 0;
 
     color: #e24646;
 
     font-size: 13px;
 }
+
+
+/* ========================================
+   設定
+======================================== */
+
+.setting-section {
+    margin-top: 18px;
+    padding: 20px;
+
+    background: #f8fbff;
+
+    border: 1px solid #e0e8f1;
+    border-radius: 15px;
+}
+
+.setting-section:first-of-type {
+    margin-top: 0;
+}
+
+.setting-section-heading {
+    display: flex;
+    gap: 13px;
+}
+
+.setting-section-icon {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: var(--profile-soft);
+
+    border-radius: 50%;
+}
+
+.setting-section h3 {
+    margin: 0;
+}
+
+.setting-section p {
+    color: #697587;
+
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+
+/* ========================================
+   テーマカラー
+======================================== */
+
+.theme-color-picker-area {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 14px;
+
+    margin-top: 18px;
+}
+
+.theme-color-picker {
+    position: relative;
+
+    padding: 15px;
+
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    background: #ffffff;
+
+    border: 1px solid #dce4ed;
+    border-radius: 12px;
+
+    cursor: pointer;
+}
+
+.theme-color-preview {
+    width: 52px;
+    height: 52px;
+
+    display: block;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--profile-primary),
+            var(--profile-secondary)
+        );
+
+    border-radius: 50%;
+}
+
+.theme-color-picker-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.theme-color-picker-text small {
+    color: #7b8797;
+}
+
+.theme-color-picker input[type="color"] {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    opacity: 0;
+
+    cursor: pointer;
+}
+
+.theme-color-information {
+    min-width: 125px;
+    padding: 13px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    background: #ffffff;
+
+    border: 1px solid #dce4ed;
+    border-radius: 12px;
+}
+
+.theme-color-information strong {
+    color: var(--profile-primary);
+}
+
+.theme-preview-card {
+    margin-top: 14px;
+    padding: 15px;
+
+    display: flex;
+    align-items: center;
+    gap: 13px;
+
+    background: var(--profile-soft);
+
+    border-radius: 12px;
+}
+
+.theme-preview-icon {
+    width: 46px;
+    height: 46px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #ffffff;
+    background:
+        linear-gradient(
+            135deg,
+            var(--profile-primary),
+            var(--profile-secondary)
+        );
+
+    border-radius: 50%;
+
+    font-weight: bold;
+}
+
+.theme-preview-information {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+}
+
+.theme-preview-information span {
+    color: #6f7b8c;
+
+    font-size: 12px;
+}
+
+.theme-preview-button {
+    padding: 8px 14px;
+
+    color: #ffffff;
+    background: var(--profile-primary);
+
+    border: none;
+    border-radius: 8px;
+
+    pointer-events: none;
+}
+
+.theme-reset-button {
+    margin-top: 13px;
+    padding: 9px 14px;
+
+    background: #ffffff;
+
+    border: 1px solid #d6dee8;
+    border-radius: 9px;
+}
+
+
+/* ========================================
+   位置情報共有
+======================================== */
+
+.privacy-note {
+    margin: 16px 0;
+    padding: 11px 13px;
+
+    color: #72510a;
+    background: #fff9e8;
+
+    border-radius: 9px;
+
+    font-size: 12px;
+}
+
+.setting-radio-card {
+    margin-top: 10px;
+    padding: 14px;
+
+    display: flex;
+    gap: 12px;
+
+    background: #ffffff;
+
+    border: 1px solid #dae2eb;
+    border-radius: 11px;
+
+    cursor: pointer;
+}
+
+.setting-radio-card:hover {
+    background: var(--profile-soft);
+
+    border-color: var(--profile-primary);
+}
+
+.setting-radio-card input {
+    accent-color: var(--profile-primary);
+}
+
+.setting-radio-card span {
+    display: flex;
+    flex-direction: column;
+}
+
+.setting-radio-card small {
+    color: #768294;
+}
+
+.setting-section-title-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.selected-user-count {
+    height: fit-content;
+    padding: 6px 10px;
+
+    color: var(--profile-primary);
+    background: var(--profile-soft);
+
+    border-radius: 20px;
+
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.share-user-section.disabled {
+    opacity: 0.55;
+
+    pointer-events: none;
+}
+
+.share-user-list {
+    margin-top: 14px;
+}
+
+.share-user-item,
+.user-list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 13px 0;
+
+    border-bottom: 1px solid #e8edf3;
+}
+
+.share-user-icon,
+.user-list-icon {
+    width: 44px;
+    height: 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #ffffff;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--profile-primary),
+            var(--profile-secondary)
+        );
+
+    border-radius: 50%;
+}
+
+.share-user-information,
+.user-list-information {
+    flex: 1;
+}
+
+.share-user-information strong,
+.user-list-information strong {
+    display: block;
+}
+
+.share-user-information span,
+.user-list-information span {
+    color: #84909f;
+
+    font-size: 12px;
+}
+
+.share-user-checkbox {
+    width: 20px;
+    height: 20px;
+
+    accent-color: var(--profile-primary);
+}
+
+
+/* ========================================
+   ボタン
+======================================== */
 
 .modal-actions {
     display: flex;
@@ -932,156 +1394,60 @@ button {
 }
 
 .cancel-button {
-    color: #5f6b7a;
     background: #ffffff;
 
     border: 1px solid #d7dee7;
 }
 
-.cancel-button:hover {
-    background: #f5f7fa;
-}
-
 .save-button {
     color: #ffffff;
-    background: #2589ff;
+    background: var(--profile-primary);
 
-    border: 1px solid #2589ff;
-}
-
-.save-button:hover {
-    background: #1478e9;
-}
-
-.save-button:disabled,
-.delete-confirm-button:disabled {
-    opacity: 0.65;
-
-    cursor: wait;
+    border: none;
 }
 
 .delete-confirm-button {
     color: #ffffff;
     background: #e24646;
 
-    border: 1px solid #e24646;
+    border: none;
 }
 
-.delete-confirm-button:hover {
-    background: #ca3636;
-}
 
 /* ========================================
-   投稿削除確認
+   フォロー一覧
 ======================================== */
-
-.delete-confirm-modal {
-    width: min(430px, 100%);
-}
-
-.delete-confirm-modal p {
-    margin: 18px 0 0;
-
-    color: #697485;
-
-    line-height: 1.8;
-}
-
-.delete-post-preview {
-    padding: 14px;
-
-    color: #536070;
-    background: #f5f8fb;
-
-    border-left: 4px solid #2589ff;
-    border-radius: 8px;
-
-    line-height: 1.7;
-
-    word-break: break-word;
-}
-
-/* ========================================
-   フォロー・フォロワー一覧
-======================================== */
-
-.user-list-modal {
-    width: min(500px, 100%);
-}
-
-.user-list-item {
-    display: flex;
-    align-items: center;
-    gap: 13px;
-
-    padding: 15px 0;
-
-    border-bottom: 1px solid #edf0f4;
-}
-
-.user-list-item:last-child {
-    border-bottom: none;
-}
-
-.user-list-icon {
-    width: 48px;
-    height: 48px;
-
-    display: flex;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-
-    color: #ffffff;
-
-    background:
-        linear-gradient(
-            135deg,
-            #2589ff,
-            #25c8ca
-        );
-
-    border-radius: 50%;
-
-    font-weight: bold;
-}
 
 .user-list-information {
     min-width: 0;
-
-    flex: 1;
-}
-
-.user-list-information strong {
-    display: block;
-}
-
-.user-list-information span {
-    color: #8a94a3;
-
-    font-size: 13px;
 }
 
 .user-list-button {
     padding: 8px 14px;
 
-    color: #2589ff;
+    color: var(--profile-primary);
     background: #ffffff;
 
-    border: 1px solid #2589ff;
+    border: 1px solid var(--profile-primary);
     border-radius: 20px;
-
-    font-size: 13px;
-    font-weight: bold;
 }
 
 .user-list-button.following {
     color: #ffffff;
-    background: #2589ff;
+    background: var(--profile-primary);
 }
 
+.delete-post-preview {
+    padding: 14px;
+
+    background: #f5f8fb;
+
+    border-left: 4px solid var(--profile-primary);
+}
+
+
 /* ========================================
-   通知メッセージ
+   通知
 ======================================== */
 
 .toast {
@@ -1090,7 +1456,6 @@ button {
     right: 25px;
     bottom: 25px;
 
-    max-width: calc(100% - 50px);
     padding: 13px 20px;
 
     opacity: 0;
@@ -1101,14 +1466,9 @@ button {
 
     border-radius: 10px;
 
-    box-shadow: 0 10px 30px rgba(14, 35, 60, 0.25);
-
     transform: translateY(15px);
 
-    transition:
-        opacity 0.25s,
-        visibility 0.25s,
-        transform 0.25s;
+    transition: 0.25s;
 }
 
 .toast.show {
@@ -1117,6 +1477,7 @@ button {
 
     transform: translateY(0);
 }
+
 
 /* ========================================
    スマートフォン
@@ -1148,56 +1509,27 @@ button {
         width: 95px;
         height: 95px;
         margin-top: -48px;
-
-        font-size: 30px;
     }
 
     .profile-top-buttons {
         flex-direction: column-reverse;
-        align-items: flex-end;
-        gap: 7px;
-
-        margin-top: 12px;
     }
 
-    .edit-button,
-    .profile-copy-button {
-        padding: 8px 12px;
-
-        font-size: 12px;
-    }
-
-    .profile-name {
-        font-size: 24px;
-    }
-
-    .profile-meta {
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .profile-count {
-        gap: 16px;
-    }
-
-    .profile-count-button {
-        font-size: 13px;
-    }
-
-    .profile-posts {
-        margin-top: 12px;
+    .profile-tabs {
+        grid-template-columns:
+            repeat(4, minmax(76px, 1fr));
     }
 
     .post-tools {
         grid-template-columns: 1fr;
     }
 
-    .post-card {
-        padding: 18px;
+    .spot-list {
+        grid-template-columns: 1fr;
     }
 
-    .post-menu {
-        right: -3px;
+    .section-heading {
+        flex-direction: column;
     }
 
     .modal {
@@ -1215,61 +1547,17 @@ button {
         border-radius: 18px 18px 0 0;
     }
 
-    .image-edit-area {
-        margin:
-            -22px
-            -18px
-            90px;
+    .theme-color-picker-area {
+        grid-template-columns: 1fr;
     }
 
-    .edit-cover-preview {
-        height: 150px;
-    }
-
-    .cover-edit-buttons {
-        flex-direction: column;
-    }
-
-    .edit-icon-wrapper {
-        left: 18px;
-    }
-
-    .edit-icon-preview {
-        width: 95px;
-        height: 95px;
-
-        font-size: 29px;
-    }
-
-    .icon-edit-buttons {
-        top: 53px;
-        left: 105px;
-    }
-
-    .image-change-button,
-    .image-remove-button {
-        padding: 7px 10px;
-
-        font-size: 11px;
+    .theme-preview-card {
+        flex-wrap: wrap;
     }
 
     .modal-actions {
         display: grid;
         grid-template-columns: 1fr 1fr;
-    }
-
-    .cancel-button,
-    .save-button,
-    .delete-confirm-button {
-        width: 100%;
-        min-width: 0;
-    }
-
-    .toast {
-        right: 15px;
-        bottom: 15px;
-
-        max-width: calc(100% - 30px);
     }
 
 }
