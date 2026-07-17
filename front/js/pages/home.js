@@ -1,3 +1,13 @@
+import {
+    getCurrentUser,
+    ensureCurrentProfile,
+    createPost,
+    getTimelinePosts
+} from "../api.js";
+
+let currentUser = null;
+let currentProfile = null;
+
 const postForm = document.getElementById("postForm");
 const postContent = document.getElementById("postContent");
 const areaSelect = document.getElementById("areaSelect");
@@ -316,7 +326,7 @@ postContent.addEventListener("input", () => {
             : "#8791a0";
 });
 
-postForm.addEventListener("submit", (event) => {
+postForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     const content = postContent.value.trim();
@@ -327,10 +337,29 @@ postForm.addEventListener("submit", (event) => {
         return;
     }
 
-    const article =
-        createPostCard(content, area);
+    if (!currentUser) {
+        alert("ログイン情報を確認できません。もう一度ログインしてください。");
+        window.location.href = "./login.html";
+        return;
+    }
 
-    postList.prepend(article);
+    try {
+        const coordinates = getAreaCoordinates(area);
+        await createPost({
+            userId: currentUser.id,
+            content,
+            locationName: area,
+            latitude: coordinates.lat,
+            longitude: coordinates.lng
+        });
+
+        const article = createPostCard(content, area);
+        postList.prepend(article);
+    } catch (error) {
+        console.error("投稿保存エラー:", error);
+        alert("投稿を保存できませんでした。SupabaseのRLS設定を確認してください。");
+        return;
+    }
 
     postContent.value = "";
     areaSelect.value = "沖縄県";
@@ -356,7 +385,7 @@ function createPostCard(content, area) {
 
     article.innerHTML = `
         <div class="post-user-icon">
-            沖
+            ${escapeHtml((currentProfile?.display_name || "沖").charAt(0))}
         </div>
 
         <div class="post-main">
@@ -364,8 +393,8 @@ function createPostCard(content, area) {
             <div class="post-header">
 
                 <div>
-                    <strong>沖縄 太郎</strong>
-                    <span>@okinawa_taro</span>
+                    <strong>${escapeHtml(currentProfile?.display_name || "ユーザー")}</strong>
+                    <span>@${escapeHtml(currentProfile?.username || "user")}</span>
                 </div>
 
                 <span class="post-time">
@@ -536,3 +565,60 @@ function escapeHtml(value) {
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
 }
+
+/* ================================
+   Supabaseユーザー初期化
+================================ */
+async function initializeCurrentUser() {
+    try {
+        currentUser = await getCurrentUser();
+        if (!currentUser) {
+            window.location.href = "./login.html";
+            return;
+        }
+
+        currentProfile = await ensureCurrentProfile(currentUser);
+
+        const displayName = document.getElementById("currentUserDisplayName");
+        const username = document.getElementById("currentUsername");
+        const email = document.getElementById("currentUserEmail");
+        const avatar = document.getElementById("currentUserAvatar");
+        const postIcon = document.querySelector(".post-form-icon");
+
+        if (displayName) displayName.textContent = currentProfile.display_name;
+        if (username) username.textContent = `@${currentProfile.username}`;
+        if (email) email.textContent = currentUser.email || "";
+        if (avatar) avatar.textContent = (currentProfile.display_name || "沖").charAt(0);
+        if (postIcon) postIcon.textContent = (currentProfile.display_name || "沖").charAt(0);
+
+        await renderSupabaseTimeline();
+    } catch (error) {
+        console.error("ホーム初期化エラー:", error);
+        alert("ユーザー情報を読み込めませんでした。");
+    }
+}
+
+async function renderSupabaseTimeline() {
+    try {
+        const posts = await getTimelinePosts();
+        if (!posts.length) return;
+        postList.innerHTML = "";
+        posts.forEach((post) => {
+            const profile = post.profiles || {};
+            const article = createPostCard(post.content, post.location_name || "沖縄県");
+            const strong = article.querySelector(".post-header strong");
+            const handle = article.querySelector(".post-header span");
+            const icon = article.querySelector(".post-user-icon");
+            const time = article.querySelector(".post-time");
+            if (strong) strong.textContent = profile.display_name || "ユーザー";
+            if (handle) handle.textContent = `@${profile.username || "user"}`;
+            if (icon) icon.textContent = (profile.display_name || "沖").charAt(0);
+            if (time) time.textContent = new Date(post.created_at).toLocaleString("ja-JP");
+            postList.appendChild(article);
+        });
+    } catch (error) {
+        console.error("投稿一覧取得エラー:", error);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", initializeCurrentUser);

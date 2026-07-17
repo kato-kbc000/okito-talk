@@ -622,3 +622,28 @@ input {
         justify-content: space-between;
     }
 }
+/* ログイン中ユーザー */
+.current-user-card {
+    width: min(1500px, calc(100% - 32px));
+    margin: 18px auto 0;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #fff;
+    border: 1px solid #e1e6ed;
+    border-radius: 16px;
+}
+.current-user-avatar {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    background: linear-gradient(135deg, #2589ff, #29c5c8);
+    border-radius: 50%;
+    font-weight: 800;
+}
+.current-user-info { display: flex; flex-direction: column; min-width: 0; }
+.current-user-info span { color: #758092; font-size: 13px; overflow-wrap: anywhere; }
+.current-user-card > a { margin-left: auto; color: #2589ff; font-weight: 700; text-decoration: none; }

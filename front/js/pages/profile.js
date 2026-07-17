@@ -1,3 +1,13 @@
+import {
+    getCurrentUser,
+    ensureCurrentProfile,
+    updateProfile,
+    isUsernameTaken,
+    getUserPosts
+} from "../api.js";
+
+let authUser = null;
+
 "use strict";
 
 /* ========================================
@@ -1592,7 +1602,7 @@ function openProfileEditModal() {
    プロフィールを保存
 ======================================== */
 
-function saveProfile(event) {
+async function saveProfile(event) {
     event.preventDefault();
 
     const name =
@@ -1617,6 +1627,34 @@ function saveProfile(event) {
             .textContent =
                 "ユーザーIDは3〜20文字の半角英数字とアンダーバーで入力してください。";
 
+        return;
+    }
+
+    try {
+        if (!authUser) {
+            throw new Error("ログインユーザーを取得できません。");
+        }
+
+        const taken = await isUsernameTaken(userId, authUser.id);
+        if (taken) {
+            elements.profileFormError.textContent =
+                "このユーザーIDはすでに使用されています。";
+            return;
+        }
+
+        await updateProfile(authUser.id, {
+            username: userId,
+            displayName: name,
+            bio: elements.editDescription.value.trim(),
+            city: elements.editLocation.value.trim(),
+            avatarUrl: temporaryIconImage || null,
+            headerUrl: temporaryCoverImage || null,
+            isPrivate: false
+        });
+    } catch (error) {
+        console.error("プロフィール更新エラー:", error);
+        elements.profileFormError.textContent =
+            `プロフィールを保存できませんでした：${error.message}`;
         return;
     }
 
@@ -2791,7 +2829,42 @@ function setupEventListeners() {
    ページ初期化
 ======================================== */
 
-function initializeProfilePage() {
+async function initializeProfilePage() {
+    try {
+        authUser = await getCurrentUser();
+        if (!authUser) {
+            window.location.href = "../login.html";
+            return;
+        }
+
+        const dbProfile = await ensureCurrentProfile(authUser);
+        profileData = {
+            ...profileData,
+            name: dbProfile.display_name,
+            userId: dbProfile.username,
+            description: dbProfile.bio || "",
+            location: dbProfile.city || "",
+            iconImage: dbProfile.avatar_url || "",
+            coverImage: dbProfile.header_url || ""
+        };
+
+        const dbPosts = await getUserPosts(authUser.id);
+        postData = dbPosts.map((post, index) => normalizePost({
+            id: index + 1,
+            text: post.content,
+            location: post.location_name || "",
+            createdAt: new Date(post.created_at).getTime(),
+            liked: false,
+            saved: false,
+            likeCount: 0,
+            pinned: false,
+            visibility: "public"
+        }, index));
+    } catch (error) {
+        console.error("プロフィール読み込みエラー:", error);
+        showToast("プロフィール情報を読み込めませんでした。");
+    }
+
     /* 動作確認用の相互フォローを追加 */
     ensureDemoMutualFollow();
 
