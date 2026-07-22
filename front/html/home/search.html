@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Explore / Search</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../css/pages/search.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M12 2 L20 20 L12 15 L4 20 Z" fill="url(#g1)"/><defs><linearGradient id="g1" x1="4" y1="2" x2="20" y2="20"><stop offset="0" stop-color="#1a73f0"/><stop offset="1" stop-color="#5ec6ff"/></linearGradient></defs></svg>
+      <span>Ripple</span>
+    </div>
+    <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg><span>ホーム</span></a>
+    <a class="nav-item active" href="#"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span>検索</span></a>
+    <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span>通知</span></a>
+    <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>メッセージ</span></a>
+    <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><span>プロフィール</span></a>
+    <button class="post-btn">投稿する</button>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="search-wrap">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="searchInput" type="text" placeholder="検索キーワードを入力" autocomplete="off">
+        <button class="clear-btn" id="clearBtn">×</button>
+        <div class="suggestions" id="suggestions"></div>
+      </div>
+
+      <div class="tabs" id="tabs">
+        <div class="tab active" data-panel="top">おすすめ</div>
+        <div class="tab" data-panel="people">アカウント</div>
+        <div class="tab" data-panel="media">写真・動画</div>
+        <div class="tab-indicator" id="tabIndicator"></div>
+      </div>
+    </div>
+
+    <!-- Top / trending panel -->
+    <div class="panel active" id="panel-top">
+      <div class="section-title">今、話題になっています</div>
+      <div id="trendList"></div>
+    </div>
+
+    <!-- People panel -->
+    <div class="panel" id="panel-people">
+      <div class="section-title">おすすめのアカウント</div>
+      <div id="peopleList"></div>
+    </div>
+
+    <!-- Media panel -->
+    <div class="panel" id="panel-media">
+      <div class="section-title">人気の投稿</div>
+      <div class="explore-grid" id="exploreGrid"></div>
+    </div>
+
+    <div class="empty" id="emptyState" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <div class="title">見つかりませんでした</div>
+      <div>別のキーワードで試してみてください</div>
+    </div>
+  </div>
+
+  <!-- Right rail -->
+  <div class="rail">
+    <div class="rail-card">
+      <h3>カテゴリから探す</h3>
+      <span class="rail-tag">テクノロジー</span>
+      <span class="rail-tag">音楽</span>
+      <span class="rail-tag">スポーツ</span>
+      <span class="rail-tag">アニメ</span>
+      <span class="rail-tag">ゲーム</span>
+      <span class="rail-tag">ニュース</span>
+      <span class="rail-tag">旅行</span>
+      <span class="rail-tag">グルメ</span>
+    </div>
+    <div class="rail-card">
+      <h3>最近の検索</h3>
+      <span class="rail-tag">#青の写真</span>
+      <span class="rail-tag">週末の予定</span>
+      <span class="rail-tag">新作アプリ</span>
+    </div>
+  </div>
+
+</div>
+
+<script src="../../js/pages/search.js"></script>
+
+</body>
+</html>
