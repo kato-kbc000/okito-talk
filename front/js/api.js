@@ -137,3 +137,82 @@ export async function getUserPosts(userId) {
     if (error) throw error;
     return data ?? [];
 }
+
+export async function searchProfiles(keyword = '') {
+    let query = supabase.from('profiles').select('*').order('display_name');
+    const term = keyword.trim();
+    if (term) query = query.or(`display_name.ilike.%${term}%,username.ilike.%${term}%,bio.ilike.%${term}%`);
+    const { data, error } = await query.limit(30);
+    if (error) throw error;
+    return data ?? [];
+}
+
+export async function searchPosts(keyword = '') {
+    let query = supabase
+        .from('posts')
+        .select('*, profiles:user_id(username, display_name, avatar_url)')
+        .order('created_at', { ascending: false });
+    const term = keyword.trim();
+    if (term) query = query.ilike('content', `%${term}%`);
+    const { data, error } = await query.limit(40);
+    if (error) throw error;
+    return data ?? [];
+}
+
+export async function deletePost(postId, userId) {
+    const { error } = await supabase.from('posts').delete().eq('id', postId).eq('user_id', userId);
+    if (error) throw error;
+}
+
+export async function updatePost(postId, userId, values) {
+    const { data, error } = await supabase.from('posts').update(values).eq('id', postId).eq('user_id', userId).select().single();
+    if (error) throw error;
+    return data;
+}
+
+export async function createPlace({ userId, name, address, description = null, latitude = null, longitude = null }) {
+    const { data, error } = await supabase.from('places').insert({
+        user_id: userId, name, address, description, latitude, longitude
+    }).select().single();
+    if (error) throw error;
+    return data;
+}
+
+export async function getPlaces() {
+    const { data, error } = await supabase.from('places').select('*, profiles:user_id(username, display_name)').order('created_at', { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+}
+
+export async function getOtherProfiles(currentUserId) {
+    const { data, error } = await supabase.from('profiles').select('*').neq('id', currentUserId).order('display_name').limit(50);
+    if (error) throw error;
+    return data ?? [];
+}
+export async function getMessages(userId, otherUserId) {
+    const { data, error } = await supabase.from('messages').select('*')
+      .or(`and(sender_id.eq.${userId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${userId})`)
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    return data ?? [];
+}
+export async function sendMessage({ senderId, receiverId, content }) {
+    const { data, error } = await supabase.from('messages').insert({ sender_id: senderId, receiver_id: receiverId, content }).select().single();
+    if (error) throw error;
+    return data;
+}
+export async function getCommunities() {
+    const { data, error } = await supabase.from('communities').select('*, profiles:owner_id(username, display_name)').order('created_at', { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+}
+export async function createCommunity({ ownerId, name, description }) {
+    const { data, error } = await supabase.from('communities').insert({ owner_id: ownerId, name, description }).select().single();
+    if (error) throw error;
+    await supabase.from('community_members').insert({ community_id: data.id, user_id: ownerId });
+    return data;
+}
+export async function joinCommunity(communityId, userId) {
+    const { error } = await supabase.from('community_members').upsert({ community_id: communityId, user_id: userId }, { onConflict: 'community_id,user_id' });
+    if (error) throw error;
+}

@@ -1,624 +1,146 @@
 import {
-    getCurrentUser,
-    ensureCurrentProfile,
-    createPost,
-    getTimelinePosts
-} from "../api.js";
+  getCurrentUser, ensureCurrentProfile, createPost, getTimelinePosts,
+  createPlace, getPlaces
+} from '../api.js';
 
-let currentUser = null;
-let currentProfile = null;
-
-const postForm = document.getElementById("postForm");
-const postContent = document.getElementById("postContent");
-const areaSelect = document.getElementById("areaSelect");
-const characterCount = document.getElementById("characterCount");
-const postList = document.getElementById("postList");
-
-const placeForm = document.getElementById("placeForm");
-const placeName = document.getElementById("placeName");
-const placeAddress =
-    document.getElementById("placeAddress");
-
-const addPinButton =
-    document.getElementById("addPinButton");
-
-const resetMapButton = document.getElementById("resetMapButton");
-const mapStatus = document.getElementById("mapStatus");
-
-const maximumLength = 200;
-
-const okinawaCenter = {
-    lat: 26.3344,
-    lng: 127.8056
+const $ = (id) => document.getElementById(id);
+const state = { user: null, profile: null, posts: [], places: [], area: 'all', selectedLocation: null, map: null, layers: null };
+const areaCoordinates = {
+  '沖縄県':[26.2124,127.6809], '那覇市':[26.2124,127.6809], '浦添市':[26.2458,127.7219],
+  '宜野湾市':[26.2816,127.7786], '沖縄市':[26.3344,127.8056], '名護市':[26.5916,127.9773],
+  '糸満市':[26.1236,127.6658], 'うるま市':[26.3790,127.8575]
 };
 
-let map;
-let geocoder;
-let markers = [];
-
-/* ================================
-   Google Maps
-================================ */
-
-window.initMap = function () {
-    const mapElement =
-        document.getElementById("map");
-
-    if (!mapElement) {
-        console.error("地図の要素が見つかりません。");
-        return;
-    }
-
-    map = new google.maps.Map(mapElement, {
-        center: okinawaCenter,
-        zoom: 9,
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: true
-    });
-
-    geocoder = new google.maps.Geocoder();
-
-    const defaultPlaces = [
-        {
-            name: "瀬長島",
-            lat: 26.1746,
-            lng: 127.6764,
-            description: "海がきれいなおすすめスポット"
-        },
-        {
-            name: "那覇市",
-            lat: 26.2124,
-            lng: 127.6809,
-            description: "国際通りやカフェの投稿"
-        },
-        {
-            name: "沖縄市",
-            lat: 26.3344,
-            lng: 127.8056,
-            description: "エイサーイベント情報"
-        },
-        {
-            name: "北谷町",
-            lat: 26.3158,
-            lng: 127.7575,
-            description: "海沿いのお店やカフェ"
-        },
-        {
-            name: "名護市",
-            lat: 26.5915,
-            lng: 127.9773,
-            description: "北部のおすすめ情報"
-        }
-    ];
-
-    defaultPlaces.forEach((place) => {
-        addMapMarker(place);
-    });
-
-    mapStatus.textContent =
-        `${defaultPlaces.length}件の場所を表示しています。`;
-
-    connectPostMapButtons();
-};
-
-function addMapMarker(place) {
-    if (!map) {
-        return;
-    }
-
-    const marker = new google.maps.Marker({
-        map: map,
-        position: {
-            lat: place.lat,
-            lng: place.lng
-        },
-        title: place.name
-    });
-
-    const addressHtml = place.address
-        ? `<p>${escapeHtml(place.address)}</p>`
-        : "";
-
-    const descriptionHtml = place.description
-        ? `<p>${escapeHtml(place.description)}</p>`
-        : "";
-
-    const infoWindow = new google.maps.InfoWindow({
-        content: `
-            <div class="map-info-window">
-                <strong>
-                    ${escapeHtml(place.name)}
-                </strong>
-
-                ${addressHtml}
-                ${descriptionHtml}
-            </div>
-        `
-    });
-
-    marker.addListener("click", () => {
-        markers.forEach((item) => {
-            item.infoWindow.close();
-        });
-
-        infoWindow.open({
-            map: map,
-            anchor: marker
-        });
-
-        map.panTo(marker.getPosition());
-        map.setZoom(15);
-
-        mapStatus.textContent =
-            `${place.name}を表示しています。`;
-    });
-
-    markers.push({
-        marker: marker,
-        infoWindow: infoWindow,
-        place: place
-    });
+function escapeHtml(value='') { const d=document.createElement('div'); d.textContent=String(value); return d.innerHTML; }
+function firstChar(value='沖') { return [...String(value).trim()][0] || '沖'; }
+function timeAgo(value) {
+  const sec=Math.max(0,Math.floor((Date.now()-new Date(value).getTime())/1000));
+  if(sec<60)return 'たった今'; if(sec<3600)return `${Math.floor(sec/60)}分前`;
+  if(sec<86400)return `${Math.floor(sec/3600)}時間前`; if(sec<604800)return `${Math.floor(sec/86400)}日前`;
+  return new Date(value).toLocaleDateString('ja-JP');
+}
+function showMessage(message, isError=false) {
+  const el=$('filterResultMessage'); if(!el)return; el.textContent=message; el.style.color=isError?'#b91c1c':'';
 }
 
-function focusMap(lat, lng, label) {
-    if (!map) {
-        return;
-    }
-
-    map.panTo({
-        lat,
-        lng
-    });
-
-    map.setZoom(14);
-
-    mapStatus.textContent =
-        `${label}付近を表示しています。`;
-
-    document
-        .getElementById("mapSection")
-        .scrollIntoView({
-            behavior: "smooth",
-            block: "start"
-        });
-}
-
-function connectPostMapButtons() {
-    const postCards =
-        document.querySelectorAll(".post-card");
-
-    postCards.forEach((card) => {
-        const button =
-            card.querySelector(".map-focus-button");
-
-        if (!button) {
-            return;
-        }
-
-        button.addEventListener("click", () => {
-            const lat = Number(card.dataset.lat);
-            const lng = Number(card.dataset.lng);
-            const label = button.textContent.trim();
-
-            focusMap(lat, lng, label);
-        });
-    });
-}
-
-resetMapButton.addEventListener("click", () => {
-    if (!map) {
-        return;
-    }
-
-    map.setCenter(okinawaCenter);
-    map.setZoom(9);
-
-    markers.forEach((item) => {
-        item.infoWindow.close();
-    });
-
-    mapStatus.textContent =
-        `${markers.length}件の場所を表示しています。`;
-});
-
-/* ================================
-   ピン追加
-================================ */
-
-placeForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-
-    const name = placeName.value.trim();
-    const address = placeAddress.value.trim();
-
-    if (!name) {
-        alert("場所の名前を入力してください。");
-        return;
-    }
-
-    if (!address) {
-        alert("住所を入力してください。");
-        return;
-    }
-
-    if (!geocoder) {
-        alert("地図の準備がまだ完了していません。");
-        return;
-    }
-
-    addPinButton.disabled = true;
-    addPinButton.textContent = "住所を検索中...";
-
-    try {
-        const response = await geocoder.geocode({
-            address: address,
-
-            // 日本国内の結果を優先
-            region: "jp",
-
-            // 沖縄県内の結果に絞りやすくする
-            componentRestrictions: {
-                country: "JP",
-                administrativeArea: "沖縄県"
-            }
-        });
-
-        if (!response.results.length) {
-            alert(
-                "住所が見つかりませんでした。\n" +
-                "市町村名や番地を確認してください。"
-            );
-            return;
-        }
-
-        const result = response.results[0];
-        const location = result.geometry.location;
-
-        const lat = location.lat();
-        const lng = location.lng();
-        const formattedAddress = result.formatted_address;
-
-        addMapMarker({
-            name: name,
-            lat: lat,
-            lng: lng,
-            address: formattedAddress,
-            description: "ユーザーが追加した場所"
-        });
-
-        focusMap(
-            lat,
-            lng,
-            `${name}（${formattedAddress}）`
-        );
-
-        mapStatus.textContent =
-            `${name}を地図へ追加しました。`;
-
-        placeForm.reset();
-    } catch (error) {
-        console.error("住所検索エラー:", error);
-
-        alert(
-            "住所の検索に失敗しました。\n" +
-            "Geocoding APIの設定を確認してください。"
-        );
-    } finally {
-        addPinButton.disabled = false;
-        addPinButton.textContent = "地図に追加";
-    }
-});
-
-/* ================================
-   投稿フォーム
-================================ */
-
-postContent.addEventListener("input", () => {
-    const length = postContent.value.length;
-
-    characterCount.textContent =
-        `${length} / ${maximumLength}`;
-
-    characterCount.style.color =
-        length >= maximumLength
-            ? "#e5484d"
-            : "#8791a0";
-});
-
-postForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-
-    const content = postContent.value.trim();
-    const area = areaSelect.value;
-
-    if (!content) {
-        alert("投稿内容を入力してください。");
-        return;
-    }
-
-    if (!currentUser) {
-        alert("ログイン情報を確認できません。もう一度ログインしてください。");
-        window.location.href = "./login.html";
-        return;
-    }
-
-    try {
-        const coordinates = getAreaCoordinates(area);
-        await createPost({
-            userId: currentUser.id,
-            content,
-            locationName: area,
-            latitude: coordinates.lat,
-            longitude: coordinates.lng
-        });
-
-        const article = createPostCard(content, area);
-        postList.prepend(article);
-    } catch (error) {
-        console.error("投稿保存エラー:", error);
-        alert("投稿を保存できませんでした。SupabaseのRLS設定を確認してください。");
-        return;
-    }
-
-    postContent.value = "";
-    areaSelect.value = "沖縄県";
-
-    characterCount.textContent =
-        `0 / ${maximumLength}`;
-
-    characterCount.style.color =
-        "#8791a0";
-});
-
-function createPostCard(content, area) {
-    const coordinates =
-        getAreaCoordinates(area);
-
-    const article =
-        document.createElement("article");
-
-    article.className = "post-card";
-    article.dataset.lat = coordinates.lat;
-    article.dataset.lng = coordinates.lng;
-    article.dataset.following = "true";
-
-    article.innerHTML = `
-        <div class="post-user-icon">
-            ${escapeHtml((currentProfile?.display_name || "沖").charAt(0))}
+function renderPosts() {
+  const list=$('postList'); if(!list)return;
+  const posts=state.posts.filter(p => state.area==='all' || p.location_name===state.area || p.location_address?.includes(state.area));
+  list.innerHTML=''; $('emptyPostMessage')?.style.setProperty('display', posts.length ? 'none' : 'block');
+  posts.forEach(post => {
+    const profile=post.profiles || {};
+    const article=document.createElement('article'); article.className='post-card';
+    article.dataset.lat=post.latitude ?? ''; article.dataset.lng=post.longitude ?? '';
+    article.innerHTML=`
+      <div class="post-user-icon">${escapeHtml(firstChar(profile.display_name || profile.username))}</div>
+      <div class="post-main">
+        <div class="post-header"><div><strong>${escapeHtml(profile.display_name || 'ユーザー')}</strong><span>@${escapeHtml(profile.username || 'user')}</span></div><span class="post-time">${timeAgo(post.created_at)}</span></div>
+        <p class="post-text">${escapeHtml(post.content).replaceAll('\n','<br>')}</p>
+        ${post.image_url ? `<img class="post-image" src="${escapeHtml(post.image_url)}" alt="投稿画像" loading="lazy">` : ''}
+        <div class="post-bottom">
+          ${post.location_name || post.location_address ? `<button type="button" class="map-focus-button">📍${escapeHtml(post.location_name || post.location_address)}</button>` : '<span></span>'}
         </div>
-
-        <div class="post-main">
-
-            <div class="post-header">
-
-                <div>
-                    <strong>${escapeHtml(currentProfile?.display_name || "ユーザー")}</strong>
-                    <span>@${escapeHtml(currentProfile?.username || "user")}</span>
-                </div>
-
-                <span class="post-time">
-                    たった今
-                </span>
-
-            </div>
-
-            <p class="post-text"></p>
-
-            <div class="post-bottom">
-
-                <button
-                    type="button"
-                    class="map-focus-button"
-                ></button>
-
-                <button
-                    type="button"
-                    class="like-button"
-                >
-                    ♡ 0
-                </button>
-
-            </div>
-
-        </div>
-    `;
-
-    article
-        .querySelector(".post-text")
-        .textContent = content;
-
-    const mapButton =
-        article.querySelector(".map-focus-button");
-
-    mapButton.textContent = `📍${area}`;
-
-    mapButton.addEventListener("click", () => {
-        focusMap(
-            coordinates.lat,
-            coordinates.lng,
-            area
-        );
-    });
-
-    addLikeEvent(
-        article.querySelector(".like-button")
-    );
-
-    addMapMarker({
-        name: area,
-        lat: coordinates.lat,
-        lng: coordinates.lng,
-        description: content
-    });
-
-    return article;
+      </div>`;
+    article.querySelector('.map-focus-button')?.addEventListener('click',()=>focusPost(post));
+    list.appendChild(article);
+  });
+  showMessage(state.area==='all' ? `${posts.length}件の投稿を表示しています。` : `${state.area}の投稿：${posts.length}件`);
+  refreshMap();
 }
 
-function getAreaCoordinates(area) {
-    const coordinates = {
-        "沖縄県": {
-            lat: 26.3344,
-            lng: 127.8056
-        },
-        "那覇市": {
-            lat: 26.2124,
-            lng: 127.6809
-        },
-        "浦添市": {
-            lat: 26.2458,
-            lng: 127.7218
-        },
-        "宜野湾市": {
-            lat: 26.2816,
-            lng: 127.7785
-        },
-        "沖縄市": {
-            lat: 26.3344,
-            lng: 127.8056
-        },
-        "名護市": {
-            lat: 26.5915,
-            lng: 127.9773
-        },
-        "糸満市": {
-            lat: 26.1236,
-            lng: 127.6658
-        },
-        "うるま市": {
-            lat: 26.3790,
-            lng: 127.8575
-        }
-    };
-
-    return coordinates[area] || coordinates["沖縄県"];
+function initMap() {
+  if(!window.L || !$('map')) return;
+  state.map=L.map('map').setView([26.2124,127.6809],9);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(state.map);
+  state.layers=L.layerGroup().addTo(state.map);
+  state.map.on('click', e => {
+    state.selectedLocation={latitude:e.latlng.lat,longitude:e.latlng.lng};
+    $('postLocationStatusText').textContent=`地図で選択：${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
+    $('postLocationStatus')?.classList.add('active');
+  });
+}
+function refreshMap() {
+  if(!state.layers)return; state.layers.clearLayers();
+  const bounds=[];
+  [...state.posts.map(p=>({...p,kind:'post'})),...state.places.map(p=>({...p,kind:'place'}))].forEach(item=>{
+    const lat=Number(item.latitude),lng=Number(item.longitude); if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
+    const label=item.kind==='post' ? item.content : `${item.name}${item.description?`<br>${item.description}`:''}`;
+    L.marker([lat,lng]).bindPopup(escapeHtml(label)).addTo(state.layers); bounds.push([lat,lng]);
+  });
+  if(bounds.length) state.map.fitBounds(bounds,{padding:[24,24],maxZoom:13});
+}
+function focusPost(post) {
+  const lat=Number(post.latitude),lng=Number(post.longitude);
+  if(Number.isFinite(lat)&&Number.isFinite(lng)) state.map?.setView([lat,lng],15);
+  else if(areaCoordinates[post.location_name]) state.map?.setView(areaCoordinates[post.location_name],13);
+  document.getElementById('mapSection')?.scrollIntoView({behavior:'smooth'});
 }
 
-/* ================================
-   全体・フォロー中タブ
-================================ */
+async function geocode(address) {
+  const response=await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=jp&q=${encodeURIComponent(address)}`,{headers:{'Accept-Language':'ja'}});
+  if(!response.ok) throw new Error('住所検索に失敗しました。');
+  const data=await response.json(); if(!data[0]) throw new Error('住所から場所を見つけられませんでした。');
+  return {latitude:Number(data[0].lat),longitude:Number(data[0].lon)};
+}
 
-const timelineTabs =
-    document.querySelectorAll(".timeline-tab");
+async function loadData() {
+  [state.posts,state.places]=await Promise.all([getTimelinePosts(),getPlaces().catch(()=>[])]);
+  renderPosts();
+}
 
-timelineTabs.forEach((tab) => {
-    tab.addEventListener("click", () => {
-        timelineTabs.forEach((item) => {
-            item.classList.remove("active");
-        });
+async function init() {
+  try {
+    state.user=await getCurrentUser();
+    if(!state.user){ location.replace('login.html'); return; }
+    state.profile=await ensureCurrentProfile(state.user);
+    ['currentUserAvatar','postFormAvatar'].forEach(id=>{if($(id))$(id).textContent=firstChar(state.profile.display_name)});
+    if($('currentUserDisplayName'))$('currentUserDisplayName').textContent=state.profile.display_name;
+    if($('currentUsername'))$('currentUsername').textContent=`@${state.profile.username}`;
+    if($('currentUserEmail'))$('currentUserEmail').textContent=state.user.email || '';
+    initMap(); await loadData();
+  } catch(error) { console.error(error); alert(`ホームの読み込みに失敗しました：${error.message}`); }
+}
 
-        tab.classList.add("active");
+$('postContent')?.addEventListener('input',e=>{$('characterCount').textContent=`${e.target.value.length} / 200`;});
+$('placeDescription')?.addEventListener('input',e=>{$('placeDescriptionCount').textContent=`${e.target.value.length} / 150`;});
+$('areaFilterSelect')?.addEventListener('change',e=>{state.area=e.target.value;renderPosts();});
+$('clearAreaFilterButton')?.addEventListener('click',()=>{state.area='all';$('areaFilterSelect').value='all';renderPosts();});
+$('resetMapButton')?.addEventListener('click',()=>state.map?.setView([26.2124,127.6809],9));
+$('cancelPostLocationButton')?.addEventListener('click',()=>{state.selectedLocation=null;$('postLocationStatusText').textContent='';$('postLocationStatus')?.classList.remove('active');});
+$('useCurrentLocationButton')?.addEventListener('click',()=>navigator.geolocation?.getCurrentPosition(pos=>{
+  state.selectedLocation={latitude:pos.coords.latitude,longitude:pos.coords.longitude};
+  $('postLocationStatusText').textContent='現在地を投稿に追加します。'; $('postLocationStatus')?.classList.add('active');
+  state.map?.setView([pos.coords.latitude,pos.coords.longitude],15);
+},()=>alert('現在地を取得できませんでした。')));
+$('postImage')?.addEventListener('change',()=>alert('画像アップロードはStorage設定後に利用できます。今回は画像なしで投稿してください。'));
+$('removeImageButton')?.addEventListener('click',()=>{if($('postImage'))$('postImage').value='';$('imagePreviewContainer').style.display='none';});
 
-        const selectedTab = tab.dataset.tab;
-        const posts =
-            document.querySelectorAll(".post-card");
-
-        posts.forEach((post) => {
-            if (selectedTab === "all") {
-                post.hidden = false;
-                return;
-            }
-
-            post.hidden =
-                post.dataset.following !== "true";
-        });
-    });
+$('postForm')?.addEventListener('submit',async e=>{
+  e.preventDefault(); const content=$('postContent').value.trim(); if(!content)return;
+  const button=e.currentTarget.querySelector('[type="submit"]'); button.disabled=true;
+  try {
+    const area=$('areaSelect').value;
+    await createPost({userId:state.user.id,content,locationName:area,latitude:state.selectedLocation?.latitude ?? areaCoordinates[area]?.[0] ?? null,longitude:state.selectedLocation?.longitude ?? areaCoordinates[area]?.[1] ?? null});
+    e.currentTarget.reset(); $('characterCount').textContent='0 / 200'; state.selectedLocation=null; await loadData();
+  } catch(error){alert(`投稿に失敗しました：${error.message}`);} finally{button.disabled=false;}
 });
 
-/* ================================
-   いいね
-================================ */
+$('placeForm')?.addEventListener('submit',async e=>{
+  e.preventDefault(); const button=$('addPinButton'); button.disabled=true;
+  try {
+    const address=$('placeAddress').value.trim(); const coords=state.selectedLocation || await geocode(address);
+    await createPlace({userId:state.user.id,name:$('placeName').value.trim(),address,description:$('placeDescription')?.value.trim()||null,...coords});
+    e.currentTarget.reset(); state.selectedLocation=null; await loadData(); alert('地図に追加しました。');
+  } catch(error){alert(`ピンを追加できませんでした：${error.message}`);} finally{button.disabled=false;}
+});
 
-document
-    .querySelectorAll(".like-button")
-    .forEach((button) => {
-        addLikeEvent(button);
-    });
+$('useCurrentLocationForPinButton')?.addEventListener('click',()=>navigator.geolocation?.getCurrentPosition(pos=>{
+  state.selectedLocation={latitude:pos.coords.latitude,longitude:pos.coords.longitude}; $('placeAddress').value='現在地'; $('clearPinLocationButton').hidden=false;
+},()=>alert('現在地を取得できませんでした。')));
+$('clearPinLocationButton')?.addEventListener('click',()=>{state.selectedLocation=null;$('placeAddress').value='';$('clearPinLocationButton').hidden=true;});
 
-function addLikeEvent(button) {
-    button.addEventListener("click", () => {
-        const currentText =
-            button.textContent.trim();
+const menu=$('mobileMenuDrawer');
+function toggleMenu(open){if(!menu)return;menu.setAttribute('aria-hidden',String(!open));menu.classList.toggle('open',open);$('mobileMenuButton')?.setAttribute('aria-expanded',String(open));}
+$('mobileMenuButton')?.addEventListener('click',()=>toggleMenu(true)); $('mobileMenuCloseButton')?.addEventListener('click',()=>toggleMenu(false)); $('mobileMenuBackdrop')?.addEventListener('click',()=>toggleMenu(false));
 
-        const currentCount =
-            Number(currentText.replace(/\D/g, "")) || 0;
-
-        const isLiked =
-            button.classList.toggle("liked");
-
-        button.textContent =
-            isLiked
-                ? `♥ ${currentCount + 1}`
-                : `♡ ${Math.max(0, currentCount - 1)}`;
-    });
-}
-
-/* ================================
-   HTMLエスケープ
-================================ */
-
-function escapeHtml(value) {
-    return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
-
-/* ================================
-   Supabaseユーザー初期化
-================================ */
-async function initializeCurrentUser() {
-    try {
-        currentUser = await getCurrentUser();
-        if (!currentUser) {
-            window.location.href = "./login.html";
-            return;
-        }
-
-        currentProfile = await ensureCurrentProfile(currentUser);
-
-        const displayName = document.getElementById("currentUserDisplayName");
-        const username = document.getElementById("currentUsername");
-        const email = document.getElementById("currentUserEmail");
-        const avatar = document.getElementById("currentUserAvatar");
-        const postIcon = document.querySelector(".post-form-icon");
-
-        if (displayName) displayName.textContent = currentProfile.display_name;
-        if (username) username.textContent = `@${currentProfile.username}`;
-        if (email) email.textContent = currentUser.email || "";
-        if (avatar) avatar.textContent = (currentProfile.display_name || "沖").charAt(0);
-        if (postIcon) postIcon.textContent = (currentProfile.display_name || "沖").charAt(0);
-
-        await renderSupabaseTimeline();
-    } catch (error) {
-        console.error("ホーム初期化エラー:", error);
-        alert("ユーザー情報を読み込めませんでした。");
-    }
-}
-
-async function renderSupabaseTimeline() {
-    try {
-        const posts = await getTimelinePosts();
-        if (!posts.length) return;
-        postList.innerHTML = "";
-        posts.forEach((post) => {
-            const profile = post.profiles || {};
-            const article = createPostCard(post.content, post.location_name || "沖縄県");
-            const strong = article.querySelector(".post-header strong");
-            const handle = article.querySelector(".post-header span");
-            const icon = article.querySelector(".post-user-icon");
-            const time = article.querySelector(".post-time");
-            if (strong) strong.textContent = profile.display_name || "ユーザー";
-            if (handle) handle.textContent = `@${profile.username || "user"}`;
-            if (icon) icon.textContent = (profile.display_name || "沖").charAt(0);
-            if (time) time.textContent = new Date(post.created_at).toLocaleString("ja-JP");
-            postList.appendChild(article);
-        });
-    } catch (error) {
-        console.error("投稿一覧取得エラー:", error);
-    }
-}
-
-document.addEventListener("DOMContentLoaded", initializeCurrentUser);
+document.addEventListener('DOMContentLoaded',init);

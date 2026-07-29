@@ -1,67 +1,594 @@
-/* ==========================
-   Header
-========================== */
-
+/* ============================
+   ヘッダー全体
+============================ */
 .site-header {
     position: sticky;
     top: 0;
-    z-index: 1000;
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 10px 22px 16px;
+
+    background:
+        radial-gradient(
+            circle at 10% 10%,
+            rgba(255, 241, 118, 0.18),
+            transparent 22%
+        ),
+        linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #f8fdff 100%
+        );
+
+    z-index: 9999;
+    overflow: visible;
+
+    border-top: 2px solid #fff4b8;
+}
+
+/* ============================
+   ヘッダー内側
+============================ */
+.header-inner {
+    position: relative;
+    z-index: 5;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 
     width: 100%;
-    height: 70px;
-
-    background: rgba(255,255,255,0.95);
-    backdrop-filter: blur(10px);
-
-    border-bottom: 1px solid #e6e6e6;
+    box-sizing: border-box;
 }
 
-.header-inner {
-    width: 90%;
-    max-width: 1200px;
-    height: 100%;
-
-    margin: auto;
-
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
+/* ============================
+   ロゴ全体
+============================ */
 .site-logo {
-    font-size: 32px;
-    font-weight: bold;
-    color: #2f8cff;
+    position: relative;
+    z-index: 20;
 
-    text-decoration: none;
-}
-
-.header-nav {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 7px;
+
+    flex-shrink: 0;
+
+    color: inherit;
+    text-decoration: none;
 }
 
+/* ============================
+   太陽
+   CSSだけでsun.svgを表示
+============================ */
+.site-logo::before {
+    content: "";
+
+    display: block;
+    width: 48px;
+    height: 48px;
+
+    flex-shrink: 0;
+
+    background-image: url("sun.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+
+    filter:
+        drop-shadow(0 5px 5px rgba(255, 183, 77, 0.25))
+        drop-shadow(0 0 6px rgba(255, 241, 118, 0.25));
+
+    animation: sun-float 3s ease-in-out infinite;
+}
+
+/* HTMLに太陽のimgが残っている場合は非表示 */
+.site-logo img {
+    display: none;
+}
+
+/* 太陽がふわっと上下に動く */
+@keyframes sun-float {
+    0%,
+    100% {
+        transform: translateY(0) rotate(-2deg);
+    }
+
+    50% {
+        transform: translateY(-4px) rotate(2deg);
+    }
+}
+
+/* ============================
+   カラフルロゴ
+============================ */
+.pop-logo {
+    position: relative;
+    z-index: 20;
+
+    display: flex;
+    align-items: center;
+    gap: 1px;
+
+    margin: 0;
+    padding: 0;
+
+    font-size: 31px;
+    font-weight: 900;
+    line-height: 1;
+
+    font-family:
+        "Rounded Mplus 1c",
+        "Hiragino Maru Gothic ProN",
+        "Yu Gothic",
+        sans-serif;
+
+    white-space: nowrap;
+
+    text-shadow:
+        0 2px 0 rgba(255, 255, 255, 0.95),
+        0 4px 6px rgba(0, 119, 194, 0.14);
+
+    transition: transform 0.2s ease;
+}
+
+/* ロゴ文字ごとの色 */
+.c1 {
+    color: #ff7f8a;
+}
+
+.c2 {
+    color: #ffb74d;
+}
+
+.c3 {
+    color: #f6d94c;
+}
+
+.c4 {
+    color: #67d5e8;
+}
+
+.c5 {
+    color: #42bfee;
+}
+
+/* ロゴにマウスを乗せたとき */
+.site-logo:hover .pop-logo {
+    transform: translateY(-2px);
+}
+
+.site-logo:hover::before {
+    filter:
+        drop-shadow(0 7px 7px rgba(255, 183, 77, 0.32))
+        drop-shadow(0 0 9px rgba(255, 241, 118, 0.4));
+}
+
+/* ============================
+   右側メニュー
+============================ */
+.header-nav {
+    position: relative;
+    z-index: 20;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+
+    margin-left: auto;
+}
+
+/* ============================
+   メニューボタン
+============================ */
 .header-link {
-    color: #666;
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    min-height: 40px;
+    box-sizing: border-box;
+
+    padding: 9px 19px;
+
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    border-radius: 999px;
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.98) 0%,
+            rgba(235, 249, 255, 0.95) 100%
+        );
+
+    color: #0878bc;
     text-decoration: none;
+    white-space: nowrap;
+
     font-size: 15px;
+    font-weight: 800;
+    line-height: 1;
+
+    font-family:
+        "Rounded Mplus 1c",
+        "Hiragino Maru Gothic ProN",
+        "Yu Gothic",
+        sans-serif;
+
+    box-shadow:
+        0 5px 0 rgba(74, 179, 224, 0.15),
+        0 7px 12px rgba(0, 119, 194, 0.1),
+        inset 0 2px 3px rgba(255, 255, 255, 0.95);
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
-.header-button {
-    padding: 10px 22px;
+/* ボタン上部の光 */
+.header-link::before {
+    content: "";
 
-    background: #2f8cff;
-    color: white;
+    position: absolute;
+    top: 4px;
+    left: 12px;
+    right: 12px;
 
-    border-radius: 50px;
+    height: 6px;
 
-    text-decoration: none;
-    font-weight: bold;
+    border-radius: 999px;
 
-    transition: .2s;
+    background: rgba(255, 255, 255, 0.7);
+
+    pointer-events: none;
 }
 
-.header-button:hover {
-    background: #1975e8;
+/* ホバーでふわっと浮く */
+.header-link:hover {
+    transform: translateY(-3px);
+
+    color: #05699f;
+
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #d9f5ff 100%
+        );
+
+    box-shadow:
+        0 7px 0 rgba(74, 179, 224, 0.14),
+        0 11px 16px rgba(0, 119, 194, 0.15),
+        inset 0 2px 3px rgba(255, 255, 255, 0.98);
+}
+
+/* クリックしたとき */
+.header-link:active {
+    transform: translateY(1px);
+
+    box-shadow:
+        0 2px 0 rgba(74, 179, 224, 0.16),
+        0 4px 7px rgba(0, 119, 194, 0.11),
+        inset 0 2px 3px rgba(255, 255, 255, 0.95);
+}
+
+/* キーボード操作時 */
+.header-link:focus-visible {
+    outline: 3px solid rgba(255, 183, 77, 0.45);
+    outline-offset: 3px;
+}
+
+/* ============================
+   波
+============================ */
+.site-header::after {
+    content: "";
+
+    position: absolute;
+    left: 0;
+    bottom: -23px;
+
+    width: 100%;
+    height: 58px;
+
+    background-image: url("wave.svg");
+    background-repeat: repeat-x;
+    background-position: left bottom;
+    background-size: 240px 58px;
+
+    pointer-events: none;
+
+    z-index: 0;
+
+    filter:
+        brightness(1.08)
+        saturate(1.12)
+        drop-shadow(0 4px 2px rgba(51, 182, 232, 0.08));
+}
+
+/* 波の奥に薄い水色を追加 */
+.site-header::before {
+    content: "";
+
+    position: absolute;
+    left: 0;
+    bottom: -15px;
+
+    width: 100%;
+    height: 38px;
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(132, 221, 249, 0.16),
+            rgba(132, 221, 249, 0.05)
+        );
+
+    pointer-events: none;
+
+    z-index: -1;
+}
+
+/* ============================
+   タブレット対応
+   ロゴを上、メニューを下にする
+============================ */
+@media screen and (max-width: 950px) {
+    .site-header {
+        padding: 10px 14px 17px;
+    }
+
+    .header-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .site-logo {
+        align-self: flex-start;
+        gap: 5px;
+    }
+
+    .site-logo::before {
+        width: 42px;
+        height: 42px;
+    }
+
+    .pop-logo {
+        font-size: 27px;
+    }
+
+    .header-nav {
+        width: 100%;
+        margin-left: 0;
+
+        display: flex;
+        justify-content: flex-start;
+        gap: 8px;
+
+        overflow-x: auto;
+        overflow-y: hidden;
+
+        padding: 3px 2px 8px;
+
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .header-nav::-webkit-scrollbar {
+        display: none;
+    }
+
+    .header-link {
+        flex: 0 0 auto;
+
+        min-height: 38px;
+        padding: 8px 15px;
+
+        font-size: 14px;
+    }
+}
+
+/* ============================
+   スマホ対応
+============================ */
+@media screen and (max-width: 520px) {
+    .site-header {
+        padding: 8px 10px 16px;
+    }
+
+    .header-inner {
+        gap: 8px;
+    }
+
+    .site-logo {
+        gap: 3px;
+    }
+
+    .site-logo::before {
+        width: 36px;
+        height: 36px;
+    }
+
+    .pop-logo {
+        font-size: 21px;
+        gap: 0;
+    }
+
+    .header-nav {
+        gap: 6px;
+        padding-bottom: 7px;
+    }
+
+    .header-link {
+        min-height: 34px;
+        padding: 7px 11px;
+
+        border-radius: 999px;
+
+        font-size: 12px;
+
+        box-shadow:
+            0 3px 0 rgba(74, 179, 224, 0.14),
+            0 5px 8px rgba(0, 119, 194, 0.09),
+            inset 0 2px 3px rgba(255, 255, 255, 0.95);
+    }
+
+    .header-link::before {
+        top: 3px;
+        left: 9px;
+        right: 9px;
+        height: 4px;
+    }
+
+    .header-link:hover {
+        transform: translateY(-1px);
+    }
+
+    .site-header::after {
+        bottom: -17px;
+        height: 44px;
+        background-size: 185px 44px;
+    }
+}
+
+/* ============================
+   かなり小さいスマホ対応
+============================ */
+@media screen and (max-width: 360px) {
+    .site-header {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    .site-logo::before {
+        width: 32px;
+        height: 32px;
+    }
+
+    .pop-logo {
+        font-size: 19px;
+    }
+
+    .header-link {
+        padding: 7px 9px;
+        font-size: 11px;
+    }
+}
+
+/* ============================
+   動きを減らす設定の利用者向け
+============================ */
+@media (prefers-reduced-motion: reduce) {
+    .site-logo::before {
+        animation: none;
+    }
+
+    .header-link,
+    .pop-logo {
+        transition: none;
+    }
+}
+
+/* =========================================================
+   スマホ用ヘッダー最終調整
+========================================================= */
+@media screen and (max-width: 760px) {
+    .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 4500;
+
+        padding:
+            calc(7px + env(safe-area-inset-top))
+            12px
+            15px;
+
+        overflow: visible;
+    }
+
+    .header-inner {
+        min-height: 46px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .site-logo {
+        align-self: auto;
+        gap: 4px;
+    }
+
+    .site-logo::before {
+        width: 36px;
+        height: 36px;
+    }
+
+    .pop-logo {
+        font-size: clamp(20px, 6vw, 25px);
+    }
+
+    /* スマホでは下部ナビと重複するので非表示 */
+    .header-nav {
+        display: none;
+    }
+
+    .site-header::after {
+        bottom: -15px;
+        height: 38px;
+        background-size: 170px 38px;
+    }
+
+    .site-header::before {
+        bottom: -10px;
+        height: 28px;
+    }
+}
+
+@media screen and (max-width: 360px) {
+    .site-header {
+        padding-right: 8px;
+        padding-left: 8px;
+    }
+
+    .site-logo::before {
+        width: 32px;
+        height: 32px;
+    }
+
+    .pop-logo {
+        font-size: 19px;
+    }
+}
+/* 共通ヘッダー追加設定 */
+.header-link.active,
+.header-link[aria-current="page"] {
+    color: #0f766e;
+    font-weight: 800;
+}
+.header-logout-button {
+    border: 1px solid #d7e3e0;
+    background: #fff;
+    color: #475569;
+    border-radius: 999px;
+    padding: .58rem .9rem;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+.header-logout-button:hover { background: #f0fdfa; color: #0f766e; }
+@media (max-width: 760px) {
+    .header-nav { gap: .35rem; overflow-x: auto; }
+    .header-link, .header-logout-button { white-space: nowrap; font-size: .82rem; }
 }

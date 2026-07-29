@@ -23,52 +23,151 @@
         href="../css/button.css"
     >
 
-    <!-- ホーム画面専用 -->
+    <!-- ホーム画面専用CSS -->
     <link
         rel="stylesheet"
         href="../css/pages/home.css"
     >
+
+    <!-- APIキー不要の地図（Leaflet + OpenStreetMap） -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        crossorigin=""
+    >
 </head>
 
 <body>
-    <div class="current-user-card">
-    <div id="currentUserAvatar" class="current-user-avatar">
-        沖
-    </div>
 
-    <div class="current-user-info">
-        <strong id="currentUserDisplayName">
-            読み込み中...
-        </strong>
-
+    <!--
+        Supabaseアカウント連携用の互換要素。
+        旧home.jsが参照するIDを残しつつ、デザインには表示しません。
+    -->
+    <div id="currentUserBridge" hidden aria-hidden="true">
+        <div id="currentUserAvatar">沖</div>
+        <strong id="currentUserDisplayName">読み込み中...</strong>
         <span id="currentUsername"></span>
         <span id="currentUserEmail"></span>
     </div>
 
-    <a href="./home/profile.html">
-        個人ページ
-    </a>
-</div>
+    <!-- スマホ用メニューボタン -->
+    <button
+        type="button"
+        id="mobileMenuButton"
+        class="mobile-menu-button"
+        aria-label="メニューを開く"
+        aria-controls="mobileMenuDrawer"
+        aria-expanded="false"
+    >
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- スマホ用メニュー -->
+    <div
+        id="mobileMenuDrawer"
+        class="mobile-menu-drawer"
+        aria-hidden="true"
+    >
+        <div
+            id="mobileMenuBackdrop"
+            class="mobile-menu-backdrop"
+        ></div>
+
+        <aside class="mobile-menu-panel">
+            <div class="mobile-menu-header">
+                <strong>メニュー</strong>
+
+                <button
+                    type="button"
+                    id="mobileMenuCloseButton"
+                    class="mobile-menu-close-button"
+                    aria-label="メニューを閉じる"
+                >
+                    ×
+                </button>
+            </div>
+
+            <nav class="mobile-menu-navigation">
+                <a href="home.html" class="mobile-menu-link active">
+                    <span>⌂</span>
+                    ホーム
+                </a>
+
+                <a href="home/search.html" class="mobile-menu-link">
+                    <span>⌕</span>
+                    検索
+                </a>
+
+                <a href="home/community.html" class="mobile-menu-link">
+                    <span>👥</span>
+                    コミュニティ
+                </a>
+
+                <a href="#mapSection" class="mobile-menu-link">
+                    <span>⌖</span>
+                    追加（ピン）
+                </a>
+
+                <a href="home/messages.html" class="mobile-menu-link">
+                    <span>✉</span>
+                    メッセージ
+                </a>
+
+                <a href="home/profile.html" class="mobile-menu-link">
+                    <span>◎</span>
+                    マイアカウント
+                </a>
+            </nav>
+        </aside>
+    </div>
+
 
     <!-- 共通ヘッダー -->
     <header class="site-header">
 
         <div class="header-inner">
 
+            <!-- 左：ロゴ -->
             <a
                 href="home.html"
                 class="site-logo"
             >
-                おきとーーーーーーく
+                <div class="pop-logo">
+                    <span class="c1">お</span>
+                    <span class="c2">き</span>
+                    <span class="c3">と</span>
+                    <span class="c4">ー</span>
+                    <span class="c4">ー</span>
+                    <span class="c4">ー</span>
+                    <span class="c4">ー</span>
+                    <span class="c5">く</span>
+                </div>
             </a>
 
+            <!-- 右：メニュー -->
             <nav class="header-nav">
 
                 <a
-                    href="#"
+                    href="home/search.html"
                     class="header-link"
                 >
                     検索
+                </a>
+
+                <a
+                    href="home/community.html"
+                    class="header-link"
+                >
+                    コミュニティ
+                </a>
+
+                <a
+                    href="add-pin.html"
+                    class="header-link"
+                >
+                    追加（ピン）
                 </a>
 
                 <a
@@ -82,7 +181,7 @@
                     href="home/profile.html"
                     class="header-link"
                 >
-                    プロフィール
+                    マイアカウント
                 </a>
 
             </nav>
@@ -94,65 +193,61 @@
     <main class="home-layout">
 
         <!-- 左メニュー -->
-        <aside class="side-menu">
+        <aside class="side-menu" aria-label="メインメニュー">
+            <div class="side-background" aria-hidden="true">
+            <img src="../../images/okinawa-sidebar.png" alt="沖縄の海の風景">
+            </div>
 
             <nav class="side-navigation">
-
-                <a
-                    href="home.html"
-                    class="side-link active"
-                >
-                    <span class="side-icon">⌂</span>
-                    <span>ホーム</span>
+                <a href="home.html" class="side-link active">
+                    <span class="active-line" aria-hidden="true"></span>
+                    <span class="side-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-6h5v6"/></svg>
+                    </span>
+                    <span class="side-label">ホーム</span>
                 </a>
 
-                <a
-                    href="#"
-                    class="side-link"
-                >
-                    <span class="side-icon">⌕</span>
-                    <span>検索</span>
+                <a href="home/search.html" class="side-link">
+                    <span class="side-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.7"/><path d="m16 16 4.5 4.5"/></svg>
+                    </span>
+                    <span class="side-label">検索</span>
                 </a>
 
-                <a
-                    href="#"
-                    class="side-link"
-                >
-                    <span class="side-icon">♧</span>
-                    <span>コミュニティ</span>
+                <a href="home/community.html" class="side-link">
+                    <span class="side-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3.5 19c.2-4 2.2-6 5.5-6s5.3 2 5.5 6"/><path d="M14.5 14c3.4-.7 5.7 1 6 4.5"/></svg>
+                    </span>
+                    <span class="side-label">コミュニティ</span>
                 </a>
 
-                <a
-                    href="#mapSection"
-                    class="side-link"
-                >
-                    <span class="side-icon">⌖</span>
-                    <span>追加（ピン）</span>
+                <a href="#mapSection" class="side-link">
+                    <span class="side-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M12 21s6-5.1 6-11a6 6 0 1 0-12 0c0 5.9 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg>
+                    </span>
+                    <span class="side-label">追加（ピン）</span>
                 </a>
 
-                <a
-                    href="messages.html"
-                    class="side-link"
-                >
-                    <span class="side-icon">✉</span>
-                    <span>メッセージ</span>
+                <a href="home/messages.html" class="side-link">
+                    <span class="side-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>
+                    </span>
+                    <span class="side-label">メッセージ</span>
                 </a>
 
-                <a
-                    href="home/profile.html"
-                    class="side-link"
-                >
-                    <span class="side-icon">♙</span>
-                    <span>マイアカウント</span>
+                <a href="home/profile.html" class="side-link">
+                    <span class="side-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20c.4-4.3 3-6.5 7.5-6.5s7.1 2.2 7.5 6.5"/></svg>
+                    </span>
+                    <span class="side-label">マイアカウント</span>
                 </a>
-
             </nav>
-
         </aside>
 
         <!-- 中央：タイムライン -->
         <section class="timeline">
 
+            <!-- 全体・フォロー中 -->
             <div class="timeline-tabs">
 
                 <button
@@ -171,12 +266,23 @@
                     フォロー中
                 </button>
 
+                
+
             </div>
 
             <!-- 投稿フォーム -->
-            <section class="post-form-area">
+            <section class="composer-shell composer-shell-wide">
+                <div class="composer-heading">
+                    <div>
+                        <span class="composer-eyebrow">SHARE OKINAWA</span>
+                        <h1>沖縄の「今」をシェア</h1>
+                    </div>
+                    <span class="composer-badge">🌺 Local SNS</span>
+                </div>
 
-                <div class="post-form-icon">
+                <section class="post-form-area">
+
+                <div id="postFormAvatar" class="post-form-icon">
                     沖
                 </div>
 
@@ -188,26 +294,105 @@
                     <textarea
                         id="postContent"
                         maxlength="200"
-                        placeholder="沖縄の今を投稿しよう！"
+                        placeholder="今日見つけた景色、お店、イベントをシェアしよう…"
                         required
                     ></textarea>
 
-                    <div class="post-form-footer">
+                    <!-- 写真プレビュー -->
+                    <div
+                        id="imagePreviewContainer"
+                        class="image-preview-container"
+                        style="display: none;"
+                    >
 
-                        <select
-                            id="areaSelect"
-                            aria-label="投稿地域"
+                        <img
+                            id="imagePreview"
+                            class="image-preview"
+                            alt="選択した画像のプレビュー"
                         >
-                            <option value="沖縄県">沖縄県</option>
-                            <option value="那覇市">那覇市</option>
-                            <option value="浦添市">浦添市</option>
-                            <option value="宜野湾市">宜野湾市</option>
-                            <option value="沖縄市">沖縄市</option>
-                            <option value="名護市">名護市</option>
-                            <option value="糸満市">糸満市</option>
-                            <option value="うるま市">うるま市</option>
-                        </select>
 
+                        <button
+                            type="button"
+                            id="removeImageButton"
+                            class="remove-image-button"
+                            title="画像を取り消す"
+                        >
+                            ✕
+                        </button>
+
+                    </div>
+
+                    <!-- 投稿ツール -->
+                    <div class="post-toolbar">
+
+                        <!-- 左側 -->
+                        <div class="post-tools">
+
+                            <select
+                                id="areaSelect"
+                                class="area-select"
+                            >
+                                <option value="沖縄県">
+                                    🌺 沖縄県
+                                </option>
+
+                                <option value="那覇市">
+                                    那覇市
+                                </option>
+
+                                <option value="浦添市">
+                                    浦添市
+                                </option>
+
+                                <option value="宜野湾市">
+                                    宜野湾市
+                                </option>
+
+                                <option value="沖縄市">
+                                    沖縄市
+                                </option>
+
+                                <option value="名護市">
+                                    名護市
+                                </option>
+
+                                <option value="糸満市">
+                                    糸満市
+                                </option>
+
+                                <option value="うるま市">
+                                    うるま市
+                                </option>
+                            </select>
+
+                            <button
+                                type="button"
+                                id="useCurrentLocationButton"
+                                class="location-tool-button"
+                                title="現在地を投稿に追加"
+                            >
+                                📍 現在地
+                            </button>
+
+                            <label
+                                for="postImage"
+                                class="tool-button"
+                                title="写真を追加"
+                            >
+                                <span aria-hidden="true">📷</span>
+                                <span class="tool-button-text">写真</span>
+                            </label>
+
+                            <input
+                                type="file"
+                                id="postImage"
+                                accept="image/*"
+                                hidden
+                            >
+
+                        </div>
+
+                        <!-- 右側 -->
                         <div class="post-submit-area">
 
                             <span id="characterCount">
@@ -216,7 +401,7 @@
 
                             <button
                                 type="submit"
-                                class="button post-button"
+                                class="button post-button post-button-nowrap"
                             >
                                 投稿する
                             </button>
@@ -225,184 +410,121 @@
 
                     </div>
 
+                    <div
+                        id="postLocationStatus"
+                        class="post-location-status"
+                        aria-live="polite"
+                    >
+                        <span id="postLocationStatusText"></span>
+
+                        <button
+                            type="button"
+                            id="cancelPostLocationButton"
+                            class="cancel-location-button"
+                        >
+                            ✕ キャンセル
+                        </button>
+                    </div>
+
                 </form>
 
+                </section>
             </section>
 
-            <!-- 投稿一覧 -->
+            <!-- エリア検索 -->
+            <section class="timeline-filter-panel">
+                <div class="timeline-filter-title">
+                    <span>🔎</span>
+                    <div>
+                        <strong>エリア検索</strong>
+                        <p>選んだ地域の投稿だけ表示できます。</p>
+                    </div>
+                </div>
+
+                <div class="timeline-filter-controls">
+                    <select
+                        id="areaFilterSelect"
+                        class="area-filter-select"
+                        aria-label="投稿を地域で絞り込む"
+                    >
+                        <option value="all">沖縄県すべて</option>
+                        <option value="那覇市">那覇市</option>
+                        <option value="浦添市">浦添市</option>
+                        <option value="宜野湾市">宜野湾市</option>
+                        <option value="沖縄市">沖縄市</option>
+                        <option value="名護市">名護市</option>
+                        <option value="糸満市">糸満市</option>
+                        <option value="うるま市">うるま市</option>
+                    </select>
+
+                    <button
+                        type="button"
+                        id="clearAreaFilterButton"
+                        class="clear-area-filter-button"
+                    >
+                        解除
+                    </button>
+                </div>
+
+                <p
+                    id="filterResultMessage"
+                    class="filter-result-message"
+                    aria-live="polite"
+                ></p>
+            </section>
+
+
+            <!-- フォロー中が空の場合 -->
+            <p
+                id="noFollowingMessage"
+                class="no-following-message"
+                style="display: none;"
+            >
+                フォローしているユーザーの投稿はありません
+            </p>
+
+            <!-- 保存済み投稿が空の場合 -->
+            <p
+                id="noSavedMessage"
+                class="no-saved-message"
+                style="display: none;"
+            >
+                保存している投稿はありません
+            </p>
+
+            <p
+                id="noNearbyMessage"
+                class="no-nearby-message"
+                style="display: none;"
+            >
+                現在地から5km以内の投稿はありません
+            </p>
+
+            <!-- 投稿がない場合 -->
+            <div
+                id="emptyPostMessage"
+                class="empty-post-message"
+            >
+
+                <div class="empty-icon">
+                    🌺
+                </div>
+
+                <h3>
+                    まだ投稿がありません
+                </h3>
+
+                <p>
+                    沖縄の魅力を発信してみませんか？
+                </p>
+
+            </div>
+
+            <!-- JavaScriptで投稿を追加する場所 -->
             <div
                 id="postList"
                 class="post-list"
             >
-
-                <article
-                    class="post-card"
-                    data-lat="26.1746"
-                    data-lng="127.6764"
-                    data-following="true"
-                >
-
-                    <div class="post-user-icon">
-                        海
-                    </div>
-
-                    <div class="post-main">
-
-                        <div class="post-header">
-
-                            <div>
-                                <strong>海が好きな人</strong>
-                                <span>@okinawa_sea</span>
-                            </div>
-
-                            <span class="post-time">
-                                1時間前
-                            </span>
-
-                        </div>
-
-                        <p class="post-text">
-                            今日の瀬長島、海がとてもきれいでした！
-                        </p>
-
-                        <div class="post-image-placeholder">
-                            🌊
-                        </div>
-
-                        <div class="post-bottom">
-
-                            <button
-                                type="button"
-                                class="map-focus-button"
-                            >
-                                📍豊見城市
-                            </button>
-
-                            <button
-                                type="button"
-                                class="like-button"
-                            >
-                                ♡ 12
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </article>
-
-                <article
-                    class="post-card"
-                    data-lat="26.2124"
-                    data-lng="127.6809"
-                    data-following="false"
-                >
-
-                    <div class="post-user-icon">
-                        食
-                    </div>
-
-                    <div class="post-main">
-
-                        <div class="post-header">
-
-                            <div>
-                                <strong>沖縄グルメ巡り</strong>
-                                <span>@okinawa_gourmet</span>
-                            </div>
-
-                            <span class="post-time">
-                                3時間前
-                            </span>
-
-                        </div>
-
-                        <p class="post-text">
-                            国際通りのカフェがとても良かったです☕
-                        </p>
-
-                        <div class="post-image-placeholder">
-                            ☕
-                        </div>
-
-                        <div class="post-bottom">
-
-                            <button
-                                type="button"
-                                class="map-focus-button"
-                            >
-                                📍那覇市
-                            </button>
-
-                            <button
-                                type="button"
-                                class="like-button"
-                            >
-                                ♡ 25
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </article>
-
-                <article
-                    class="post-card"
-                    data-lat="26.3344"
-                    data-lng="127.8056"
-                    data-following="true"
-                >
-
-                    <div class="post-user-icon">
-                        祭
-                    </div>
-
-                    <div class="post-main">
-
-                        <div class="post-header">
-
-                            <div>
-                                <strong>エイサー情報局</strong>
-                                <span>@eisa_okinawa</span>
-                            </div>
-
-                            <span class="post-time">
-                                5時間前
-                            </span>
-
-                        </div>
-
-                        <p class="post-text">
-                            今週末はエイサーイベントがあります！
-                        </p>
-
-                        <div class="post-image-placeholder">
-                            🥁
-                        </div>
-
-                        <div class="post-bottom">
-
-                            <button
-                                type="button"
-                                class="map-focus-button"
-                            >
-                                📍沖縄市
-                            </button>
-
-                            <button
-                                type="button"
-                                class="like-button"
-                            >
-                                ♡ 41
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </article>
-
             </div>
 
         </section>
@@ -412,18 +534,21 @@
             id="mapSection"
             class="map-area"
         >
+
             <section class="map-pin-card">
 
                 <div class="map-heading">
 
                     <div>
+
                         <p class="map-label">
                             OKINAWA MAP
                         </p>
 
                         <h2>
-                            全体のピン
+                            沖縄スポットマップ
                         </h2>
+
                     </div>
 
                     <button
@@ -442,8 +567,16 @@
                     id="mapStatus"
                     class="map-status"
                 >
-                    投稿の地域を地図に表示しています。
+                    投稿とおすすめスポットを、地図から見つけられます。
                 </p>
+
+                <div class="map-post-guide">
+                    <span class="map-post-guide-icon">✍️</span>
+                    <div>
+                        <strong>地図から投稿</strong>
+                        <p>地図上の投稿したい場所をクリックしてください。</p>
+                    </div>
+                </div>
 
                 <div class="pin-divider"></div>
 
@@ -454,6 +587,7 @@
                     </div>
 
                     <div>
+
                         <h2>
                             ピンを追加
                         </h2>
@@ -461,6 +595,7 @@
                         <p>
                             おすすめのお店や場所を登録できます。
                         </p>
+
                     </div>
 
                 </div>
@@ -497,10 +632,53 @@
                         >
 
                         <p class="address-note">
-                            市町村名や番地まで入力すると、正確に表示されやすくなります。
+                            市町村名や番地まで入力すると、
+                            正確に表示されやすくなります。
                         </p>
 
                     </div>
+
+                    <div class="place-form-group">
+
+                        <label for="placeDescription">
+                            詳細など
+                            <span class="optional-label">任意</span>
+                        </label>
+
+                        <textarea
+                            id="placeDescription"
+                            maxlength="150"
+                            placeholder="例：海が見えるカフェです。パンケーキがおすすめ！"
+                        ></textarea>
+
+                        <div class="place-description-bottom">
+                            <p class="address-note">
+                                おすすめポイントなどが書けます。
+                            </p>
+
+                            <span id="placeDescriptionCount">
+                                0 / 150
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        id="useCurrentLocationForPinButton"
+                        class="current-pin-button"
+                    >
+                        📍 現在地を住所欄に使う
+                    </button>
+
+                    <button
+                        type="button"
+                        id="clearPinLocationButton"
+                        class="clear-pin-location-button"
+                        hidden
+                    >
+                        ✕ 現在地の選択を解除
+                    </button>
 
                     <button
                         type="submit"
@@ -513,25 +691,41 @@
                 </form>
 
             </section>
+
         </aside>
 
     </main>
 
-   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-   <script
-    type="module"
-    src="../js/pages/home.js"
-></script>
-    <!--
-        YOUR_GOOGLE_MAPS_API_KEY を
-        自分のデモAPIキーへ置き換えてください。
-        APIキーはチャットやGitHubに公開しないでください。
-    -->
+    <!-- 投稿詳細モーダル -->
+    <div id="postDetailModal" class="post-detail-modal" hidden>
+        <div class="post-detail-backdrop" data-close-detail></div>
+
+        <section class="post-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="postDetailTitle">
+            <header class="post-detail-topbar">
+                <h2 id="postDetailTitle">投稿</h2>
+                <button type="button" id="closePostDetailButton" class="post-detail-close" aria-label="投稿詳細を閉じる">✕</button>
+            </header>
+
+            <div id="postDetailBody" class="post-detail-body"></div>
+        </section>
+    </div>
+
+    <!-- Supabase Auth / Database -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- APIキー不要の地図ライブラリ -->
     <script
-        async
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCU4qTaXJ3m3Uq-v_dvU3rFgIfyc-gUJkY&loading=async&callback=initMap"
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        crossorigin=""
     ></script>
+
+    <!--
+        home.js内でimportを使用し、Supabaseのログイン情報・DBを読み込むため
+        type="module"を付けます。
+    -->
+    <script type="module" src="../js/common-header.js"></script>
+    <script type="module" src="../js/pages/home.js"></script>
 
 </body>
 

@@ -1560,4 +1560,4 @@ button {
         grid-template-columns: 1fr 1fr;
     }
 
-}
+}.profile-post-card{background:#fff;border:1px solid #e5ecea;border-radius:16px;padding:18px;margin-bottom:14px}.profile-post-head{display:flex;justify-content:space-between;gap:12px;color:#64748b}.profile-post-head strong{color:#0f172a}.profile-post-actions{display:flex;justify-content:flex-end;gap:8px}.profile-post-actions button{border:1px solid #dce7e4;background:#fff;border-radius:999px;padding:7px 12px;cursor:pointer}
