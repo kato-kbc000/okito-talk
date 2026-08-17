@@ -4322,3 +4322,268 @@ body {
         padding-left: 38px;
     }
 }
+
+/* =========================
+   Google Maps
+========================= */
+
+#map {
+    position: relative;
+    width: 100%;
+    min-height: 300px;
+    overflow: hidden;
+    background: #e7edf3;
+    border-radius: 14px;
+}
+
+.google-map-popup {
+    min-width: 190px;
+    max-width: 260px;
+    color: #243247;
+
+    font-family:
+        "Yu Gothic",
+        "Hiragino Kaku Gothic ProN",
+        sans-serif;
+}
+
+.google-map-popup strong {
+    display: block;
+    margin-bottom: 7px;
+    color: #172033;
+    font-size: 14px;
+}
+
+.google-map-popup p {
+    margin: 0 0 9px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.google-map-popup small {
+    display: block;
+    margin-bottom: 10px;
+    color: #718096;
+    line-height: 1.5;
+}
+
+.google-map-popup button {
+    width: 100%;
+    padding: 8px 11px;
+    color: #ffffff;
+    background: #2589ff;
+    border: none;
+    border-radius: 999px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.google-map-popup button:hover {
+    background: #1673d1;
+}
+
+.gm-style .gm-style-iw-c {
+    border-radius: 14px;
+}
+
+.gm-style .gm-style-iw-d {
+    overflow: auto !important;
+}
+
+
+/* タイムラインは全体・フォロー中の2列に固定 */
+.timeline-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+
+/* =========================
+   Googleマップのピン詳細を見やすく
+========================= */
+
+.google-map-popup-container {
+    width: min(290px, calc(100vw - 90px));
+    padding: 0;
+    color: #263348;
+    font-family:
+        "Yu Gothic",
+        "Hiragino Kaku Gothic ProN",
+        sans-serif;
+}
+
+.google-map-popup-container .map-popup {
+    min-width: 0;
+    width: 100%;
+    padding: 4px 2px 2px;
+}
+
+.google-map-popup-container .simple-map-popup {
+    display: grid;
+    gap: 10px;
+}
+
+.google-map-popup-container .map-popup-title {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    margin: 0;
+    padding-right: 20px;
+    color: #162136;
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+}
+
+.google-map-popup-container .map-popup-description {
+    margin: 0;
+    padding: 10px 12px;
+    color: #33435a;
+    background: #f4f8fc;
+    border-radius: 11px;
+    font-size: 13px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.google-map-popup-container .map-popup-address {
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+    margin: 0;
+    color: #718096;
+    font-size: 12px;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+}
+
+.google-map-popup-container .delete-map-place-button,
+.google-map-popup-container [data-map-post-id] {
+    width: 100%;
+    min-height: 40px;
+    margin-top: 2px;
+    padding: 9px 13px;
+    border: none;
+    border-radius: 999px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.google-map-popup-container .delete-map-place-button {
+    color: #d94a55;
+    background: #fff1f2;
+    border: 1px solid #ffc7cc;
+}
+
+.google-map-popup-container .delete-map-place-button:hover {
+    color: #ffffff;
+    background: #e85a64;
+    border-color: #e85a64;
+}
+
+.google-map-popup-container [data-map-post-id] {
+    color: #ffffff;
+    background: linear-gradient(135deg, #3298e8, #27bdbe);
+}
+
+.google-map-popup-container [data-map-post-id]:hover {
+    filter: brightness(1.04);
+}
+
+/* Google標準の白い吹き出し */
+.gm-style .gm-style-iw-c {
+    max-width: 340px !important;
+    padding: 16px 16px 14px !important;
+    border-radius: 18px !important;
+    box-shadow:
+        0 14px 36px
+        rgba(24, 46, 75, 0.22) !important;
+}
+
+.gm-style .gm-style-iw-d {
+    max-height: 280px !important;
+    overflow: auto !important;
+}
+
+.gm-style .gm-style-iw-chr {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    z-index: 2;
+    height: 34px;
+}
+
+.gm-style .gm-style-iw-ch {
+    display: none;
+}
+
+.gm-style .gm-style-iw-close-button {
+    width: 34px !important;
+    height: 34px !important;
+    top: 2px !important;
+    right: 2px !important;
+    opacity: 0.72;
+    border-radius: 50%;
+}
+
+.gm-style .gm-style-iw-close-button:hover {
+    opacity: 1;
+    background: #edf3f8 !important;
+}
+
+.gm-style .gm-style-iw-tc::after {
+    background: #ffffff;
+}
+
+@media (max-width: 520px) {
+    .google-map-popup-container {
+        width: min(260px, calc(100vw - 72px));
+    }
+
+    .gm-style .gm-style-iw-c {
+        max-width: calc(100vw - 54px) !important;
+        padding: 14px !important;
+    }
+
+    .google-map-popup-container .map-popup-title {
+        font-size: 15px;
+    }
+}
+/* 投稿のいいね・保存 */
+.post-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.post-action-button {
+  border: 1px solid #cfe3ef;
+  background: #ffffff;
+  color: #53677a;
+  border-radius: 999px;
+  padding: 8px 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .15s ease, color .15s ease, background .15s ease, border-color .15s ease;
+}
+
+.post-action-button:hover {
+  transform: translateY(-1px);
+  border-color: #47b8ed;
+}
+
+.post-action-button.active[data-like] {
+  color: #ef476f;
+  background: #fff0f4;
+  border-color: #ffb5c7;
+}
+
+.post-action-button.active[data-save] {
+  color: #087f8c;
+  background: #e9fbf8;
+  border-color: #8fe0d5;
+}
+
+.post-action-button:disabled { opacity: .6; cursor: wait; }

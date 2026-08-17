@@ -1,0 +1,162 @@
+/* ==========================
+   Register Page
+========================== */
+
+body{
+    margin:0;
+    background:#f4f7fc;
+    font-family:"Yu Gothic",sans-serif;
+}
+
+.register-main{
+
+    min-height:calc(100vh - 70px);
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    padding:50px 20px;
+}
+
+.register-card{
+
+    width:100%;
+    max-width:520px;
+
+    background:white;
+
+    border-radius:20px;
+
+    padding:45px;
+
+    box-shadow:0 15px 40px rgba(0,0,0,.08);
+}
+
+/* タイトル */
+
+.register-title{
+
+    text-align:center;
+
+    margin-bottom:35px;
+}
+
+.register-title h1{
+
+    font-size:34px;
+
+    margin-bottom:10px;
+
+    color:#222;
+}
+
+.register-title p{
+
+    color:#777;
+
+    line-height:1.7;
+}
+
+/* 入力欄 */
+
+.form-group{
+
+    margin-bottom:22px;
+}
+
+.form-group label{
+
+    display:block;
+
+    margin-bottom:8px;
+
+    font-weight:bold;
+}
+
+.form-group input{
+
+    width:100%;
+
+    height:50px;
+
+    padding:0 15px;
+
+    border:1px solid #ddd;
+
+    border-radius:10px;
+
+    font-size:16px;
+
+    box-sizing:border-box;
+
+    transition:.2s;
+}
+
+.form-group input:focus{
+
+    outline:none;
+
+    border-color:#2f8cff;
+
+    box-shadow:0 0 0 4px rgba(47,140,255,.15);
+}
+
+/* ボタン */
+
+.register-button{
+
+    width:100%;
+
+    height:55px;
+
+    margin-top:15px;
+
+    border:none;
+
+    border-radius:10px;
+
+    background:#2f8cff;
+
+    color:white;
+
+    font-size:17px;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.register-button:hover{
+
+    background:#1975e8;
+
+    transform:translateY(-2px);
+}
+
+/* ログインリンク */
+
+.login-link{
+
+    text-align:center;
+
+    margin-top:25px;
+
+    color:#666;
+}
+
+.login-link a{
+
+    color:#2f8cff;
+
+    text-decoration:none;
+
+    font-weight:bold;
+}
+
+.login-link a:hover{
+
+    text-decoration:underline;
+}

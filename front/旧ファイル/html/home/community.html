@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>コミュニティ | おきとーーーーーーく</title>
+
+    <link rel="stylesheet" href="../../css/header.css">
+    <link rel="stylesheet" href="../../css/button.css">
+    <link rel="stylesheet" href="../../css/pages/community.css">
+</head>
+
+<body>
+
+
+    <!-- スマホ用メニューボタン -->
+    <button
+        type="button"
+        id="mobileMenuButton"
+        class="mobile-menu-button"
+        aria-label="メニューを開く"
+        aria-controls="mobileMenuDrawer"
+        aria-expanded="false"
+    >
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- スマホ用メニュー -->
+    <div
+        id="mobileMenuDrawer"
+        class="mobile-menu-drawer"
+        aria-hidden="true"
+    >
+        <div id="mobileMenuBackdrop" class="mobile-menu-backdrop"></div>
+
+        <aside class="mobile-menu-panel">
+            <div class="mobile-menu-header">
+                <strong>メニュー</strong>
+
+                <button
+                    type="button"
+                    id="mobileMenuCloseButton"
+                    class="mobile-menu-close-button"
+                    aria-label="メニューを閉じる"
+                >
+                    ×
+                </button>
+            </div>
+
+            <nav class="mobile-menu-navigation">
+                <a href="../home.html" class="mobile-menu-link">
+                    <span>⌂</span>
+                    ホーム
+                </a>
+
+                <a href="search.html" class="mobile-menu-link">
+                    <span>⌕</span>
+                    検索
+                </a>
+
+                <a href="community.html" class="mobile-menu-link active">
+                    <span>👥</span>
+                    コミュニティ
+                </a>
+
+                <a href="../add-pin.html" class="mobile-menu-link">
+                    <span>⌖</span>
+                    追加（ピン）
+                </a>
+
+                <a href="messages.html" class="mobile-menu-link">
+                    <span>✉</span>
+                    メッセージ
+                </a>
+
+                <a href="profile.html" class="mobile-menu-link">
+                    <span>◎</span>
+                    マイアカウント
+                </a>
+            </nav>
+        </aside>
+    </div>
+
+    <!-- 共通ヘッダー -->
+    <header class="site-header">
+
+        <div class="header-inner">
+
+            <!-- ロゴ -->
+            <a href="../home.html" class="site-logo">
+                <div class="pop-logo">
+                    <span class="c1">お</span>
+                    <span class="c2">き</span>
+                    <span class="c3">と</span>
+                    <span class="c4">ー</span>
+                    <span class="c4">ー</span>
+                    <span class="c4">ー</span>
+                    <span class="c4">ー</span>
+                    <span class="c5">く</span>
+                </div>
+            </a>
+
+            <!-- メニュー -->
+            <nav class="header-nav">
+
+                <a href="search.html" class="header-link">
+                    検索
+                </a>
+
+                <a href="community.html" class="header-link" aria-current="page">
+                    コミュニティ
+                </a>
+
+                <a href="../add-pin.html" class="header-link">
+                    追加（ピン）
+                </a>
+
+                <a href="messages.html" class="header-link">
+                    メッセージ
+                </a>
+
+                <a href="profile.html" class="header-link">
+                    マイアカウント
+                </a>
+
+            </nav>
+
+        </div>
+
+    </header>
+
+
+    <div class="community-layout">
+
+        <!-- Homeと同じ左メニュー -->
+        <aside class="side-menu" aria-label="メインメニュー">
+            <div class="side-background" aria-hidden="true">
+                <img src="../../../images/okinawa-sidebar.png" alt="沖縄の海の風景">
+            </div>
+
+            <nav class="side-navigation">
+                <a href="../home.html" class="side-link">
+                    <span class="side-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-6h5v6"/></svg>
+                    </span>
+                    <span class="side-label">ホーム</span>
+                </a>
+
+                <a href="search.html" class="side-link">
+                    <span class="side-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.7"/><path d="m16 16 4.5 4.5"/></svg>
+                    </span>
+                    <span class="side-label">検索</span>
+                </a>
+
+                <a href="community.html" class="side-link active" aria-current="page">
+                    <span class="active-line" aria-hidden="true"></span>
+                    <span class="side-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3.5 19c.2-4 2.2-6 5.5-6s5.3 2 5.5 6"/><path d="M14.5 14c3.4-.7 5.7 1 6 4.5"/></svg>
+                    </span>
+                    <span class="side-label">コミュニティ</span>
+                </a>
+
+                <a href="../add-pin.html" class="side-link">
+                    <span class="side-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M12 21s6-5.1 6-11a6 6 0 1 0-12 0c0 5.9 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg>
+                    </span>
+                    <span class="side-label">追加（ピン）</span>
+                </a>
+
+                <a href="messages.html" class="side-link">
+                    <span class="side-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>
+                    </span>
+                    <span class="side-label">メッセージ</span>
+                    <span class="side-notification" aria-label="未読3件">3</span>
+                </a>
+
+                <a href="profile.html" class="side-link">
+                    <span class="side-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20c.4-4.3 3-6.5 7.5-6.5s7.1 2.2 7.5 6.5"/></svg>
+                    </span>
+                    <span class="side-label">マイアカウント</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main class="community-page">
+
+        <section class="community-hero">
+            <p>OKINAWA COMMUNITY</p>
+
+            <h1>
+                好きな沖縄でつながろう
+            </h1>
+
+            <button
+                type="button"
+                id="openCommunityForm"
+                class="button"
+            >
+                コミュニティを作成
+            </button>
+        </section>
+
+        <form
+            id="communityForm"
+            class="community-form"
+            hidden
+        >
+            <label>
+                コミュニティ名
+
+                <input
+                    id="communityName"
+                    maxlength="60"
+                    required
+                >
+            </label>
+
+            <label>
+                説明
+
+                <textarea
+                    id="communityDescription"
+                    maxlength="300"
+                ></textarea>
+            </label>
+
+            <div>
+                <button
+                    class="button"
+                    type="submit"
+                >
+                    作成する
+                </button>
+
+                <button
+                    type="button"
+                    id="cancelCommunityForm"
+                >
+                    キャンセル
+                </button>
+            </div>
+        </form>
+
+        <section>
+            <h2>コミュニティ一覧</h2>
+
+            <div
+                id="communityList"
+                class="community-grid"
+            ></div>
+
+            <p id="communityEmpty">
+                まだコミュニティがありません。最初のコミュニティを作ってみましょう。
+            </p>
+        </section>
+
+        </main>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script
+        type="module"
+        src="../../js/pages/community.js"
+    ></script>
+
+</body>
+
+</html>

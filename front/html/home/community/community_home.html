@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        コミュニティ | おきとーーーーーーく
+    </title>
+
+    <!-- 共通CSS -->
+    <link
+        rel="stylesheet"
+        href="../../../css/header.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="../../../css/button.css"
+    >
+
+    <!-- コミュニティホーム専用CSS -->
+    <link
+        rel="stylesheet"
+        href="../../../css/pages/community/community_home.css"
+    >
+</head>
+
+<body>
+
+    <!-- =====================================
+         共通ヘッダー
+    ====================================== -->
+    <header class="site-header">
+
+        <div class="header-inner">
+
+            <!-- ロゴ -->
+            <a
+                href="../home.html"
+                class="site-logo"
+            >
+                <div class="pop-logo">
+
+                    <span class="c1">お</span>
+                    <span class="c2">き</span>
+                    <span class="c3">と</span>
+                    <span class="c4">ー</span>
+                    <span class="c4">ー</span>
+                    <span class="c4">ー</span>
+                    <span class="c4">ー</span>
+                    <span class="c5">く</span>
+
+                </div>
+            </a>
+
+
+            <!-- ヘッダーナビ -->
+            <nav class="header-nav">
+
+                <a
+                    href="../search.html"
+                    class="header-link"
+                >
+                    検索
+                </a>
+
+                <a
+                    href="../community.html"
+                    class="header-link active"
+                    aria-current="page"
+                >
+                    コミュニティ
+                </a>
+
+                <a
+                    href="../notification.html"
+                    class="header-link"
+                >
+                    通知
+                </a>
+
+                <a
+                    href="../profile.html"
+                    class="header-link"
+                >
+                    プロフィール
+                </a>
+
+            </nav>
+
+        </div>
+
+    </header>
+
+
+    <!-- =====================================
+         コミュニティ上部
+    ====================================== -->
+    <section
+        id="communityHero"
+        class="community-hero"
+    >
+
+        <!-- カバー -->
+        <div
+            id="communityHeroCover"
+            class="community-hero-cover"
+        >
+
+            <div
+                id="communityHeroIcon"
+                class="community-hero-icon"
+                aria-hidden="true"
+            >
+                🌺
+            </div>
+
+        </div>
+
+
+        <!-- コミュニティ情報 -->
+        <div class="community-hero-content">
+
+            <div class="community-title-area">
+
+                <div>
+
+                    <span
+                        id="communityCategory"
+                        class="community-category"
+                    >
+                        カテゴリー
+                    </span>
+
+                    <h1 id="communityName">
+                        コミュニティを読み込んでいます
+                    </h1>
+
+                    <p id="communityDescription">
+                        しばらくお待ちください。
+                    </p>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    id="joinedStatusButton"
+                    class="joined-button"
+                >
+                    ✓ 参加中
+                </button>
+
+            </div>
+
+
+            <!-- 人数・投稿数 -->
+            <div class="community-summary">
+
+                <span>
+                    <strong id="communityMemberCount">
+                        0
+                    </strong>
+                    メンバー
+                </span>
+
+                <span>
+                    <strong id="communityPostCount">
+                        0
+                    </strong>
+                    投稿
+                </span>
+
+                <span>
+                    作成日：
+                    <strong id="communityCreatedDate">
+                        -
+                    </strong>
+                </span>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================
+         3カラムレイアウト
+    ====================================== -->
+    <main class="community-home-layout">
+
+
+        <!-- =====================================
+             左サイドバー
+        ====================================== -->
+        <aside class="community-left-sidebar">
+
+            <nav class="community-side-menu">
+
+                <!-- 通常ホーム -->
+                <a
+                    href="../../home.html"
+                    class="community-side-item"
+                >
+
+                    <span
+                        class="side-item-icon"
+                        aria-hidden="true"
+                    >
+                        🏠
+                    </span>
+
+                    <span class="side-item-text">
+
+                        <strong>
+                            ホーム
+                        </strong>
+
+                        <small>
+                            通常のホームへ戻る
+                        </small>
+
+                    </span>
+
+                </a>
+
+
+                <!-- コミュニティ一覧 -->
+                <a
+                    href="../community.html"
+                    class="community-side-item"
+                >
+
+                    <span
+                        class="side-item-icon"
+                        aria-hidden="true"
+                    >
+                        👥
+                    </span>
+
+                    <span class="side-item-text">
+
+                        <strong>
+                            コミュニティ一覧
+                        </strong>
+
+                        <small>
+                            参加中の一覧を見る
+                        </small>
+
+                    </span>
+
+                </a>
+
+
+                <!-- コミュニティホーム -->
+                <a
+                    href="#communityTimeline"
+                    class="community-side-item active"
+                    aria-current="page"
+                >
+
+                    <span
+                        class="side-item-icon"
+                        aria-hidden="true"
+                    >
+                        💬
+                    </span>
+
+                    <span class="side-item-text">
+
+                        <strong>
+                            コミュニティホーム
+                        </strong>
+
+                        <small>
+                            みんなの投稿を見る
+                        </small>
+
+                    </span>
+
+                </a>
+
+
+                <!-- メンバー -->
+                <a
+                    id="memberPageLink"
+                    href="community_members.html"
+                    class="community-side-item"
+                >
+
+                    <span
+                        class="side-item-icon"
+                        aria-hidden="true"
+                    >
+                        🙋
+                    </span>
+
+                    <span class="side-item-text">
+
+                        <strong>
+                            メンバー
+                        </strong>
+
+                        <small>
+                            参加メンバーを見る
+                        </small>
+
+                    </span>
+
+                </a>
+
+
+                <!-- 設定 -->
+                <a
+                    id="communitySettingsLink"
+                    href="community_settings.html"
+                    class="community-side-item"
+                >
+
+                    <span
+                        class="side-item-icon"
+                        aria-hidden="true"
+                    >
+                        ⚙️
+                    </span>
+
+                    <span class="side-item-text">
+
+                        <strong>
+                            コミュニティ設定
+                        </strong>
+
+                        <small>
+                            通知などを変更する
+                        </small>
+
+                    </span>
+
+                </a>
+
+            </nav>
+
+        </aside>
+
+
+        <!-- =====================================
+             中央カラム
+        ====================================== -->
+        <section
+            id="communityTimeline"
+            class="community-main-content"
+        >
+
+            <!-- 投稿タブ -->
+            <div
+                class="community-tabs"
+                role="tablist"
+                aria-label="投稿の表示切り替え"
+            >
+
+                <button
+                    type="button"
+                    class="community-tab active"
+                    data-tab="new"
+                    role="tab"
+                    aria-selected="true"
+                >
+                    新着
+                </button>
+
+                <button
+                    type="button"
+                    class="community-tab"
+                    data-tab="popular"
+                    role="tab"
+                    aria-selected="false"
+                >
+                    人気
+                </button>
+
+                <button
+                    type="button"
+                    class="community-tab"
+                    data-tab="media"
+                    role="tab"
+                    aria-selected="false"
+                >
+                    メディア
+                </button>
+
+            </div>
+
+
+            <!-- =====================================
+                 投稿フォーム
+            ====================================== -->
+            <section class="community-post-form">
+
+                <div class="post-form-header">
+
+                    <img
+                        id="currentUserAvatar"
+                        class="post-user-image"
+                        alt="自分のプロフィール画像"
+                    >
+
+                    <div>
+
+                        <strong id="currentUserName">
+                            りゅうほ
+                        </strong>
+
+                        <p>
+                            このコミュニティに投稿する
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <textarea
+                    id="communityPostText"
+                    class="community-post-textarea"
+                    maxlength="300"
+                    placeholder="コミュニティのみんなに共有したいことを書いてみよう"
+                ></textarea>
+
+
+                <!-- 画像プレビュー -->
+                <div
+                    id="imagePreviewArea"
+                    class="image-preview-area"
+                    hidden
+                >
+
+                    <img
+                        id="imagePreview"
+                        alt="投稿する画像のプレビュー"
+                    >
+
+                    <button
+                        type="button"
+                        id="removeImageButton"
+                        class="remove-image-button"
+                        aria-label="画像を削除"
+                    >
+                        ×
+                    </button>
+
+                </div>
+
+
+                <!-- 選択場所 -->
+                <div
+                    id="locationPreview"
+                    class="location-preview"
+                    hidden
+                >
+
+                    <span aria-hidden="true">
+                        📍
+                    </span>
+
+                    <span id="selectedLocationText">
+                        場所
+                    </span>
+
+                    <button
+                        type="button"
+                        id="removeLocationButton"
+                        aria-label="場所を削除"
+                    >
+                        ×
+                    </button>
+
+                </div>
+
+
+                <!-- 投稿フォーム下部 -->
+                <div class="post-form-footer">
+
+                    <div class="post-options">
+
+                        <button
+                            type="button"
+                            id="selectImageButton"
+                            class="post-option-button"
+                        >
+                            <span aria-hidden="true">
+                                🖼️
+                            </span>
+                            画像
+                        </button>
+
+                        <button
+                            type="button"
+                            id="selectLocationButton"
+                            class="post-option-button"
+                        >
+                            <span aria-hidden="true">
+                                📍
+                            </span>
+                            場所
+                        </button>
+
+                        <input
+                            type="file"
+                            id="postImageInput"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            hidden
+                        >
+
+                    </div>
+
+
+                    <div class="post-submit-area">
+
+                        <span
+                            id="characterCount"
+                            class="character-count"
+                        >
+                            0 / 300
+                        </span>
+
+                        <button
+                            type="button"
+                            id="submitCommunityPost"
+                            class="community-submit-button"
+                        >
+                            投稿する
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================
+                 場所入力欄
+            ====================================== -->
+            <section
+                id="locationSelector"
+                class="location-selector"
+                hidden
+            >
+
+                <div class="location-selector-header">
+
+                    <h2>
+                        場所を追加
+                    </h2>
+
+                    <button
+                        type="button"
+                        id="closeLocationSelector"
+                        aria-label="場所の入力を閉じる"
+                    >
+                        ×
+                    </button>
+
+                </div>
+
+
+                <div class="location-input-group">
+
+                    <input
+                        type="text"
+                        id="locationInput"
+                        maxlength="50"
+                        placeholder="例：瀬長島、国際通り、美ら海水族館"
+                    >
+
+                    <button
+                        type="button"
+                        id="addLocationButton"
+                    >
+                        追加
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================
+                 投稿一覧
+            ====================================== -->
+            <section class="community-post-list">
+
+                <div class="post-list-heading">
+
+                    <div>
+
+                        <span class="section-label">
+                            COMMUNITY TIMELINE
+                        </span>
+
+                        <h2 id="postListTitle">
+                            新着の投稿
+                        </h2>
+
+                    </div>
+
+
+                    <select
+                        id="postSortSelect"
+                        class="post-sort-select"
+                        aria-label="投稿の並び順"
+                    >
+
+                        <option value="new">
+                            新しい順
+                        </option>
+
+                        <option value="old">
+                            古い順
+                        </option>
+
+                        <option value="likes">
+                            いいね順
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- JavaScriptで投稿を表示 -->
+                <div id="communityPosts"></div>
+
+
+                <!-- 投稿がない場合 -->
+                <section
+                    id="emptyPostMessage"
+                    class="empty-post-message"
+                    hidden
+                >
+
+                    <span aria-hidden="true">
+                        💬
+                    </span>
+
+                    <h2>
+                        まだ投稿がありません
+                    </h2>
+
+                    <p>
+                        最初の投稿をして、コミュニティを盛り上げよう！
+                    </p>
+
+                </section>
+
+            </section>
+
+        </section>
+
+
+        <!-- =====================================
+             右サイドバー
+        ====================================== -->
+        <aside class="community-right-sidebar">
+
+
+            <!-- コミュニティについて -->
+            <section class="community-info-card">
+
+                <h2>
+                    コミュニティについて
+                </h2>
+
+                <p id="sideCommunityDescription">
+                    コミュニティの説明を読み込んでいます。
+                </p>
+
+
+                <dl class="community-details">
+
+                    <div>
+
+                        <dt>
+                            カテゴリー
+                        </dt>
+
+                        <dd id="sideCommunityCategory">
+                            -
+                        </dd>
+
+                    </div>
+
+                    <div>
+
+                        <dt>
+                            公開範囲
+                        </dt>
+
+                        <dd>
+                            公開
+                        </dd>
+
+                    </div>
+
+                    <div>
+
+                        <dt>
+                            管理者
+                        </dt>
+
+                        <dd id="communityOwner">
+                            -
+                        </dd>
+
+                    </div>
+
+                </dl>
+
+            </section>
+
+
+            <!-- ルール -->
+            <section class="community-rule-card">
+
+                <h2>
+                    コミュニティルール
+                </h2>
+
+                <ol id="communityRuleList">
+
+                    <li>
+                        相手を傷つける投稿は控えましょう。
+                    </li>
+
+                    <li>
+                        個人情報の投稿は禁止です。
+                    </li>
+
+                    <li>
+                        コミュニティのテーマに沿って交流しましょう。
+                    </li>
+
+                </ol>
+
+            </section>
+
+
+            <!-- メンバー -->
+            <section class="community-member-card">
+
+                <div class="side-card-header">
+
+                    <h2>
+                        メンバー
+                    </h2>
+
+                    <a
+                        id="allMemberLink"
+                        href="community_members.html"
+                    >
+                        すべて見る
+                    </a>
+
+                </div>
+
+
+                <div
+                    id="communityMemberList"
+                    class="member-list"
+                >
+                    <!-- JavaScriptで表示 -->
+                </div>
+
+            </section>
+
+
+            <!-- 退出 -->
+            <button
+                type="button"
+                id="leaveCommunityButton"
+                class="leave-community-button"
+            >
+                このコミュニティから退出する
+            </button>
+
+        </aside>
+
+    </main>
+
+
+    <!-- =====================================
+         退出確認モーダル
+    ====================================== -->
+    <div
+        id="leaveCommunityModal"
+        class="modal-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="leaveModalTitle"
+        hidden
+    >
+
+        <div class="confirm-modal">
+
+            <div
+                class="confirm-modal-icon"
+                aria-hidden="true"
+            >
+                ⚠️
+            </div>
+
+            <h2 id="leaveModalTitle">
+                コミュニティから退出しますか？
+            </h2>
+
+            <p>
+                退出すると、参加中のコミュニティ一覧から削除されます。
+                投稿した内容は残ります。
+            </p>
+
+
+            <div class="confirm-modal-actions">
+
+                <button
+                    type="button"
+                    id="cancelLeaveButton"
+                    class="cancel-modal-button"
+                >
+                    キャンセル
+                </button>
+
+                <button
+                    type="button"
+                    id="confirmLeaveButton"
+                    class="confirm-leave-button"
+                >
+                    退出する
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================
+         トーストメッセージ
+    ====================================== -->
+    <div
+        id="communityHomeToast"
+        class="community-toast"
+        role="status"
+        aria-live="polite"
+        hidden
+    >
+        処理が完了しました。
+    </div>
+
+
+    <!-- コミュニティホーム専用JavaScript -->
+    <script src="../../../js/pages/community/community_home.js"></script>
+
+</body>
+
+</html>

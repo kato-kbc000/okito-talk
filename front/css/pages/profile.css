@@ -1561,3 +1561,36 @@ button {
     }
 
 }.profile-post-card{background:#fff;border:1px solid #e5ecea;border-radius:16px;padding:18px;margin-bottom:14px}.profile-post-head{display:flex;justify-content:space-between;gap:12px;color:#64748b}.profile-post-head strong{color:#0f172a}.profile-post-actions{display:flex;justify-content:flex-end;gap:8px}.profile-post-actions button{border:1px solid #dce7e4;background:#fff;border-radius:999px;padding:7px 12px;cursor:pointer}
+
+/* DB統合で追加したプロフィール操作 */
+.other-profile-actions{display:flex;align-items:center;gap:8px;margin-top:18px}.other-profile-actions[hidden]{display:none}.other-profile-following-label{padding:5px 9px;border-radius:999px;background:var(--profile-soft);color:var(--profile-primary);font-size:12px;font-weight:700}.other-profile-follow-button,.other-profile-message-button,.unfollow-button,.user-message-button{width:auto;margin:0;padding:7px 11px;border-radius:9px;font-size:12px;font-weight:700}.other-profile-follow-button,.other-profile-message-button,.user-message-button{color:#fff;background:var(--profile-primary);border:1px solid var(--profile-primary)}.other-profile-unfollow-button,.unfollow-button{color:#d64545;background:#fff;border:1px solid #efbaba}.user-list-item{display:grid;grid-template-columns:46px minmax(0,1fr) auto;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid #edf0f4}.user-list-icon{width:46px;height:46px;display:grid;place-items:center;background:linear-gradient(135deg,var(--profile-primary),var(--profile-secondary));background-size:cover;background-position:center;border-radius:50%;color:#fff;font-weight:700}.user-list-information{min-width:0;display:flex;flex-direction:column}.user-name-link{padding:0;color:#172033;background:none;border:none;text-align:left}.user-list-information span{color:#7d8796;font-size:12px}.user-list-actions{display:flex;gap:7px}.profile-post-image{display:block;max-width:100%;max-height:420px;margin-top:12px;border-radius:12px}.db-place-list{display:grid}
+
+
+/* ========================================
+   DB遅延読み込み中の表示
+======================================== */
+
+.is-loading {
+    min-height: 90px;
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.user-list-loading {
+    margin: 0;
+    padding: 28px 16px;
+    color: #7a8694;
+    text-align: center;
+}
+
+.post-action-button.active[data-like] {
+    color: #ef476f;
+    border-color: #ffb5c7;
+    background: #fff0f4;
+}
+.post-action-button.active[data-save] {
+    color: #087f8c;
+    border-color: #8fe0d5;
+    background: #e9fbf8;
+}
+.post-action-button:disabled { opacity: .6; cursor: wait; }

@@ -1,146 +1,545 @@
 import {
-  getCurrentUser, ensureCurrentProfile, createPost, getTimelinePosts,
-  createPlace, getPlaces
+  getCurrentUser,
+  ensureCurrentProfile,
+  createPost,
+  getTimelinePosts,
+  createPlace,
+  getPlaces,
+  getFollowing,
+  getPostEngagement,
+  setPostLiked,
+  setPostSaved
 } from '../api.js';
 
 const $ = (id) => document.getElementById(id);
-const state = { user: null, profile: null, posts: [], places: [], area: 'all', selectedLocation: null, map: null, layers: null };
-const areaCoordinates = {
-  '沖縄県':[26.2124,127.6809], '那覇市':[26.2124,127.6809], '浦添市':[26.2458,127.7219],
-  '宜野湾市':[26.2816,127.7786], '沖縄市':[26.3344,127.8056], '名護市':[26.5916,127.9773],
-  '糸満市':[26.1236,127.6658], 'うるま市':[26.3790,127.8575]
+
+const state = {
+  user: null,
+  profile: null,
+  posts: [],
+  places: [],
+  followingIds: new Set(),
+  activeTab: 'all',
+  area: 'all',
+  selectedPostLocation: null,
+  selectedPinLocation: null,
+  map: null,
+  layers: null,
+  mapReady: false,
+  loadingData: false,
+  likedIds: new Set(),
+  savedIds: new Set(),
+  likeCounts: new Map()
 };
 
-function escapeHtml(value='') { const d=document.createElement('div'); d.textContent=String(value); return d.innerHTML; }
-function firstChar(value='沖') { return [...String(value).trim()][0] || '沖'; }
+function escapeHtml(value = '') {
+  const element = document.createElement('div');
+  element.textContent = String(value);
+  return element.innerHTML;
+}
+
+function firstChar(value = '沖') {
+  return [...String(value).trim()][0] || '沖';
+}
+
 function timeAgo(value) {
-  const sec=Math.max(0,Math.floor((Date.now()-new Date(value).getTime())/1000));
-  if(sec<60)return 'たった今'; if(sec<3600)return `${Math.floor(sec/60)}分前`;
-  if(sec<86400)return `${Math.floor(sec/3600)}時間前`; if(sec<604800)return `${Math.floor(sec/86400)}日前`;
+  const timestamp = new Date(value).getTime();
+  if (!Number.isFinite(timestamp)) return '';
+
+  const seconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
+  if (seconds < 60) return 'たった今';
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}分前`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}時間前`;
+  if (seconds < 604800) return `${Math.floor(seconds / 86400)}日前`;
   return new Date(value).toLocaleDateString('ja-JP');
 }
-function showMessage(message, isError=false) {
-  const el=$('filterResultMessage'); if(!el)return; el.textContent=message; el.style.color=isError?'#b91c1c':'';
+
+function setAvatar(element, profile) {
+  if (!element) return;
+
+  const label = profile?.display_name || profile?.username || 'ユーザー';
+  element.textContent = '';
+  element.style.backgroundImage = '';
+
+  if (profile?.avatar_url) {
+    element.style.backgroundImage = `url("${profile.avatar_url}")`;
+    element.style.backgroundSize = 'cover';
+    element.style.backgroundPosition = 'center';
+  } else {
+    element.textContent = firstChar(label);
+  }
+}
+
+function setTimelineStatus(message = '', isError = false) {
+  const element = $('timelineStatus');
+  if (!element) return;
+
+  element.textContent = message;
+  element.style.display = message ? 'block' : 'none';
+  element.style.color = isError ? '#b91c1c' : '';
+}
+
+function getVisiblePosts() {
+  return state.posts.filter((post) => {
+    const matchesTab =
+      state.activeTab === 'all' || state.followingIds.has(post.user_id);
+
+    const matchesArea =
+      state.area === 'all' ||
+      post.location_name === state.area ||
+      post.location_address?.includes(state.area);
+
+    return matchesTab && matchesArea;
+  });
 }
 
 function renderPosts() {
-  const list=$('postList'); if(!list)return;
-  const posts=state.posts.filter(p => state.area==='all' || p.location_name===state.area || p.location_address?.includes(state.area));
-  list.innerHTML=''; $('emptyPostMessage')?.style.setProperty('display', posts.length ? 'none' : 'block');
-  posts.forEach(post => {
-    const profile=post.profiles || {};
-    const article=document.createElement('article'); article.className='post-card';
-    article.dataset.lat=post.latitude ?? ''; article.dataset.lng=post.longitude ?? '';
-    article.innerHTML=`
-      <div class="post-user-icon">${escapeHtml(firstChar(profile.display_name || profile.username))}</div>
+  const list = $('postList');
+  if (!list) return;
+
+  const posts = getVisiblePosts();
+  list.replaceChildren();
+
+  const noFollowing = $('noFollowingMessage');
+  const empty = $('emptyPostMessage');
+
+  if (noFollowing) {
+    noFollowing.style.display =
+      state.activeTab === 'following' && posts.length === 0 ? 'block' : 'none';
+  }
+
+  if (empty) {
+    empty.style.display =
+      state.activeTab === 'all' && posts.length === 0 ? 'block' : 'none';
+  }
+
+  const fragment = document.createDocumentFragment();
+
+  posts.forEach((post) => {
+    const profile = post.profiles || {};
+    const article = document.createElement('article');
+    article.className = 'post-card';
+
+    article.innerHTML = `
+      <button
+        type="button"
+        class="post-user-icon post-profile-link"
+        aria-label="${escapeHtml(profile.display_name || 'ユーザー')}のプロフィールを開く"
+      ></button>
       <div class="post-main">
-        <div class="post-header"><div><strong>${escapeHtml(profile.display_name || 'ユーザー')}</strong><span>@${escapeHtml(profile.username || 'user')}</span></div><span class="post-time">${timeAgo(post.created_at)}</span></div>
-        <p class="post-text">${escapeHtml(post.content).replaceAll('\n','<br>')}</p>
+        <div class="post-header">
+          <div>
+            <strong>${escapeHtml(profile.display_name || 'ユーザー')}</strong>
+            <span>@${escapeHtml(profile.username || 'user')}</span>
+          </div>
+          <span class="post-time">${timeAgo(post.created_at)}</span>
+        </div>
+        <p class="post-text">${escapeHtml(post.content).replaceAll('\n', '<br>')}</p>
         ${post.image_url ? `<img class="post-image" src="${escapeHtml(post.image_url)}" alt="投稿画像" loading="lazy">` : ''}
         <div class="post-bottom">
-          ${post.location_name || post.location_address ? `<button type="button" class="map-focus-button">📍${escapeHtml(post.location_name || post.location_address)}</button>` : '<span></span>'}
+          ${post.location_name || post.location_address
+            ? `<button type="button" class="map-focus-button">📍 ${escapeHtml(post.location_name || post.location_address)}</button>`
+            : '<span></span>'}
+          <div class="post-actions">
+            <button type="button" class="post-action-button ${state.likedIds.has(post.id) ? 'active' : ''}" data-like aria-pressed="${state.likedIds.has(post.id)}">
+              ${state.likedIds.has(post.id) ? '♥' : '♡'} いいね <span>${state.likeCounts.get(post.id) || 0}</span>
+            </button>
+            <button type="button" class="post-action-button ${state.savedIds.has(post.id) ? 'active' : ''}" data-save aria-pressed="${state.savedIds.has(post.id)}">
+              ${state.savedIds.has(post.id) ? '🔖' : '🔗'} 保存
+            </button>
+          </div>
         </div>
-      </div>`;
-    article.querySelector('.map-focus-button')?.addEventListener('click',()=>focusPost(post));
-    list.appendChild(article);
+      </div>
+    `;
+
+    const avatar = article.querySelector('.post-user-icon');
+    setAvatar(avatar, profile);
+
+    avatar?.addEventListener('click', () => {
+      if (post.user_id) {
+        location.href = `home/profile.html?userId=${encodeURIComponent(post.user_id)}`;
+      }
+    });
+
+    article.querySelector('.map-focus-button')?.addEventListener('click', () => {
+      focusPost(post);
+    });
+
+    article.querySelector('[data-like]')?.addEventListener('click', async (event) => {
+      const button = event.currentTarget;
+      const nextLiked = !state.likedIds.has(post.id);
+      button.disabled = true;
+      try {
+        await setPostLiked(state.user.id, post.id, nextLiked);
+        if (nextLiked) {
+          state.likedIds.add(post.id);
+          state.likeCounts.set(post.id, (state.likeCounts.get(post.id) || 0) + 1);
+        } else {
+          state.likedIds.delete(post.id);
+          state.likeCounts.set(post.id, Math.max(0, (state.likeCounts.get(post.id) || 0) - 1));
+        }
+        renderPosts();
+      } catch (error) {
+        alert(`いいねを更新できませんでした：${error.message}`);
+        button.disabled = false;
+      }
+    });
+
+    article.querySelector('[data-save]')?.addEventListener('click', async (event) => {
+      const button = event.currentTarget;
+      const nextSaved = !state.savedIds.has(post.id);
+      button.disabled = true;
+      try {
+        await setPostSaved(state.user.id, post.id, nextSaved);
+        if (nextSaved) state.savedIds.add(post.id);
+        else state.savedIds.delete(post.id);
+        renderPosts();
+      } catch (error) {
+        alert(`保存を更新できませんでした：${error.message}`);
+        button.disabled = false;
+      }
+    });
+
+    fragment.appendChild(article);
   });
-  showMessage(state.area==='all' ? `${posts.length}件の投稿を表示しています。` : `${state.area}の投稿：${posts.length}件`);
+
+  list.appendChild(fragment);
+
+  const filterMessage = $('filterResultMessage');
+  if (filterMessage) {
+    const tabLabel = state.activeTab === 'following' ? 'フォロー中' : '全体';
+    const areaLabel = state.area === 'all' ? '沖縄県すべて' : state.area;
+    filterMessage.textContent = `${tabLabel}・${areaLabel}：${posts.length}件`;
+  }
+
   refreshMap();
 }
 
 function initMap() {
-  if(!window.L || !$('map')) return;
-  state.map=L.map('map').setView([26.2124,127.6809],9);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(state.map);
-  state.layers=L.layerGroup().addTo(state.map);
-  state.map.on('click', e => {
-    state.selectedLocation={latitude:e.latlng.lat,longitude:e.latlng.lng};
-    $('postLocationStatusText').textContent=`地図で選択：${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
+  if (state.mapReady || !window.L || !$('map')) return;
+
+  state.map = window.L.map('map').setView([26.2124, 127.6809], 9);
+  window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(state.map);
+
+  state.layers = window.L.layerGroup().addTo(state.map);
+  state.mapReady = true;
+
+  state.map.on('click', (event) => {
+    state.selectedPostLocation = {
+      latitude: event.latlng.lat,
+      longitude: event.latlng.lng
+    };
+
+    const text = $('postLocationStatusText');
+    if (text) {
+      text.textContent = `地図で選択：${event.latlng.lat.toFixed(5)}, ${event.latlng.lng.toFixed(5)}`;
+    }
     $('postLocationStatus')?.classList.add('active');
   });
+
+  refreshMap();
 }
+
 function refreshMap() {
-  if(!state.layers)return; state.layers.clearLayers();
-  const bounds=[];
-  [...state.posts.map(p=>({...p,kind:'post'})),...state.places.map(p=>({...p,kind:'place'}))].forEach(item=>{
-    const lat=Number(item.latitude),lng=Number(item.longitude); if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
-    const label=item.kind==='post' ? item.content : `${item.name}${item.description?`<br>${item.description}`:''}`;
-    L.marker([lat,lng]).bindPopup(escapeHtml(label)).addTo(state.layers); bounds.push([lat,lng]);
+  if (!state.mapReady || !state.layers || !state.map) return;
+
+  state.layers.clearLayers();
+  const bounds = [];
+  const visiblePostIds = new Set(getVisiblePosts().map((post) => post.id));
+
+  const items = [
+    ...state.posts
+      .filter((post) => visiblePostIds.has(post.id))
+      .map((post) => ({ ...post, kind: 'post' })),
+    ...state.places.map((place) => ({ ...place, kind: 'place' }))
+  ];
+
+  items.forEach((item) => {
+    const latitude = Number(item.latitude);
+    const longitude = Number(item.longitude);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
+
+    const label = item.kind === 'post'
+      ? item.content
+      : `${item.name}${item.description ? `\n${item.description}` : ''}`;
+
+    window.L.marker([latitude, longitude])
+      .bindPopup(escapeHtml(label).replaceAll('\n', '<br>'))
+      .addTo(state.layers);
+
+    bounds.push([latitude, longitude]);
   });
-  if(bounds.length) state.map.fitBounds(bounds,{padding:[24,24],maxZoom:13});
+
+  if (bounds.length) {
+    state.map.fitBounds(bounds, { padding: [24, 24], maxZoom: 13 });
+  }
 }
+
 function focusPost(post) {
-  const lat=Number(post.latitude),lng=Number(post.longitude);
-  if(Number.isFinite(lat)&&Number.isFinite(lng)) state.map?.setView([lat,lng],15);
-  else if(areaCoordinates[post.location_name]) state.map?.setView(areaCoordinates[post.location_name],13);
-  document.getElementById('mapSection')?.scrollIntoView({behavior:'smooth'});
+  const latitude = Number(post.latitude);
+  const longitude = Number(post.longitude);
+
+  if (state.map && Number.isFinite(latitude) && Number.isFinite(longitude)) {
+    state.map.setView([latitude, longitude], 15);
+  }
+
+  $('mapSection')?.scrollIntoView({ behavior: 'smooth' });
 }
 
 async function geocode(address) {
-  const response=await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=jp&q=${encodeURIComponent(address)}`,{headers:{'Accept-Language':'ja'}});
-  if(!response.ok) throw new Error('住所検索に失敗しました。');
-  const data=await response.json(); if(!data[0]) throw new Error('住所から場所を見つけられませんでした。');
-  return {latitude:Number(data[0].lat),longitude:Number(data[0].lon)};
+  const response = await fetch(
+    `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=jp&q=${encodeURIComponent(address)}`,
+    { headers: { 'Accept-Language': 'ja' } }
+  );
+
+  if (!response.ok) throw new Error('住所検索に失敗しました。');
+
+  const data = await response.json();
+  if (!data[0]) throw new Error('住所から場所を見つけられませんでした。');
+
+  return {
+    latitude: Number(data[0].lat),
+    longitude: Number(data[0].lon)
+  };
 }
 
-async function loadData() {
-  [state.posts,state.places]=await Promise.all([getTimelinePosts(),getPlaces().catch(()=>[])]);
-  renderPosts();
+async function loadData({ force = false } = {}) {
+  if (state.loadingData) return;
+
+  state.loadingData = true;
+  setTimelineStatus('投稿を読み込んでいます…');
+
+  try {
+    const [posts, following, places] = await Promise.all([
+      getTimelinePosts({ force }),
+      getFollowing(state.user.id, { force }),
+      getPlaces({ force })
+    ]);
+
+    state.posts = posts || [];
+    state.followingIds = new Set((following || []).map((profile) => profile.id));
+    state.places = places || [];
+
+    const engagement = await getPostEngagement(
+      state.posts.map((post) => post.id),
+      state.user.id
+    );
+    state.likedIds = engagement.likedIds;
+    state.savedIds = engagement.savedIds;
+    state.likeCounts = engagement.likeCounts;
+
+    setTimelineStatus('');
+    renderPosts();
+  } catch (error) {
+    console.error(error);
+    state.posts = [];
+    state.places = [];
+    state.followingIds = new Set();
+    setTimelineStatus(`投稿を読み込めませんでした：${error.message}`, true);
+    renderPosts();
+  } finally {
+    state.loadingData = false;
+  }
 }
 
 async function init() {
   try {
-    state.user=await getCurrentUser();
-    if(!state.user){ location.replace('login.html'); return; }
-    state.profile=await ensureCurrentProfile(state.user);
-    ['currentUserAvatar','postFormAvatar'].forEach(id=>{if($(id))$(id).textContent=firstChar(state.profile.display_name)});
-    if($('currentUserDisplayName'))$('currentUserDisplayName').textContent=state.profile.display_name;
-    if($('currentUsername'))$('currentUsername').textContent=`@${state.profile.username}`;
-    if($('currentUserEmail'))$('currentUserEmail').textContent=state.user.email || '';
-    initMap(); await loadData();
-  } catch(error) { console.error(error); alert(`ホームの読み込みに失敗しました：${error.message}`); }
+    state.user = await getCurrentUser();
+    if (!state.user) {
+      location.replace('login.html');
+      return;
+    }
+
+    state.profile = await ensureCurrentProfile(state.user);
+    setAvatar($('postFormAvatar'), state.profile);
+
+    initMap();
+    await loadData();
+
+    const savedScroll = Number(sessionStorage.getItem('okitalk_home_scroll_y') || 0);
+    if (savedScroll > 0) {
+      requestAnimationFrame(() => window.scrollTo({ top: savedScroll, behavior: 'auto' }));
+    }
+  } catch (error) {
+    console.error(error);
+    setTimelineStatus(`ホームを読み込めませんでした：${error.message}`, true);
+  }
 }
 
-$('postContent')?.addEventListener('input',e=>{$('characterCount').textContent=`${e.target.value.length} / 200`;});
-$('placeDescription')?.addEventListener('input',e=>{$('placeDescriptionCount').textContent=`${e.target.value.length} / 150`;});
-$('areaFilterSelect')?.addEventListener('change',e=>{state.area=e.target.value;renderPosts();});
-$('clearAreaFilterButton')?.addEventListener('click',()=>{state.area='all';$('areaFilterSelect').value='all';renderPosts();});
-$('resetMapButton')?.addEventListener('click',()=>state.map?.setView([26.2124,127.6809],9));
-$('cancelPostLocationButton')?.addEventListener('click',()=>{state.selectedLocation=null;$('postLocationStatusText').textContent='';$('postLocationStatus')?.classList.remove('active');});
-$('useCurrentLocationButton')?.addEventListener('click',()=>navigator.geolocation?.getCurrentPosition(pos=>{
-  state.selectedLocation={latitude:pos.coords.latitude,longitude:pos.coords.longitude};
-  $('postLocationStatusText').textContent='現在地を投稿に追加します。'; $('postLocationStatus')?.classList.add('active');
-  state.map?.setView([pos.coords.latitude,pos.coords.longitude],15);
-},()=>alert('現在地を取得できませんでした。')));
-$('postImage')?.addEventListener('change',()=>alert('画像アップロードはStorage設定後に利用できます。今回は画像なしで投稿してください。'));
-$('removeImageButton')?.addEventListener('click',()=>{if($('postImage'))$('postImage').value='';$('imagePreviewContainer').style.display='none';});
-
-$('postForm')?.addEventListener('submit',async e=>{
-  e.preventDefault(); const content=$('postContent').value.trim(); if(!content)return;
-  const button=e.currentTarget.querySelector('[type="submit"]'); button.disabled=true;
-  try {
-    const area=$('areaSelect').value;
-    await createPost({userId:state.user.id,content,locationName:area,latitude:state.selectedLocation?.latitude ?? areaCoordinates[area]?.[0] ?? null,longitude:state.selectedLocation?.longitude ?? areaCoordinates[area]?.[1] ?? null});
-    e.currentTarget.reset(); $('characterCount').textContent='0 / 200'; state.selectedLocation=null; await loadData();
-  } catch(error){alert(`投稿に失敗しました：${error.message}`);} finally{button.disabled=false;}
+$('postContent')?.addEventListener('input', (event) => {
+  if ($('characterCount')) {
+    $('characterCount').textContent = `${event.target.value.length} / 200`;
+  }
 });
 
-$('placeForm')?.addEventListener('submit',async e=>{
-  e.preventDefault(); const button=$('addPinButton'); button.disabled=true;
-  try {
-    const address=$('placeAddress').value.trim(); const coords=state.selectedLocation || await geocode(address);
-    await createPlace({userId:state.user.id,name:$('placeName').value.trim(),address,description:$('placeDescription')?.value.trim()||null,...coords});
-    e.currentTarget.reset(); state.selectedLocation=null; await loadData(); alert('地図に追加しました。');
-  } catch(error){alert(`ピンを追加できませんでした：${error.message}`);} finally{button.disabled=false;}
+$('placeDescription')?.addEventListener('input', (event) => {
+  if ($('placeDescriptionCount')) {
+    $('placeDescriptionCount').textContent = `${event.target.value.length} / 150`;
+  }
 });
 
-$('useCurrentLocationForPinButton')?.addEventListener('click',()=>navigator.geolocation?.getCurrentPosition(pos=>{
-  state.selectedLocation={latitude:pos.coords.latitude,longitude:pos.coords.longitude}; $('placeAddress').value='現在地'; $('clearPinLocationButton').hidden=false;
-},()=>alert('現在地を取得できませんでした。')));
-$('clearPinLocationButton')?.addEventListener('click',()=>{state.selectedLocation=null;$('placeAddress').value='';$('clearPinLocationButton').hidden=true;});
+document.querySelectorAll('.timeline-tab').forEach((button) => {
+  button.addEventListener('click', () => {
+    state.activeTab = button.dataset.tab || 'all';
+    document.querySelectorAll('.timeline-tab').forEach((tab) => {
+      tab.classList.toggle('active', tab === button);
+    });
+    renderPosts();
+  });
+});
 
-const menu=$('mobileMenuDrawer');
-function toggleMenu(open){if(!menu)return;menu.setAttribute('aria-hidden',String(!open));menu.classList.toggle('open',open);$('mobileMenuButton')?.setAttribute('aria-expanded',String(open));}
-$('mobileMenuButton')?.addEventListener('click',()=>toggleMenu(true)); $('mobileMenuCloseButton')?.addEventListener('click',()=>toggleMenu(false)); $('mobileMenuBackdrop')?.addEventListener('click',()=>toggleMenu(false));
+$('areaFilterSelect')?.addEventListener('change', (event) => {
+  state.area = event.target.value;
+  renderPosts();
+});
 
-document.addEventListener('DOMContentLoaded',init);
+$('clearAreaFilterButton')?.addEventListener('click', () => {
+  state.area = 'all';
+  if ($('areaFilterSelect')) $('areaFilterSelect').value = 'all';
+  renderPosts();
+});
+
+$('resetMapButton')?.addEventListener('click', () => {
+  state.map?.setView([26.2124, 127.6809], 9);
+});
+
+$('cancelPostLocationButton')?.addEventListener('click', () => {
+  state.selectedPostLocation = null;
+  if ($('postLocationStatusText')) $('postLocationStatusText').textContent = '';
+  $('postLocationStatus')?.classList.remove('active');
+});
+
+$('useCurrentLocationButton')?.addEventListener('click', () => {
+  if (!navigator.geolocation) {
+    alert('このブラウザでは現在地を取得できません。');
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      state.selectedPostLocation = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude
+      };
+      if ($('postLocationStatusText')) {
+        $('postLocationStatusText').textContent = '現在地を投稿に追加します。';
+      }
+      $('postLocationStatus')?.classList.add('active');
+      state.map?.setView([position.coords.latitude, position.coords.longitude], 15);
+    },
+    () => alert('現在地を取得できませんでした。')
+  );
+});
+
+$('postForm')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+
+  const form = event.currentTarget;
+  const content = $('postContent')?.value.trim();
+  if (!content) return;
+
+  const button = form.querySelector('[type="submit"]');
+  button.disabled = true;
+
+  try {
+    await createPost({
+      userId: state.user.id,
+      content,
+      locationName: $('areaSelect')?.value || null,
+      latitude: state.selectedPostLocation?.latitude ?? null,
+      longitude: state.selectedPostLocation?.longitude ?? null
+    });
+
+    form.reset();
+    if ($('characterCount')) $('characterCount').textContent = '0 / 200';
+    state.selectedPostLocation = null;
+    if ($('postLocationStatusText')) $('postLocationStatusText').textContent = '';
+    $('postLocationStatus')?.classList.remove('active');
+
+    await loadData({ force: true });
+  } catch (error) {
+    alert(`投稿に失敗しました：${error.message}`);
+  } finally {
+    button.disabled = false;
+  }
+});
+
+$('placeForm')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+
+  const form = event.currentTarget;
+  const button = $('addPinButton');
+  button.disabled = true;
+
+  try {
+    const address = $('placeAddress')?.value.trim();
+    const coordinates = state.selectedPinLocation || await geocode(address);
+
+    await createPlace({
+      userId: state.user.id,
+      name: $('placeName')?.value.trim(),
+      address,
+      description: $('placeDescription')?.value.trim() || null,
+      ...coordinates
+    });
+
+    form.reset();
+    state.selectedPinLocation = null;
+    if ($('clearPinLocationButton')) $('clearPinLocationButton').hidden = true;
+    await loadData({ force: true });
+  } catch (error) {
+    alert(`ピンを追加できませんでした：${error.message}`);
+  } finally {
+    button.disabled = false;
+  }
+});
+
+$('useCurrentLocationForPinButton')?.addEventListener('click', () => {
+  if (!navigator.geolocation) {
+    alert('このブラウザでは現在地を取得できません。');
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      state.selectedPinLocation = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude
+      };
+      if ($('placeAddress')) $('placeAddress').value = '現在地';
+      if ($('clearPinLocationButton')) $('clearPinLocationButton').hidden = false;
+    },
+    () => alert('現在地を取得できませんでした。')
+  );
+});
+
+$('clearPinLocationButton')?.addEventListener('click', () => {
+  state.selectedPinLocation = null;
+  if ($('placeAddress')) $('placeAddress').value = '';
+  $('clearPinLocationButton').hidden = true;
+});
+
+const menu = $('mobileMenuDrawer');
+function toggleMenu(open) {
+  if (!menu) return;
+  menu.setAttribute('aria-hidden', String(!open));
+  menu.classList.toggle('open', open);
+  $('mobileMenuButton')?.setAttribute('aria-expanded', String(open));
+}
+
+$('mobileMenuButton')?.addEventListener('click', () => toggleMenu(true));
+$('mobileMenuCloseButton')?.addEventListener('click', () => toggleMenu(false));
+$('mobileMenuBackdrop')?.addEventListener('click', () => toggleMenu(false));
+
+document.querySelectorAll('.mobile-menu-link').forEach((link) => {
+  link.addEventListener('click', () => toggleMenu(false));
+});
+
+window.addEventListener('pagehide', () => {
+  sessionStorage.setItem('okitalk_home_scroll_y', String(window.scrollY));
+});
+
+document.addEventListener('DOMContentLoaded', init);

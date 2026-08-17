@@ -11,6 +11,8 @@
 
     <title>ホーム | おきとーーーーーーく</title>
 
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
     <!-- 共通ヘッダー -->
     <link
         rel="stylesheet"
@@ -28,27 +30,9 @@
         rel="stylesheet"
         href="../css/pages/home.css"
     >
-
-    <!-- APIキー不要の地図（Leaflet + OpenStreetMap） -->
-    <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        crossorigin=""
-    >
 </head>
 
 <body>
-
-    <!--
-        Supabaseアカウント連携用の互換要素。
-        旧home.jsが参照するIDを残しつつ、デザインには表示しません。
-    -->
-    <div id="currentUserBridge" hidden aria-hidden="true">
-        <div id="currentUserAvatar">沖</div>
-        <strong id="currentUserDisplayName">読み込み中...</strong>
-        <span id="currentUsername"></span>
-        <span id="currentUserEmail"></span>
-    </div>
 
     <!-- スマホ用メニューボタン -->
     <button
@@ -164,7 +148,7 @@
                 </a>
 
                 <a
-                    href="add-pin.html"
+                    href="home/add-pin.html"
                     class="header-link"
                 >
                     追加（ピン）
@@ -282,9 +266,7 @@
 
                 <section class="post-form-area">
 
-                <div id="postFormAvatar" class="post-form-icon">
-                    沖
-                </div>
+                <div id="postFormAvatar" class="post-form-icon" aria-label="ログイン中のユーザー"></div>
 
                 <form
                     id="postForm"
@@ -297,30 +279,6 @@
                         placeholder="今日見つけた景色、お店、イベントをシェアしよう…"
                         required
                     ></textarea>
-
-                    <!-- 写真プレビュー -->
-                    <div
-                        id="imagePreviewContainer"
-                        class="image-preview-container"
-                        style="display: none;"
-                    >
-
-                        <img
-                            id="imagePreview"
-                            class="image-preview"
-                            alt="選択した画像のプレビュー"
-                        >
-
-                        <button
-                            type="button"
-                            id="removeImageButton"
-                            class="remove-image-button"
-                            title="画像を取り消す"
-                        >
-                            ✕
-                        </button>
-
-                    </div>
 
                     <!-- 投稿ツール -->
                     <div class="post-toolbar">
@@ -373,22 +331,6 @@
                             >
                                 📍 現在地
                             </button>
-
-                            <label
-                                for="postImage"
-                                class="tool-button"
-                                title="写真を追加"
-                            >
-                                <span aria-hidden="true">📷</span>
-                                <span class="tool-button-text">写真</span>
-                            </label>
-
-                            <input
-                                type="file"
-                                id="postImage"
-                                accept="image/*"
-                                hidden
-                            >
 
                         </div>
 
@@ -483,22 +425,7 @@
                 フォローしているユーザーの投稿はありません
             </p>
 
-            <!-- 保存済み投稿が空の場合 -->
-            <p
-                id="noSavedMessage"
-                class="no-saved-message"
-                style="display: none;"
-            >
-                保存している投稿はありません
-            </p>
-
-            <p
-                id="noNearbyMessage"
-                class="no-nearby-message"
-                style="display: none;"
-            >
-                現在地から5km以内の投稿はありません
-            </p>
+            <p id="timelineStatus" class="filter-result-message" aria-live="polite">投稿を読み込んでいます…</p>
 
             <!-- 投稿がない場合 -->
             <div
@@ -600,7 +527,7 @@
 
                 </div>
 
-                <form id="placeForm">
+                <form id="placeForm" novalidate>
 
                     <div class="place-form-group">
 
@@ -710,21 +637,8 @@
             <div id="postDetailBody" class="post-detail-body"></div>
         </section>
     </div>
-
-    <!-- Supabase Auth / Database -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <!-- APIキー不要の地図ライブラリ -->
-    <script
-        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        crossorigin=""
-    ></script>
-
-    <!--
-        home.js内でimportを使用し、Supabaseのログイン情報・DBを読み込むため
-        type="module"を付けます。
-    -->
-    <script type="module" src="../js/common-header.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module" src="../js/pages/home.js"></script>
 
 </body>

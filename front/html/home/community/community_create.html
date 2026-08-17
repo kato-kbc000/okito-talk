@@ -1,0 +1,1710 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="沖縄県民向けコミュニティSNSのコミュニティ作成ページです。"
+    >
+
+    <title>
+        コミュニティ作成 | おきとーーーーーーく
+    </title>
+
+    <!-- 共通CSS -->
+    <link
+        rel="stylesheet"
+        href="../../../css/header.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="../../../css/button.css"
+    >
+
+    <!-- コミュニティ作成専用CSS -->
+    <link
+        rel="stylesheet"
+        href="../../../css/pages/community/community_create.css"
+    >
+</head>
+
+<body>
+
+    <!-- =====================================
+         共通ヘッダー
+    ====================================== -->
+    <header class="site-header">
+
+        <div class="header-inner">
+
+            <!-- ロゴ -->
+            <a
+                href="../home.html"
+                class="site-logo"
+                aria-label="おきとーーーーーーく ホーム"
+            >
+
+                <div class="pop-logo">
+
+                    <span class="c1">お</span>
+                    <span class="c2">き</span>
+                    <span class="c3">と</span>
+                    <span class="c4">ー</span>
+                    <span class="c4">ー</span>
+                    <span class="c4">ー</span>
+                    <span class="c4">ー</span>
+                    <span class="c5">く</span>
+
+                </div>
+
+            </a>
+
+
+            <!-- ヘッダーナビ -->
+            <nav
+                class="header-nav"
+                aria-label="メインメニュー"
+            >
+
+                <a
+                    href="../search.html"
+                    class="header-link"
+                >
+                    検索
+                </a>
+
+                <a
+                    href="../community.html"
+                    class="header-link active"
+                    aria-current="page"
+                >
+                    コミュニティ
+                </a>
+
+                <a
+                    href="../notification.html"
+                    class="header-link"
+                >
+                    通知
+                </a>
+
+                <a
+                    href="../profile.html"
+                    class="header-link"
+                >
+                    プロフィール
+                </a>
+
+            </nav>
+
+        </div>
+
+    </header>
+
+
+    <!-- =====================================
+         ページ全体
+    ====================================== -->
+    <main class="community-create-layout">
+
+
+        <!-- =====================================
+             左サイドバー
+        ====================================== -->
+        <aside class="create-sidebar">
+
+            <!-- サイドバータイトル -->
+            <section class="sidebar-heading">
+
+                <span class="sidebar-label">
+                    COMMUNITY
+                </span>
+
+                <h1>
+                    コミュニティ
+                </h1>
+
+                <p>
+                    沖縄のみんなと交流できる、新しいコミュニティを作成できます。
+                </p>
+
+            </section>
+
+
+            <!-- サイドバーメニュー -->
+            <nav
+                class="create-side-menu"
+                aria-label="コミュニティメニュー"
+            >
+
+                <!-- ホーム -->
+                <a
+                    href="../home.html"
+                    class="create-side-item"
+                >
+
+                    <span
+                        class="side-item-icon"
+                        aria-hidden="true"
+                    >
+                        🏠
+                    </span>
+
+                    <span class="side-item-content">
+
+                        <strong>
+                            ホーム
+                        </strong>
+
+                        <small>
+                            通常のホームへ戻る
+                        </small>
+
+                    </span>
+
+                </a>
+
+
+                <!-- コミュニティ一覧 -->
+                <a
+                    href="../community.html"
+                    class="create-side-item"
+                >
+
+                    <span
+                        class="side-item-icon"
+                        aria-hidden="true"
+                    >
+                        👥
+                    </span>
+
+                    <span class="side-item-content">
+
+                        <strong>
+                            コミュニティ一覧
+                        </strong>
+
+                        <small>
+                            参加中の一覧を見る
+                        </small>
+
+                    </span>
+
+                </a>
+
+
+                <!-- コミュニティ検索 -->
+                <a
+                    href="community_search.html"
+                    class="create-side-item"
+                >
+
+                    <span
+                        class="side-item-icon"
+                        aria-hidden="true"
+                    >
+                        🔍
+                    </span>
+
+                    <span class="side-item-content">
+
+                        <strong>
+                            コミュニティ検索
+                        </strong>
+
+                        <small>
+                            興味のある場所を探す
+                        </small>
+
+                    </span>
+
+                </a>
+
+
+                <!-- コミュニティ作成 -->
+                <a
+                    href="community_create.html"
+                    class="create-side-item active"
+                    aria-current="page"
+                >
+
+                    <span
+                        class="side-item-icon"
+                        aria-hidden="true"
+                    >
+                        ➕
+                    </span>
+
+                    <span class="side-item-content">
+
+                        <strong>
+                            コミュニティ作成
+                        </strong>
+
+                        <small>
+                            新しい交流の場を作る
+                        </small>
+
+                    </span>
+
+                </a>
+
+            </nav>
+
+
+            <!-- 作成時の注意 -->
+            <section class="sidebar-note">
+
+                <div
+                    class="sidebar-note-icon"
+                    aria-hidden="true"
+                >
+                    💡
+                </div>
+
+                <div>
+
+                    <h2>
+                        作成前に確認
+                    </h2>
+
+                    <p>
+                        同じ内容のコミュニティがないか、検索ページで確認してから作成しましょう。
+                    </p>
+
+                </div>
+
+            </section>
+
+        </aside>
+
+
+        <!-- =====================================
+             中央・右コンテンツ
+        ====================================== -->
+        <div class="create-page-content">
+
+
+            <!-- =====================================
+                 ページ上部
+            ====================================== -->
+            <section class="create-page-header">
+
+                <div>
+
+                    <span class="page-label">
+                        CREATE COMMUNITY
+                    </span>
+
+                    <h1>
+                        新しいコミュニティを作成
+                    </h1>
+
+                    <p>
+                        必要な情報を入力して、沖縄のみんなが交流できる場所を作りましょう。
+                    </p>
+
+                </div>
+
+
+                <!-- 入力進捗 -->
+                <div
+                    class="form-progress"
+                    aria-label="入力進捗"
+                >
+
+                    <div class="progress-information">
+
+                        <span>
+                            入力進捗
+                        </span>
+
+                        <strong id="formProgressText">
+                            0%
+                        </strong>
+
+                    </div>
+
+                    <div
+                        class="progress-track"
+                        aria-hidden="true"
+                    >
+
+                        <div
+                            id="formProgressBar"
+                            class="progress-bar"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================
+                 2カラム
+            ====================================== -->
+            <div class="create-content-grid">
+
+
+                <!-- =====================================
+                     入力フォーム
+                ====================================== -->
+                <section class="create-form-column">
+
+                    <form
+                        id="communityCreateForm"
+                        class="community-create-form"
+                        novalidate
+                    >
+
+
+                        <!-- =====================================
+                             基本情報
+                        ====================================== -->
+                        <section class="form-section">
+
+                            <div class="form-section-header">
+
+                                <div class="section-number">
+                                    1
+                                </div>
+
+                                <div>
+
+                                    <h2>
+                                        基本情報
+                                    </h2>
+
+                                    <p>
+                                        コミュニティの名前や説明を入力してください。
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="form-section-body">
+
+
+                                <!-- コミュニティ名 -->
+                                <div class="form-group">
+
+                                    <div class="form-label-row">
+
+                                        <label for="communityNameInput">
+                                            コミュニティ名
+                                            <span class="required-label">
+                                                必須
+                                            </span>
+                                        </label>
+
+                                        <span
+                                            id="communityNameCount"
+                                            class="input-count"
+                                        >
+                                            0 / 30
+                                        </span>
+
+                                    </div>
+
+
+                                    <input
+                                        type="text"
+                                        id="communityNameInput"
+                                        name="communityName"
+                                        class="form-input"
+                                        maxlength="30"
+                                        autocomplete="off"
+                                        placeholder="例：沖縄カフェ巡り"
+                                        aria-describedby="communityNameHelp communityNameError"
+                                        required
+                                    >
+
+
+                                    <p
+                                        id="communityNameHelp"
+                                        class="form-help"
+                                    >
+                                        コミュニティの内容が分かりやすい名前がおすすめです。
+                                    </p>
+
+
+                                    <p
+                                        id="communityNameError"
+                                        class="form-error"
+                                        role="alert"
+                                        hidden
+                                    >
+                                        コミュニティ名を入力してください。
+                                    </p>
+
+                                </div>
+
+
+                                <!-- カテゴリー -->
+                                <div class="form-group">
+
+                                    <label for="communityCategorySelect">
+                                        カテゴリー
+                                        <span class="required-label">
+                                            必須
+                                        </span>
+                                    </label>
+
+
+                                    <div class="select-wrapper">
+
+                                        <select
+                                            id="communityCategorySelect"
+                                            name="communityCategory"
+                                            class="form-select"
+                                            aria-describedby="communityCategoryError"
+                                            required
+                                        >
+
+                                            <option
+                                                value=""
+                                                selected
+                                                disabled
+                                            >
+                                                カテゴリーを選択してください
+                                            </option>
+
+                                            <option value="地域">
+                                                地域
+                                            </option>
+
+                                            <option value="自然・海">
+                                                自然・海
+                                            </option>
+
+                                            <option value="グルメ">
+                                                グルメ
+                                            </option>
+
+                                            <option value="文化・伝統">
+                                                文化・伝統
+                                            </option>
+
+                                            <option value="スポーツ">
+                                                スポーツ
+                                            </option>
+
+                                            <option value="旅行・観光">
+                                                旅行・観光
+                                            </option>
+
+                                            <option value="音楽">
+                                                音楽
+                                            </option>
+
+                                            <option value="趣味">
+                                                趣味
+                                            </option>
+
+                                            <option value="子育て">
+                                                子育て
+                                            </option>
+
+                                            <option value="学校・学習">
+                                                学校・学習
+                                            </option>
+
+                                            <option value="仕事">
+                                                仕事
+                                            </option>
+
+                                            <option value="イベント">
+                                                イベント
+                                            </option>
+
+                                            <option value="その他">
+                                                その他
+                                            </option>
+
+                                        </select>
+
+                                    </div>
+
+
+                                    <p
+                                        id="communityCategoryError"
+                                        class="form-error"
+                                        role="alert"
+                                        hidden
+                                    >
+                                        カテゴリーを選択してください。
+                                    </p>
+
+                                </div>
+
+
+                                <!-- 説明 -->
+                                <div class="form-group">
+
+                                    <div class="form-label-row">
+
+                                        <label for="communityDescriptionInput">
+                                            コミュニティの説明
+                                            <span class="required-label">
+                                                必須
+                                            </span>
+                                        </label>
+
+                                        <span
+                                            id="communityDescriptionCount"
+                                            class="input-count"
+                                        >
+                                            0 / 300
+                                        </span>
+
+                                    </div>
+
+
+                                    <textarea
+                                        id="communityDescriptionInput"
+                                        name="communityDescription"
+                                        class="form-textarea"
+                                        maxlength="300"
+                                        rows="6"
+                                        placeholder="どのような人が参加し、どのような情報を共有するコミュニティなのかを書いてください。"
+                                        aria-describedby="communityDescriptionHelp communityDescriptionError"
+                                        required
+                                    ></textarea>
+
+
+                                    <p
+                                        id="communityDescriptionHelp"
+                                        class="form-help"
+                                    >
+                                        参加する人がコミュニティの目的を理解できるように説明しましょう。
+                                    </p>
+
+
+                                    <p
+                                        id="communityDescriptionError"
+                                        class="form-error"
+                                        role="alert"
+                                        hidden
+                                    >
+                                        コミュニティの説明を入力してください。
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </section>
+
+
+                        <!-- =====================================
+                             カバー画像
+                        ====================================== -->
+                        <section class="form-section">
+
+                            <div class="form-section-header">
+
+                                <div class="section-number">
+                                    2
+                                </div>
+
+                                <div>
+
+                                    <h2>
+                                        カバー画像
+                                    </h2>
+
+                                    <p>
+                                        コミュニティ上部に表示する画像を設定できます。
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="form-section-body">
+
+                                <div class="form-group">
+
+                                    <label>
+                                        カバー画像
+                                        <span class="optional-label">
+                                            任意
+                                        </span>
+                                    </label>
+
+
+                                    <!-- カバー画像アップロード -->
+                                    <div
+                                        id="coverUploadArea"
+                                        class="image-upload-area"
+                                        tabindex="0"
+                                        role="button"
+                                        aria-label="カバー画像を選択"
+                                    >
+
+                                        <input
+                                            type="file"
+                                            id="coverImageInput"
+                                            name="coverImage"
+                                            accept="image/jpeg,image/png,image/webp"
+                                            hidden
+                                        >
+
+
+                                        <!-- 未選択時 -->
+                                        <div
+                                            id="coverUploadPlaceholder"
+                                            class="upload-placeholder"
+                                        >
+
+                                            <span
+                                                class="upload-icon"
+                                                aria-hidden="true"
+                                            >
+                                                🖼️
+                                            </span>
+
+                                            <strong>
+                                                クリックして画像を選択
+                                            </strong>
+
+                                            <p>
+                                                または画像をここにドラッグしてください
+                                            </p>
+
+                                            <small>
+                                                JPEG・PNG・WebP／最大3MB
+                                            </small>
+
+                                        </div>
+
+
+                                        <!-- 選択後プレビュー -->
+                                        <div
+                                            id="coverImagePreviewArea"
+                                            class="uploaded-image-preview"
+                                            hidden
+                                        >
+
+                                            <img
+                                                id="coverImagePreview"
+                                                src=""
+                                                alt="カバー画像のプレビュー"
+                                            >
+
+                                            <div class="image-preview-overlay">
+
+                                                <span>
+                                                    画像を変更
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <button
+                                        type="button"
+                                        id="removeCoverImageButton"
+                                        class="remove-upload-button"
+                                        hidden
+                                    >
+                                        カバー画像を削除
+                                    </button>
+
+
+                                    <p
+                                        id="coverImageError"
+                                        class="form-error"
+                                        role="alert"
+                                        hidden
+                                    >
+                                        画像を読み込めませんでした。
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </section>
+
+
+                        <!-- =====================================
+                             アイコン
+                        ====================================== -->
+                        <section class="form-section">
+
+                            <div class="form-section-header">
+
+                                <div class="section-number">
+                                    3
+                                </div>
+
+                                <div>
+
+                                    <h2>
+                                        コミュニティアイコン
+                                    </h2>
+
+                                    <p>
+                                        コミュニティを表す絵文字を選択してください。
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="form-section-body">
+
+                                <div class="form-group">
+
+                                    <label>
+                                        アイコン
+                                        <span class="required-label">
+                                            必須
+                                        </span>
+                                    </label>
+
+
+                                    <div
+                                        id="emojiSelector"
+                                        class="emoji-selector"
+                                        role="radiogroup"
+                                        aria-label="コミュニティアイコン"
+                                    >
+
+                                        <button
+                                            type="button"
+                                            class="emoji-option active"
+                                            data-emoji="🌺"
+                                            role="radio"
+                                            aria-checked="true"
+                                            aria-label="ハイビスカス"
+                                        >
+                                            🌺
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="emoji-option"
+                                            data-emoji="🐠"
+                                            role="radio"
+                                            aria-checked="false"
+                                            aria-label="魚"
+                                        >
+                                            🐠
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="emoji-option"
+                                            data-emoji="🐢"
+                                            role="radio"
+                                            aria-checked="false"
+                                            aria-label="ウミガメ"
+                                        >
+                                            🐢
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="emoji-option"
+                                            data-emoji="🌊"
+                                            role="radio"
+                                            aria-checked="false"
+                                            aria-label="海"
+                                        >
+                                            🌊
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="emoji-option"
+                                            data-emoji="🏝️"
+                                            role="radio"
+                                            aria-checked="false"
+                                            aria-label="島"
+                                        >
+                                            🏝️
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="emoji-option"
+                                            data-emoji="🍜"
+                                            role="radio"
+                                            aria-checked="false"
+                                            aria-label="沖縄そば"
+                                        >
+                                            🍜
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="emoji-option"
+                                            data-emoji="☕"
+                                            role="radio"
+                                            aria-checked="false"
+                                            aria-label="カフェ"
+                                        >
+                                            ☕
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="emoji-option"
+                                            data-emoji="🥁"
+                                            role="radio"
+                                            aria-checked="false"
+                                            aria-label="太鼓"
+                                        >
+                                            🥁
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="emoji-option"
+                                            data-emoji="⚽"
+                                            role="radio"
+                                            aria-checked="false"
+                                            aria-label="サッカー"
+                                        >
+                                            ⚽
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="emoji-option"
+                                            data-emoji="🏀"
+                                            role="radio"
+                                            aria-checked="false"
+                                            aria-label="バスケットボール"
+                                        >
+                                            🏀
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="emoji-option"
+                                            data-emoji="🚗"
+                                            role="radio"
+                                            aria-checked="false"
+                                            aria-label="ドライブ"
+                                        >
+                                            🚗
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="emoji-option"
+                                            data-emoji="📸"
+                                            role="radio"
+                                            aria-checked="false"
+                                            aria-label="カメラ"
+                                        >
+                                            📸
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="emoji-option"
+                                            data-emoji="🎵"
+                                            role="radio"
+                                            aria-checked="false"
+                                            aria-label="音楽"
+                                        >
+                                            🎵
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="emoji-option"
+                                            data-emoji="📚"
+                                            role="radio"
+                                            aria-checked="false"
+                                            aria-label="本"
+                                        >
+                                            📚
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="emoji-option"
+                                            data-emoji="🎮"
+                                            role="radio"
+                                            aria-checked="false"
+                                            aria-label="ゲーム"
+                                        >
+                                            🎮
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="emoji-option"
+                                            data-emoji="🤝"
+                                            role="radio"
+                                            aria-checked="false"
+                                            aria-label="交流"
+                                        >
+                                            🤝
+                                        </button>
+
+                                    </div>
+
+
+                                    <!-- 選択アイコン保存用 -->
+                                    <input
+                                        type="hidden"
+                                        id="selectedEmojiInput"
+                                        name="communityIcon"
+                                        value="🌺"
+                                    >
+
+                                </div>
+
+                            </div>
+
+                        </section>
+
+
+                        <!-- =====================================
+                             公開設定
+                        ====================================== -->
+                        <section class="form-section">
+
+                            <div class="form-section-header">
+
+                                <div class="section-number">
+                                    4
+                                </div>
+
+                                <div>
+
+                                    <h2>
+                                        公開設定
+                                    </h2>
+
+                                    <p>
+                                        コミュニティへの参加方法を設定します。
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="form-section-body">
+
+                                <fieldset class="visibility-fieldset">
+
+                                    <legend>
+                                        公開範囲
+                                        <span class="required-label">
+                                            必須
+                                        </span>
+                                    </legend>
+
+
+                                    <label class="visibility-option">
+
+                                        <input
+                                            type="radio"
+                                            name="communityVisibility"
+                                            value="public"
+                                            checked
+                                        >
+
+                                        <span class="visibility-radio"></span>
+
+                                        <span
+                                            class="visibility-icon"
+                                            aria-hidden="true"
+                                        >
+                                            🌐
+                                        </span>
+
+                                        <span class="visibility-content">
+
+                                            <strong>
+                                                公開コミュニティ
+                                            </strong>
+
+                                            <small>
+                                                誰でもコミュニティを見つけて、すぐに参加できます。
+                                            </small>
+
+                                        </span>
+
+                                    </label>
+
+
+                                    <label class="visibility-option">
+
+                                        <input
+                                            type="radio"
+                                            name="communityVisibility"
+                                            value="approval"
+                                        >
+
+                                        <span class="visibility-radio"></span>
+
+                                        <span
+                                            class="visibility-icon"
+                                            aria-hidden="true"
+                                        >
+                                            ✅
+                                        </span>
+
+                                        <span class="visibility-content">
+
+                                            <strong>
+                                                承認制コミュニティ
+                                            </strong>
+
+                                            <small>
+                                                管理者が参加申請を承認した人だけ参加できます。
+                                            </small>
+
+                                        </span>
+
+                                    </label>
+
+
+                                    <label class="visibility-option">
+
+                                        <input
+                                            type="radio"
+                                            name="communityVisibility"
+                                            value="private"
+                                        >
+
+                                        <span class="visibility-radio"></span>
+
+                                        <span
+                                            class="visibility-icon"
+                                            aria-hidden="true"
+                                        >
+                                            🔒
+                                        </span>
+
+                                        <span class="visibility-content">
+
+                                            <strong>
+                                                非公開コミュニティ
+                                            </strong>
+
+                                            <small>
+                                                招待された人だけがコミュニティを確認できます。
+                                            </small>
+
+                                        </span>
+
+                                    </label>
+
+                                </fieldset>
+
+                            </div>
+
+                        </section>
+
+
+                        <!-- =====================================
+                             コミュニティルール
+                        ====================================== -->
+                        <section class="form-section">
+
+                            <div class="form-section-header">
+
+                                <div class="section-number">
+                                    5
+                                </div>
+
+                                <div>
+
+                                    <h2>
+                                        コミュニティルール
+                                    </h2>
+
+                                    <p>
+                                        参加者に守ってほしいルールを設定できます。
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="form-section-body">
+
+                                <div class="form-group">
+
+                                    <div class="form-label-row">
+
+                                        <label>
+                                            ルール
+                                            <span class="optional-label">
+                                                任意
+                                            </span>
+                                        </label>
+
+                                        <span
+                                            id="ruleCount"
+                                            class="input-count"
+                                        >
+                                            3 / 5
+                                        </span>
+
+                                    </div>
+
+
+                                    <div
+                                        id="communityRuleContainer"
+                                        class="community-rule-container"
+                                    >
+
+                                        <!-- ルール1 -->
+                                        <div
+                                            class="rule-input-row"
+                                            data-rule-index="1"
+                                        >
+
+                                            <span class="rule-number">
+                                                1
+                                            </span>
+
+                                            <input
+                                                type="text"
+                                                class="rule-input"
+                                                maxlength="100"
+                                                value="相手を傷つける投稿やコメントは控えましょう。"
+                                                placeholder="コミュニティルールを入力"
+                                                aria-label="コミュニティルール1"
+                                            >
+
+                                            <button
+                                                type="button"
+                                                class="remove-rule-button"
+                                                data-action="remove-rule"
+                                                aria-label="ルール1を削除"
+                                            >
+                                                ×
+                                            </button>
+
+                                        </div>
+
+
+                                        <!-- ルール2 -->
+                                        <div
+                                            class="rule-input-row"
+                                            data-rule-index="2"
+                                        >
+
+                                            <span class="rule-number">
+                                                2
+                                            </span>
+
+                                            <input
+                                                type="text"
+                                                class="rule-input"
+                                                maxlength="100"
+                                                value="個人情報を無断で投稿しないでください。"
+                                                placeholder="コミュニティルールを入力"
+                                                aria-label="コミュニティルール2"
+                                            >
+
+                                            <button
+                                                type="button"
+                                                class="remove-rule-button"
+                                                data-action="remove-rule"
+                                                aria-label="ルール2を削除"
+                                            >
+                                                ×
+                                            </button>
+
+                                        </div>
+
+
+                                        <!-- ルール3 -->
+                                        <div
+                                            class="rule-input-row"
+                                            data-rule-index="3"
+                                        >
+
+                                            <span class="rule-number">
+                                                3
+                                            </span>
+
+                                            <input
+                                                type="text"
+                                                class="rule-input"
+                                                maxlength="100"
+                                                value="コミュニティのテーマに沿って交流しましょう。"
+                                                placeholder="コミュニティルールを入力"
+                                                aria-label="コミュニティルール3"
+                                            >
+
+                                            <button
+                                                type="button"
+                                                class="remove-rule-button"
+                                                data-action="remove-rule"
+                                                aria-label="ルール3を削除"
+                                            >
+                                                ×
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <button
+                                        type="button"
+                                        id="addRuleButton"
+                                        class="add-rule-button"
+                                    >
+
+                                        <span aria-hidden="true">
+                                            ＋
+                                        </span>
+
+                                        ルールを追加
+
+                                    </button>
+
+
+                                    <p class="form-help">
+                                        ルールは最大5件まで設定できます。
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </section>
+
+
+                        <!-- =====================================
+                             作成ボタン
+                        ====================================== -->
+                        <section class="create-submit-section">
+
+                            <div class="create-submit-message">
+
+                                <span aria-hidden="true">
+                                    🌺
+                                </span>
+
+                                <p>
+                                    作成後は、あなたがコミュニティの管理者になります。
+                                </p>
+
+                            </div>
+
+
+                            <div class="create-form-actions">
+
+                                <a
+                                    href="../community.html"
+                                    class="cancel-create-button"
+                                >
+                                    キャンセル
+                                </a>
+
+                                <button
+                                    type="submit"
+                                    id="createCommunityButton"
+                                    class="create-community-button"
+                                >
+
+                                    <span aria-hidden="true">
+                                        ＋
+                                    </span>
+
+                                    コミュニティを作成
+
+                                </button>
+
+                            </div>
+
+                        </section>
+
+                    </form>
+
+                </section>
+
+
+                <!-- =====================================
+                     右側プレビュー
+                ====================================== -->
+                <aside class="create-preview-column">
+
+                    <div class="preview-sticky-area">
+
+                        <section class="preview-heading">
+
+                            <span class="page-label">
+                                LIVE PREVIEW
+                            </span>
+
+                            <h2>
+                                コミュニティプレビュー
+                            </h2>
+
+                            <p>
+                                入力した内容がリアルタイムで反映されます。
+                            </p>
+
+                        </section>
+
+
+                        <!-- プレビューカード -->
+                        <article
+                            id="communityPreviewCard"
+                            class="community-preview-card"
+                        >
+
+                            <!-- カバー -->
+                            <div
+                                id="previewCover"
+                                class="preview-cover"
+                            >
+
+                                <img
+                                    id="previewCoverImage"
+                                    src=""
+                                    alt=""
+                                    hidden
+                                >
+
+                                <div
+                                    id="previewCoverBackground"
+                                    class="preview-cover-background"
+                                ></div>
+
+
+                                <div
+                                    id="previewIcon"
+                                    class="preview-community-icon"
+                                    aria-hidden="true"
+                                >
+                                    🌺
+                                </div>
+
+                            </div>
+
+
+                            <!-- カード本文 -->
+                            <div class="preview-card-body">
+
+                                <div class="preview-category-row">
+
+                                    <span
+                                        id="previewCategory"
+                                        class="preview-category"
+                                    >
+                                        カテゴリー
+                                    </span>
+
+                                    <span
+                                        id="previewVisibility"
+                                        class="preview-visibility"
+                                    >
+                                        🌐 公開
+                                    </span>
+
+                                </div>
+
+
+                                <h2 id="previewCommunityName">
+                                    コミュニティ名
+                                </h2>
+
+
+                                <p
+                                    id="previewCommunityDescription"
+                                    class="preview-description placeholder-text"
+                                >
+                                    コミュニティの説明がここに表示されます。
+                                </p>
+
+
+                                <div class="preview-community-meta">
+
+                                    <span>
+
+                                        <span aria-hidden="true">
+                                            👥
+                                        </span>
+
+                                        <strong>
+                                            1
+                                        </strong>
+
+                                        メンバー
+
+                                    </span>
+
+                                    <span>
+
+                                        <span aria-hidden="true">
+                                            💬
+                                        </span>
+
+                                        <strong>
+                                            0
+                                        </strong>
+
+                                        投稿
+
+                                    </span>
+
+                                </div>
+
+
+                                <button
+                                    type="button"
+                                    class="preview-joined-button"
+                                    disabled
+                                >
+                                    ✓ 参加中
+                                </button>
+
+                            </div>
+
+                        </article>
+
+
+                        <!-- ルールプレビュー -->
+                        <section class="rule-preview-card">
+
+                            <div class="rule-preview-header">
+
+                                <span
+                                    aria-hidden="true"
+                                    class="rule-preview-icon"
+                                >
+                                    📋
+                                </span>
+
+                                <h2>
+                                    コミュニティルール
+                                </h2>
+
+                            </div>
+
+
+                            <ol id="previewRuleList">
+
+                                <li>
+                                    相手を傷つける投稿やコメントは控えましょう。
+                                </li>
+
+                                <li>
+                                    個人情報を無断で投稿しないでください。
+                                </li>
+
+                                <li>
+                                    コミュニティのテーマに沿って交流しましょう。
+                                </li>
+
+                            </ol>
+
+
+                            <p
+                                id="emptyRulePreview"
+                                class="empty-rule-preview"
+                                hidden
+                            >
+                                ルールは設定されていません。
+                            </p>
+
+                        </section>
+
+
+                        <!-- データ保存案内 -->
+                        <section class="storage-information-card">
+
+                            <div
+                                class="storage-information-icon"
+                                aria-hidden="true"
+                            >
+                                💾
+                            </div>
+
+                            <div>
+
+                                <h2>
+                                    入力内容について
+                                </h2>
+
+                                <p>
+                                    作成したコミュニティは、このブラウザのLocalStorageに保存されます。
+                                </p>
+
+                            </div>
+
+                        </section>
+
+                    </div>
+
+                </aside>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <!-- =====================================
+         作成確認モーダル
+    ====================================== -->
+    <div
+        id="createConfirmModal"
+        class="modal-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="createConfirmTitle"
+        hidden
+    >
+
+        <div class="create-confirm-modal">
+
+            <div
+                class="confirm-icon"
+                aria-hidden="true"
+            >
+                🌺
+            </div>
+
+            <span class="modal-label">
+                CREATE COMMUNITY
+            </span>
+
+            <h2 id="createConfirmTitle">
+                この内容で作成しますか？
+            </h2>
+
+            <p>
+                作成後もコミュニティ設定から、説明やルールを変更できます。
+            </p>
+
+
+            <div class="modal-community-summary">
+
+                <span
+                    id="modalCommunityIcon"
+                    class="modal-community-icon"
+                    aria-hidden="true"
+                >
+                    🌺
+                </span>
+
+                <div>
+
+                    <strong id="modalCommunityName">
+                        コミュニティ名
+                    </strong>
+
+                    <small id="modalCommunityCategory">
+                        カテゴリー
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <div class="confirm-modal-actions">
+
+                <button
+                    type="button"
+                    id="cancelCreateConfirmButton"
+                    class="modal-cancel-button"
+                >
+                    入力画面に戻る
+                </button>
+
+                <button
+                    type="button"
+                    id="confirmCreateCommunityButton"
+                    class="modal-confirm-button"
+                >
+                    作成する
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================
+         作成処理中モーダル
+    ====================================== -->
+    <div
+        id="creatingModal"
+        class="modal-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="creatingModalTitle"
+        hidden
+    >
+
+        <div class="creating-modal">
+
+            <div
+                class="loading-spinner"
+                aria-hidden="true"
+            ></div>
+
+            <h2 id="creatingModalTitle">
+                コミュニティを作成しています
+            </h2>
+
+            <p>
+                しばらくお待ちください。
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================
+         トーストメッセージ
+    ====================================== -->
+    <div
+        id="communityCreateToast"
+        class="community-toast"
+        role="status"
+        aria-live="polite"
+        hidden
+    >
+        メッセージ
+    </div>
+
+
+    <!-- コミュニティ作成専用JavaScript -->
+    <script type="module" src="../../../js/pages/community/community_create.js"></script>
+
+</body>
+
+</html>
