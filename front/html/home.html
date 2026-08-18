@@ -11,8 +11,6 @@
 
     <title>ホーム | おきとーーーーーーく</title>
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-
     <!-- 共通ヘッダー -->
     <link
         rel="stylesheet"
@@ -28,7 +26,7 @@
     <!-- ホーム画面専用CSS -->
     <link
         rel="stylesheet"
-        href="../css/pages/home.css"
+        href="../css/pages/home.css?v=20260818-6"
     >
 </head>
 
@@ -148,7 +146,7 @@
                 </a>
 
                 <a
-                    href="home/add-pin.html"
+                    href="#mapSection"
                     class="header-link"
                 >
                     追加（ピン）
@@ -217,6 +215,7 @@
                         <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>
                     </span>
                     <span class="side-label">メッセージ</span>
+                    <span id="homeUnreadMessageBadge" class="side-notification" hidden>0</span>
                 </a>
 
                 <a href="home/profile.html" class="side-link">
@@ -280,6 +279,12 @@
                         required
                     ></textarea>
 
+                    <div class="post-media-row">
+                        <label class="post-image-tool" for="postImageInput">📷 写真を追加</label>
+                        <input id="postImageInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+                        <small>JPEG・PNG・WebP・GIF／最大5MB</small>
+                    </div>
+
                     <!-- 投稿ツール -->
                     <div class="post-toolbar">
 
@@ -332,6 +337,9 @@
                                 📍 現在地
                             </button>
 
+                            <input id="postAddressInput" class="post-address-input" type="search" placeholder="住所・施設名で検索" aria-label="投稿場所の住所">
+                            <button type="button" id="searchPostAddressButton" class="location-tool-button">🔎 住所検索</button>
+
                         </div>
 
                         <!-- 右側 -->
@@ -350,6 +358,11 @@
 
                         </div>
 
+                    </div>
+
+                    <div id="postImagePreviewArea" class="post-image-preview-area" hidden>
+                        <img id="postImagePreview" alt="投稿画像のプレビュー">
+                        <button type="button" id="removePostImageButton" aria-label="選択した画像を削除">✕</button>
                     </div>
 
                     <div
@@ -453,6 +466,8 @@
                 class="post-list"
             >
             </div>
+
+            <button type="button" id="loadMorePostsButton" class="button load-more-posts-button" hidden>過去の投稿をさらに見る</button>
 
         </section>
 
@@ -638,8 +653,7 @@
         </section>
     </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script type="module" src="../js/pages/home.js"></script>
+    <script type="module" src="../js/pages/home.js?v=20260818-4"></script>
 
 </body>
 

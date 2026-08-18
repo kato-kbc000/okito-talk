@@ -1,8 +1,8 @@
-import { supabase } from "../supabase.js";
+import { supabase } from "../../supabase.js";
 import { getCurrentUser } from "../api.js";
 
 const $ = (id) => document.getElementById(id);
-const communityId = new URLSearchParams(location.search).get("communityId");
+const communityId = new URLSearchParams(location.search).get("communityId") || new URLSearchParams(location.search).get("id");
 
 let currentUser = null;
 let community = null;

@@ -669,6 +669,9 @@ $('postCountButton')?.addEventListener('click', () => { changeTab('posts'); $('p
 $('openFollowingButton')?.addEventListener('click', () => openUserList('following'));
 $('openFollowerButton')?.addEventListener('click', () => openUserList('followers'));
 $('openMutualButton')?.addEventListener('click', () => state.isOwn && openUserList('mutual'));
+$('openSpotAddButton')?.addEventListener('click', () => {
+    location.href = '../home.html#mapSection';
+});
 
 // モーダル
 document.querySelectorAll('[data-close-modal]').forEach(button => button.addEventListener('click', () => {

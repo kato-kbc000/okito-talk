@@ -1,4 +1,4 @@
-import { getCurrentUser, getOtherProfiles, getProfile, getMessages, sendMessage } from '../api.js';
+import { getCurrentUser, getOtherProfiles, getProfile, getMessages, sendMessage, getUnreadMessageCount, markConversationRead, subscribeToIncomingMessages } from '../api.js?v=20260818-4';
 const $=id=>document.getElementById(id);
 const state={user:null,profiles:[],selected:null};
 const esc=v=>{const d=document.createElement('div');d.textContent=String(v??'');return d.innerHTML};
@@ -76,7 +76,8 @@ async function selectProfile(p,button=null){
     $('messageForm').querySelector('button').disabled=false;
     await renderMessages();
 }
-async function renderMessages(){const rows=await getMessages(state.user.id,state.selected.id);$('chatMessages').innerHTML=rows.length?'':'<p class="chat-empty">まだメッセージはありません。</p>';rows.forEach(m=>{const el=document.createElement('div');el.className=`message-bubble ${m.sender_id===state.user.id?'mine':'theirs'}`;el.textContent=m.content;$('chatMessages').appendChild(el);});$('chatMessages').scrollTop=$('chatMessages').scrollHeight;}
+async function refreshUnreadBadge(){const badge=$('messageUnreadBadge');if(!badge||!state.user)return;const count=await getUnreadMessageCount(state.user.id);badge.textContent=count>99?'99+':String(count);badge.hidden=count===0;badge.setAttribute('aria-label',`未読メッセージ${count}件`);}
+async function renderMessages(){await markConversationRead(state.user.id,state.selected.id);const rows=await getMessages(state.user.id,state.selected.id);$('chatMessages').innerHTML=rows.length?'':'<p class="chat-empty">まだメッセージはありません。</p>';rows.forEach(m=>{const el=document.createElement('div');el.className=`message-bubble ${m.sender_id===state.user.id?'mine':'theirs'}`;el.textContent=m.content;$('chatMessages').appendChild(el);});$('chatMessages').scrollTop=$('chatMessages').scrollHeight;await refreshUnreadBadge();}
 $('messageSearch').addEventListener('input',renderProfiles);$('messageForm').addEventListener('submit',async e=>{e.preventDefault();const content=$('messageInput').value.trim();if(!content||!state.selected)return;try{await sendMessage({senderId:state.user.id,receiverId:state.selected.id,content});$('messageInput').value='';await renderMessages();}catch(err){alert(`送信できませんでした：${err.message}`);}});
 document.addEventListener('DOMContentLoaded',async()=>{
     try{
@@ -89,6 +90,8 @@ document.addEventListener('DOMContentLoaded',async()=>{
 
         state.profiles=await getOtherProfiles(state.user.id);
         renderProfiles();
+        await refreshUnreadBadge();
+        subscribeToIncomingMessages(state.user.id, async payload=>{await refreshUnreadBadge();if(state.selected?.id===payload.new.sender_id)await renderMessages();});
 
         /*
          * プロフィールページから渡されたユーザーIDがある場合だけ、

@@ -2,16 +2,40 @@ import {
   getCurrentUser,
   ensureCurrentProfile,
   createPost,
+  uploadPostImage,
   getTimelinePosts,
   createPlace,
   getPlaces,
   getFollowing,
   getPostEngagement,
+  getUnreadMessageCount,
+  subscribeToIncomingMessages,
   setPostLiked,
   setPostSaved
-} from '../api.js';
+} from '../api.js?v=20260818-4';
 
 const $ = (id) => document.getElementById(id);
+const GOOGLE_MAPS_API_KEY = 'AIzaSyCU4qTaXJ3m3Uq-v_dvU3rFgIfyc-gUJkY';
+let googleMapsPromise;
+
+function loadGoogleMaps() {
+  if (window.google?.maps) return Promise.resolve(window.google.maps);
+  if (googleMapsPromise) return googleMapsPromise;
+  googleMapsPromise = new Promise((resolve, reject) => {
+    const callbackName = `okitalkGoogleMapsReady${Date.now()}`;
+    window[callbackName] = () => {
+      delete window[callbackName];
+      resolve(window.google.maps);
+    };
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(GOOGLE_MAPS_API_KEY)}&callback=${callbackName}&language=ja&region=JP&v=weekly`;
+    script.async = true;
+    script.defer = true;
+    script.onerror = () => reject(new Error('Google Mapsを読み込めませんでした。APIキーの制限とMaps JavaScript APIの有効化を確認してください。'));
+    document.head.appendChild(script);
+  });
+  return googleMapsPromise;
+}
 
 const state = {
   user: null,
@@ -29,7 +53,12 @@ const state = {
   loadingData: false,
   likedIds: new Set(),
   savedIds: new Set(),
-  likeCounts: new Map()
+  likeCounts: new Map(),
+  page: 0,
+  pageSize: 30,
+  hasMorePosts: true
+  ,postImageFile: null
+  ,postImagePreviewUrl: null
 };
 
 function escapeHtml(value = '') {
@@ -77,6 +106,15 @@ function setTimelineStatus(message = '', isError = false) {
   element.textContent = message;
   element.style.display = message ? 'block' : 'none';
   element.style.color = isError ? '#b91c1c' : '';
+}
+
+async function refreshUnreadBadge() {
+  const badge = $('homeUnreadMessageBadge');
+  if (!badge || !state.user) return;
+  const count = await getUnreadMessageCount(state.user.id);
+  badge.textContent = count > 99 ? '99+' : String(count);
+  badge.hidden = count === 0;
+  badge.setAttribute('aria-label', `未読メッセージ${count}件`);
 }
 
 function getVisiblePosts() {
@@ -215,27 +253,29 @@ function renderPosts() {
   refreshMap();
 }
 
-function initMap() {
-  if (state.mapReady || !window.L || !$('map')) return;
-
-  state.map = window.L.map('map').setView([26.2124, 127.6809], 9);
-  window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; OpenStreetMap contributors'
-  }).addTo(state.map);
-
-  state.layers = window.L.layerGroup().addTo(state.map);
+async function initMap() {
+  if (state.mapReady || !$('map')) return;
+  const maps = await loadGoogleMaps();
+  state.map = new maps.Map($('map'), {
+    center: { lat: 26.2124, lng: 127.6809 },
+    zoom: 9,
+    mapTypeControl: false,
+    streetViewControl: false
+  });
+  state.layers = [];
   state.mapReady = true;
 
-  state.map.on('click', (event) => {
+  state.map.addListener('click', (event) => {
+    const latitude = event.latLng.lat();
+    const longitude = event.latLng.lng();
     state.selectedPostLocation = {
-      latitude: event.latlng.lat,
-      longitude: event.latlng.lng
+      latitude,
+      longitude
     };
 
     const text = $('postLocationStatusText');
     if (text) {
-      text.textContent = `地図で選択：${event.latlng.lat.toFixed(5)}, ${event.latlng.lng.toFixed(5)}`;
+      text.textContent = `地図で選択：${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
     }
     $('postLocationStatus')?.classList.add('active');
   });
@@ -244,10 +284,11 @@ function initMap() {
 }
 
 function refreshMap() {
-  if (!state.mapReady || !state.layers || !state.map) return;
-
-  state.layers.clearLayers();
-  const bounds = [];
+  if (!state.mapReady || !state.map || !window.google?.maps) return;
+  state.layers.forEach(marker => marker.setMap(null));
+  state.layers = [];
+  const bounds = new window.google.maps.LatLngBounds();
+  let markerCount = 0;
   const visiblePostIds = new Set(getVisiblePosts().map((post) => post.id));
 
   const items = [
@@ -260,22 +301,36 @@ function refreshMap() {
   items.forEach((item) => {
     const latitude = Number(item.latitude);
     const longitude = Number(item.longitude);
-    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || !isOkinawaCoordinate(latitude, longitude)) return;
 
     const label = item.kind === 'post'
       ? item.content
       : `${item.name}${item.description ? `\n${item.description}` : ''}`;
 
-    window.L.marker([latitude, longitude])
-      .bindPopup(escapeHtml(label).replaceAll('\n', '<br>'))
-      .addTo(state.layers);
-
-    bounds.push([latitude, longitude]);
+    const marker = new window.google.maps.Marker({
+      position: { lat: latitude, lng: longitude },
+      map: state.map,
+      title: label
+    });
+    const info = new window.google.maps.InfoWindow({
+      content: `<div>${escapeHtml(label).replaceAll('\n', '<br>')}</div>`
+    });
+    marker.addListener('click', () => info.open({ map: state.map, anchor: marker }));
+    state.layers.push(marker);
+    bounds.extend(marker.getPosition());
+    markerCount += 1;
   });
 
-  if (bounds.length) {
-    state.map.fitBounds(bounds, { padding: [24, 24], maxZoom: 13 });
+  if (markerCount) {
+    state.map.fitBounds(bounds, 24);
+    window.google.maps.event.addListenerOnce(state.map, 'idle', () => {
+      if (state.map.getZoom() > 13) state.map.setZoom(13);
+    });
   }
+}
+
+function isOkinawaCoordinate(latitude, longitude) {
+  return latitude >= 24 && latitude <= 28.8 && longitude >= 122.5 && longitude <= 131.5;
 }
 
 function focusPost(post) {
@@ -283,27 +338,43 @@ function focusPost(post) {
   const longitude = Number(post.longitude);
 
   if (state.map && Number.isFinite(latitude) && Number.isFinite(longitude)) {
-    state.map.setView([latitude, longitude], 15);
+    state.map.setCenter({ lat: latitude, lng: longitude });
+    state.map.setZoom(15);
   }
 
   $('mapSection')?.scrollIntoView({ behavior: 'smooth' });
 }
 
 async function geocode(address) {
+  const query = /沖縄/.test(address) ? address : `沖縄県 ${address}`;
+  try {
+    await loadGoogleMaps();
+    const geocoder = new window.google.maps.Geocoder();
+    const { results } = await geocoder.geocode({ address: query, region: 'JP' });
+    if (results?.[0]) {
+      const result = {
+        latitude: results[0].geometry.location.lat(),
+        longitude: results[0].geometry.location.lng(),
+        formattedAddress: results[0].formatted_address
+      };
+      if (isOkinawaCoordinate(result.latitude, result.longitude)) return result;
+    }
+  } catch (error) {
+    console.warn('Google Geocoderを利用できないため代替検索を使用します。', error);
+  }
+
   const response = await fetch(
-    `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=jp&q=${encodeURIComponent(address)}`,
+    `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=jp&viewbox=122.5,28.8,131.5,24&bounded=1&q=${encodeURIComponent(query)}`,
     { headers: { 'Accept-Language': 'ja' } }
   );
-
-  if (!response.ok) throw new Error('住所検索に失敗しました。');
-
-  const data = await response.json();
-  if (!data[0]) throw new Error('住所から場所を見つけられませんでした。');
-
-  return {
-    latitude: Number(data[0].lat),
-    longitude: Number(data[0].lon)
-  };
+  if (!response.ok) throw new Error('住所検索サービスへ接続できませんでした。');
+  const rows = await response.json();
+  const latitude = Number(rows?.[0]?.lat);
+  const longitude = Number(rows?.[0]?.lon);
+  if (!isOkinawaCoordinate(latitude, longitude)) {
+    throw new Error('沖縄県内の住所を確認できませんでした。市町村名・番地まで入力してください。');
+  }
+  return { latitude, longitude, formattedAddress: rows[0].display_name };
 }
 
 async function loadData({ force = false } = {}) {
@@ -314,12 +385,14 @@ async function loadData({ force = false } = {}) {
 
   try {
     const [posts, following, places] = await Promise.all([
-      getTimelinePosts({ force }),
+      getTimelinePosts({ force, page: 0, pageSize: state.pageSize }),
       getFollowing(state.user.id, { force }),
       getPlaces({ force })
     ]);
 
     state.posts = posts || [];
+    state.page = 0;
+    state.hasMorePosts = state.posts.length === state.pageSize;
     state.followingIds = new Set((following || []).map((profile) => profile.id));
     state.places = places || [];
 
@@ -333,6 +406,7 @@ async function loadData({ force = false } = {}) {
 
     setTimelineStatus('');
     renderPosts();
+    updateLoadMoreButton();
   } catch (error) {
     console.error(error);
     state.posts = [];
@@ -342,6 +416,39 @@ async function loadData({ force = false } = {}) {
     renderPosts();
   } finally {
     state.loadingData = false;
+  }
+}
+
+function updateLoadMoreButton() {
+  const button = $('loadMorePostsButton');
+  if (!button) return;
+  button.hidden = !state.hasMorePosts;
+  button.disabled = false;
+  button.textContent = '過去の投稿をさらに見る';
+}
+
+async function loadOlderPosts() {
+  const button = $('loadMorePostsButton');
+  if (!button || !state.hasMorePosts) return;
+  button.disabled = true;
+  button.textContent = '読み込み中…';
+  try {
+    const nextPage = state.page + 1;
+    const rows = await getTimelinePosts({ page: nextPage, pageSize: state.pageSize });
+    const knownIds = new Set(state.posts.map(post => post.id));
+    const additions = (rows || []).filter(post => !knownIds.has(post.id));
+    state.posts.push(...additions);
+    state.page = nextPage;
+    state.hasMorePosts = (rows || []).length === state.pageSize;
+    const engagement = await getPostEngagement(additions.map(post => post.id), state.user.id);
+    engagement.likedIds.forEach(id => state.likedIds.add(id));
+    engagement.savedIds.forEach(id => state.savedIds.add(id));
+    engagement.likeCounts.forEach((count, id) => state.likeCounts.set(id, count));
+    renderPosts();
+  } catch (error) {
+    alert(`過去の投稿を読み込めませんでした：${error.message}`);
+  } finally {
+    updateLoadMoreButton();
   }
 }
 
@@ -356,8 +463,10 @@ async function init() {
     state.profile = await ensureCurrentProfile(state.user);
     setAvatar($('postFormAvatar'), state.profile);
 
-    initMap();
+    await initMap();
     await loadData();
+    await refreshUnreadBadge();
+    subscribeToIncomingMessages(state.user.id, refreshUnreadBadge);
 
     const savedScroll = Number(sessionStorage.getItem('okitalk_home_scroll_y') || 0);
     if (savedScroll > 0) {
@@ -373,6 +482,30 @@ $('postContent')?.addEventListener('input', (event) => {
   if ($('characterCount')) {
     $('characterCount').textContent = `${event.target.value.length} / 200`;
   }
+});
+
+$('postImageInput')?.addEventListener('change', (event) => {
+  const file = event.target.files?.[0] || null;
+  if (!file) return;
+  if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+    alert('JPEG・PNG・WebP・GIFの5MB以下の画像を選択してください。');
+    event.target.value = '';
+    return;
+  }
+  if (state.postImagePreviewUrl) URL.revokeObjectURL(state.postImagePreviewUrl);
+  state.postImageFile = file;
+  state.postImagePreviewUrl = URL.createObjectURL(file);
+  $('postImagePreview').src = state.postImagePreviewUrl;
+  $('postImagePreviewArea').hidden = false;
+});
+
+$('removePostImageButton')?.addEventListener('click', () => {
+  if (state.postImagePreviewUrl) URL.revokeObjectURL(state.postImagePreviewUrl);
+  state.postImageFile = null;
+  state.postImagePreviewUrl = null;
+  if ($('postImageInput')) $('postImageInput').value = '';
+  $('postImagePreviewArea').hidden = true;
+  $('postImagePreview').removeAttribute('src');
 });
 
 $('placeDescription')?.addEventListener('input', (event) => {
@@ -403,7 +536,8 @@ $('clearAreaFilterButton')?.addEventListener('click', () => {
 });
 
 $('resetMapButton')?.addEventListener('click', () => {
-  state.map?.setView([26.2124, 127.6809], 9);
+  state.map?.setCenter({ lat: 26.2124, lng: 127.6809 });
+  state.map?.setZoom(9);
 });
 
 $('cancelPostLocationButton')?.addEventListener('click', () => {
@@ -411,6 +545,27 @@ $('cancelPostLocationButton')?.addEventListener('click', () => {
   if ($('postLocationStatusText')) $('postLocationStatusText').textContent = '';
   $('postLocationStatus')?.classList.remove('active');
 });
+
+$('searchPostAddressButton')?.addEventListener('click', async () => {
+  const address = $('postAddressInput')?.value.trim();
+  if (!address) return alert('検索する住所を入力してください。');
+  const button = $('searchPostAddressButton');
+  button.disabled = true;
+  try {
+    const coordinates = await geocode(address);
+    state.selectedPostLocation = { ...coordinates, address };
+    $('postLocationStatusText').textContent = `住所：${address}`;
+    $('postLocationStatus')?.classList.add('active');
+    state.map?.setCenter({ lat: coordinates.latitude, lng: coordinates.longitude });
+    state.map?.setZoom(15);
+  } catch (error) {
+    alert(error.message);
+  } finally {
+    button.disabled = false;
+  }
+});
+
+$('loadMorePostsButton')?.addEventListener('click', loadOlderPosts);
 
 $('useCurrentLocationButton')?.addEventListener('click', () => {
   if (!navigator.geolocation) {
@@ -428,7 +583,8 @@ $('useCurrentLocationButton')?.addEventListener('click', () => {
         $('postLocationStatusText').textContent = '現在地を投稿に追加します。';
       }
       $('postLocationStatus')?.classList.add('active');
-      state.map?.setView([position.coords.latitude, position.coords.longitude], 15);
+      state.map?.setCenter({ lat: position.coords.latitude, lng: position.coords.longitude });
+      state.map?.setZoom(15);
     },
     () => alert('現在地を取得できませんでした。')
   );
@@ -445,15 +601,25 @@ $('postForm')?.addEventListener('submit', async (event) => {
   button.disabled = true;
 
   try {
+    const imageUrl = state.postImageFile
+      ? await uploadPostImage(state.user.id, state.postImageFile)
+      : null;
     await createPost({
       userId: state.user.id,
       content,
       locationName: $('areaSelect')?.value || null,
+      locationAddress: state.selectedPostLocation?.address ?? null,
+      imageUrl,
       latitude: state.selectedPostLocation?.latitude ?? null,
       longitude: state.selectedPostLocation?.longitude ?? null
     });
 
     form.reset();
+    if (state.postImagePreviewUrl) URL.revokeObjectURL(state.postImagePreviewUrl);
+    state.postImageFile = null;
+    state.postImagePreviewUrl = null;
+    $('postImagePreviewArea').hidden = true;
+    $('postImagePreview').removeAttribute('src');
     if ($('characterCount')) $('characterCount').textContent = '0 / 200';
     state.selectedPostLocation = null;
     if ($('postLocationStatusText')) $('postLocationStatusText').textContent = '';

@@ -1,5 +1,7 @@
 "use strict";
 
+import { supabase } from '../../supabase.js';
+
 /* =========================================
    コミュニティホーム
    community_home.js
@@ -133,11 +135,11 @@ const communityData = [
    現在のユーザー
 ========================================= */
 
-const currentUser = {
-    id: "current-user",
-    name: "りゅうほ",
-    account: "@ryuho",
-    avatarText: "り"
+let currentUser = {
+    id: "",
+    name: "ユーザー",
+    account: "",
+    avatarText: "沖"
 };
 
 
@@ -180,6 +182,7 @@ const sampleMembers = [
 const pageState = {
     community: null,
     communityId: "",
+    members: [],
     activeTab: "new",
     selectedImage: "",
     selectedLocation: "",
@@ -342,18 +345,20 @@ document.addEventListener(
 /**
  * ページ全体を初期化します。
  */
-function initializeCommunityHome() {
+async function initializeCommunityHome() {
     try {
         pageState.communityId = getCommunityIdFromUrl();
 
-        pageState.community = getCommunityById(
-            pageState.communityId
-        );
+        pageState.community = await getDatabaseCommunity(pageState.communityId)
+            || getCommunityById(pageState.communityId);
 
         if (!pageState.community) {
             handleCommunityNotFound();
             return;
         }
+
+        await loadCurrentUser();
+        migrateLegacyCurrentUserPosts();
 
         ensureCommunityJoined();
         initializeDefaultPosts();
@@ -374,6 +379,91 @@ function initializeCommunityHome() {
             "コミュニティの読み込みに失敗しました。"
         );
     }
+}
+
+async function loadCurrentUser() {
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData?.user) throw new Error('ログイン中のユーザーを確認できませんでした。');
+    const user = authData.user;
+    const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('id, username, display_name, avatar_url')
+        .eq('id', user.id)
+        .maybeSingle();
+    if (error) throw error;
+    const name = profile?.display_name || profile?.username || user.email?.split('@')[0] || 'ユーザー';
+    currentUser = {
+        id: user.id,
+        name,
+        account: profile?.username ? `@${profile.username}` : '',
+        avatarText: [...name][0] || '沖',
+        avatarUrl: profile?.avatar_url || ''
+    };
+}
+
+function migrateLegacyCurrentUserPosts() {
+    const posts = getCommunityPosts();
+    let changed = false;
+    posts.forEach(post => {
+        if (post.authorId === 'current-user') {
+            post.authorId = currentUser.id;
+            post.authorName = currentUser.name;
+            post.authorAccount = currentUser.account;
+            post.authorAvatarText = currentUser.avatarText;
+            post.authorAvatarUrl = currentUser.avatarUrl;
+            changed = true;
+        }
+        (post.comments || []).forEach(comment => {
+            if (comment.authorName === 'りゅうほ') {
+                comment.authorName = currentUser.name;
+                comment.authorAvatarText = currentUser.avatarText;
+                changed = true;
+            }
+        });
+    });
+    if (changed) saveCommunityPosts(posts);
+}
+
+async function getDatabaseCommunity(communityId) {
+    if (!communityId) return null;
+    const { data, error } = await supabase
+        .from('communities')
+        .select('*, category:category_id(name), owner:owner_id(display_name,username), community_members(count)')
+        .eq('id', communityId)
+        .maybeSingle();
+    if (error) {
+        console.warn('DBコミュニティの取得に失敗しました。', error);
+        return null;
+    }
+    if (!data) return null;
+    const { data: memberRows, error: memberError } = await supabase
+        .from('community_members')
+        .select('role, joined_at, profile:user_id(id,username,display_name,avatar_url)')
+        .eq('community_id', communityId)
+        .order('joined_at', { ascending: true });
+    if (memberError) console.warn('メンバー取得に失敗しました。', memberError);
+    pageState.members = (memberRows || []).map(row => ({
+        id: row.profile?.id,
+        name: row.profile?.display_name || row.profile?.username || 'ユーザー',
+        account: row.profile?.username ? `@${row.profile.username}` : '',
+        avatarText: [...(row.profile?.display_name || row.profile?.username || '沖')][0],
+        avatarUrl: row.profile?.avatar_url || '',
+        role: row.role
+    })).filter(member => member.id);
+    return {
+        id: data.id,
+        name: data.name || '名称未設定',
+        category: data.category?.name || 'その他',
+        description: data.description || '説明はまだありません。',
+        icon: '🌺',
+        iconUrl: data.icon_url && !data.icon_url.includes('images.example.com') ? data.icon_url : '',
+        headerUrl: data.header_url && !data.header_url.includes('images.example.com') ? data.header_url : '',
+        owner: data.owner?.display_name || data.owner?.username || '管理者',
+        memberCount: pageState.members.length,
+        createdDate: new Date(data.created_at).toLocaleDateString('ja-JP'),
+        coverClass: 'cover-blue',
+        rules: ['相手を尊重して交流しましょう。', '個人情報の投稿には注意してください。']
+    };
 }
 
 
@@ -560,7 +650,10 @@ function setCommunityInformation() {
         `${community.name} | おきとーーーーーーく`;
 
     elements.communityHeroIcon.textContent =
-        community.icon;
+        community.iconUrl ? "" : community.icon;
+    elements.communityHeroIcon.style.backgroundImage = community.iconUrl ? `url("${community.iconUrl}")` : "";
+    elements.communityHeroIcon.style.backgroundSize = "cover";
+    elements.communityHeroIcon.style.backgroundPosition = "center";
 
     elements.communityCategory.textContent =
         community.category;
@@ -589,6 +682,11 @@ function setCommunityInformation() {
     elements.communityHeroCover.classList.add(
         community.coverClass
     );
+    if (community.headerUrl) {
+        elements.communityHeroCover.style.backgroundImage = `url("${community.headerUrl}")`;
+        elements.communityHeroCover.style.backgroundSize = "cover";
+        elements.communityHeroCover.style.backgroundPosition = "center";
+    }
 
     const posts = getCommunityPosts();
 
@@ -619,7 +717,7 @@ function setCurrentUserInformation() {
         currentUser.name;
 
     elements.currentUserAvatar.src =
-        createAvatarDataUrl(
+        currentUser.avatarUrl || createAvatarDataUrl(
             currentUser.avatarText,
             "#2f8cff"
         );
@@ -656,17 +754,18 @@ function renderMembers() {
 
     const fragment = document.createDocumentFragment();
 
-    sampleMembers.forEach((member, index) => {
+    const members = pageState.members.length ? pageState.members : sampleMembers.slice(0, pageState.community?.memberCount || 0);
+    members.forEach((member, index) => {
         const memberItem =
             document.createElement("a");
 
-        memberItem.href = "#";
+        memberItem.href = member.id ? `../profile.html?userId=${encodeURIComponent(member.id)}` : "#";
         memberItem.className = "member-item";
 
         const memberImage =
             document.createElement("img");
 
-        memberImage.src = createAvatarDataUrl(
+        memberImage.src = member.avatarUrl || createAvatarDataUrl(
             member.avatarText,
             getAvatarColor(index)
         );
@@ -994,6 +1093,7 @@ function submitPost() {
         authorName: currentUser.name,
         authorAccount: currentUser.account,
         authorAvatarText: currentUser.avatarText,
+        authorAvatarUrl: currentUser.avatarUrl,
         text: postText,
         image: pageState.selectedImage,
         location: pageState.selectedLocation,
@@ -1357,14 +1457,14 @@ function createPostElement(post) {
     const author =
         document.createElement("a");
 
-    author.href = "#";
+    author.href = post.authorId ? `../profile.html?userId=${encodeURIComponent(post.authorId)}` : "#";
     author.className = "post-author";
 
 
     const authorImage =
         document.createElement("img");
 
-    authorImage.src = createAvatarDataUrl(
+    authorImage.src = post.authorAvatarUrl || createAvatarDataUrl(
         post.authorAvatarText || "沖",
         "#2f8cff"
     );
@@ -1630,6 +1730,18 @@ function createCommentSection(post) {
     commentInput.placeholder =
         "コメントを入力";
 
+    const imageInput = document.createElement("input");
+    imageInput.type = "file";
+    imageInput.name = "commentImage";
+    imageInput.accept = "image/jpeg,image/png,image/webp,image/gif";
+    imageInput.hidden = true;
+
+    const imageLabel = document.createElement("label");
+    imageLabel.className = "comment-image-button";
+    imageLabel.textContent = "📷";
+    imageLabel.title = "コメントに写真を追加";
+    imageLabel.appendChild(imageInput);
+
 
     const submitButton =
         document.createElement("button");
@@ -1641,6 +1753,7 @@ function createCommentSection(post) {
     form.append(
         currentUserImage,
         commentInput,
+        imageLabel,
         submitButton
     );
 
@@ -1706,6 +1819,14 @@ function createCommentElement(comment) {
 
     text.textContent = comment.text;
 
+    const image = comment.image ? document.createElement("img") : null;
+    if (image) {
+        image.className = "comment-image";
+        image.src = comment.image;
+        image.alt = "コメント画像";
+        image.loading = "lazy";
+    }
+
 
     nameArea.append(
         name,
@@ -1714,7 +1835,8 @@ function createCommentElement(comment) {
 
     content.append(
         nameArea,
-        text
+        text,
+        ...(image ? [image] : [])
     );
 
     item.append(
@@ -1864,7 +1986,7 @@ function focusCommentInput(postElement) {
 }
 
 
-function handleCommentSubmit(event) {
+async function handleCommentSubmit(event) {
     const form =
         event.target.closest(".comment-form");
 
@@ -1884,13 +2006,27 @@ function handleCommentSubmit(event) {
     const commentText =
         input.value.trim();
 
-    if (!commentText) {
+    const imageFile = form.querySelector('input[name="commentImage"]')?.files?.[0];
+
+    if (!commentText && !imageFile) {
         showToast(
             "コメントを入力してください。"
         );
 
         return;
     }
+
+    if (imageFile && imageFile.size > 3 * 1024 * 1024) {
+        showToast("コメント画像は3MB以下にしてください。");
+        return;
+    }
+
+    const imageData = imageFile ? await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(new Error("画像を読み込めませんでした。"));
+        reader.readAsDataURL(imageFile);
+    }) : "";
 
     const posts = getCommunityPosts();
 
@@ -1911,6 +2047,7 @@ function handleCommentSubmit(event) {
         authorName: currentUser.name,
         authorAvatarText: currentUser.avatarText,
         text: commentText,
+        image: imageData,
         createdAt: new Date().toISOString()
     });
 

@@ -427,13 +427,33 @@ export async function createPost({ userId, content, locationName = null, locatio
     }
 
     if (response.error) throw response.error;
-    removeApiCache(createCacheKey("timeline"));
+    removeApiCacheByPrefix(`${API_CACHE_PREFIX}timeline:`);
     removeApiCache(createCacheKey("user-posts", userId));
     return response.data;
 }
 
-export async function getTimelinePosts({ force = false } = {}) {
-    const key = createCacheKey("timeline");
+export async function uploadPostImage(userId, file) {
+    if (!userId || !file) throw new Error("画像ファイルを確認できません。");
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowed.includes(file.type)) throw new Error("JPEG・PNG・WebP・GIF画像を選択してください。");
+    if (file.size > 5 * 1024 * 1024) throw new Error("投稿画像は5MB以下にしてください。");
+
+    const extension = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const path = `${userId}/${crypto.randomUUID()}.${extension || "jpg"}`;
+    const { error } = await supabase.storage
+        .from("post-images")
+        .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+    if (error) throw error;
+
+    const { data } = supabase.storage.from("post-images").getPublicUrl(path);
+    if (!data?.publicUrl) throw new Error("画像URLを取得できませんでした。");
+    return data.publicUrl;
+}
+
+export async function getTimelinePosts({ force = false, page = 0, pageSize = 30 } = {}) {
+    const safePage = Math.max(0, Number(page) || 0);
+    const safePageSize = Math.min(100, Math.max(1, Number(pageSize) || 30));
+    const key = createCacheKey("timeline", safePage, safePageSize);
 
     return withRequestCache({
         key,
@@ -443,7 +463,8 @@ export async function getTimelinePosts({ force = false } = {}) {
             const { data, error } = await supabase
                 .from("posts")
                 .select("*, profiles:user_id(username, display_name, avatar_url)")
-                .order("created_at", { ascending: false });
+                .order("created_at", { ascending: false })
+                .range(safePage * safePageSize, (safePage + 1) * safePageSize - 1);
 
             if (error) throw error;
             return data ?? [];
@@ -501,7 +522,7 @@ export async function deletePost(postId, userId) {
 
     if (error) throw error;
 
-    removeApiCache(createCacheKey("timeline"));
+    removeApiCacheByPrefix(`${API_CACHE_PREFIX}timeline:`);
     removeApiCache(createCacheKey("user-posts", userId));
     removeApiCacheByPrefix(`${API_CACHE_PREFIX}liked-posts:`);
     removeApiCacheByPrefix(`${API_CACHE_PREFIX}saved-posts:`);
@@ -518,7 +539,7 @@ export async function updatePost(postId, userId, values) {
 
     if (error) throw error;
 
-    removeApiCache(createCacheKey("timeline"));
+    removeApiCacheByPrefix(`${API_CACHE_PREFIX}timeline:`);
     removeApiCache(createCacheKey("user-posts", userId));
     removeApiCacheByPrefix(`${API_CACHE_PREFIX}liked-posts:`);
     removeApiCacheByPrefix(`${API_CACHE_PREFIX}saved-posts:`);
@@ -528,14 +549,14 @@ export async function updatePost(postId, userId, values) {
 
 export async function createPlace({ userId, name, address, description = null, latitude = null, longitude = null, category = "その他" }) {
     // 現在のDBではスポット情報を public.spots に保存します。
-    // 画面側の「住所」は city、「説明」は memo に対応させています。
+    // 画面側の住所は address、エリア名は city、説明は memo に対応します。
     const { data, error } = await supabase
         .from("spots")
         .insert({
             user_id: userId,
             name,
             category,
-            city: address || null,
+            address: address || null,
             memo: description,
             latitude,
             longitude
@@ -553,7 +574,7 @@ export async function createPlace({ userId, name, address, description = null, l
 
     return {
         ...data,
-        address: data.city,
+        address: data.address || data.city,
         description: data.memo
     };
 }
@@ -576,7 +597,7 @@ export async function getPlaces({ force = false } = {}) {
 
             return (data ?? []).map((spot) => ({
                 ...spot,
-                address: spot.city,
+                address: spot.address || spot.city,
                 description: spot.memo
             }));
         }
@@ -616,6 +637,32 @@ export async function sendMessage({ senderId, receiverId, content }) {
     const { data, error } = await supabase.from('messages').insert({ sender_id: senderId, receiver_id: receiverId, content }).select().single();
     if (error) throw error;
     return data;
+}
+export async function getUnreadMessageCount(userId) {
+    const { count, error } = await supabase
+        .from('messages')
+        .select('id', { count: 'exact', head: true })
+        .eq('receiver_id', userId)
+        .eq('is_read', false);
+    if (error) throw error;
+    return count ?? 0;
+}
+export async function markConversationRead(userId, senderId) {
+    const { error } = await supabase
+        .from('messages')
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq('receiver_id', userId)
+        .eq('sender_id', senderId)
+        .eq('is_read', false);
+    if (error) throw error;
+}
+export function subscribeToIncomingMessages(userId, callback) {
+    const channel = supabase.channel(`incoming-messages-${userId}`)
+        .on('postgres_changes', {
+            event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${userId}`
+        }, callback)
+        .subscribe();
+    return () => { supabase.removeChannel(channel); };
 }
 export async function getCommunities() {
     const { data, error } = await supabase.from('communities').select('*, profiles:owner_id(username, display_name)').order('created_at', { ascending: false });
@@ -873,7 +920,7 @@ export async function setPostLiked(userId, postId, liked) {
     if (error) throw error;
 
     removeApiCache(createCacheKey("liked-posts", userId));
-    removeApiCache(createCacheKey("timeline"));
+    removeApiCacheByPrefix(`${API_CACHE_PREFIX}timeline:`);
     removeApiCacheByPrefix(`${API_CACHE_PREFIX}user-posts:`);
 }
 
@@ -988,8 +1035,8 @@ export async function getLocationShareTargets(ownerId, { force = false } = {}) {
         loader: async () => {
             const { data, error } = await supabase
                 .from("location_shares")
-                .select("profile:shared_with_id(*)")
-                .eq("owner_id", ownerId);
+                .select("profile:shared_with_user_id(*)")
+                .eq("user_id", ownerId);
 
             if (error && isPendingDatabaseFeature(error)) return [];
             if (error) throw error;
@@ -1009,7 +1056,7 @@ export async function replaceLocationShareTargets(ownerId, targetIds) {
     const { error: deleteError } = await supabase
         .from("location_shares")
         .delete()
-        .eq("owner_id", ownerId);
+        .eq("user_id", ownerId);
 
     if (deleteError && isPendingDatabaseFeature(deleteError)) {
         throw createPendingFeatureError("位置情報共有");
@@ -1025,8 +1072,8 @@ export async function replaceLocationShareTargets(ownerId, targetIds) {
         .from("location_shares")
         .insert(
             uniqueIds.map(id => ({
-                owner_id: ownerId,
-                shared_with_id: id
+                user_id: ownerId,
+                shared_with_user_id: id
             }))
         );
 

@@ -1041,6 +1041,12 @@ input {
     }
 }
 
+/* 投稿ボタンが住所検索へ重ならない最終配置 */
+.post-toolbar { display: flex !important; flex-direction: column; align-items: stretch !important; }
+.post-tools { width: 100%; flex: 0 0 auto; }
+.post-submit-area { width: 100%; margin-left: 0 !important; justify-content: flex-end; }
+.post-submit-area .post-button { flex: 0 0 auto; min-width: 120px; }
+
 @media (max-width: 520px) {
 
     .post-form-area,
@@ -4587,3 +4593,49 @@ body {
 }
 
 .post-action-button:disabled { opacity: .6; cursor: wait; }
+.post-address-input { min-width: 180px; padding: .65rem .8rem; border: 1px solid #cbd5e1; border-radius: 999px; }
+.load-more-posts-button { display: block; margin: 18px auto 30px; }
+.side-notification[hidden] { display: none !important; }
+
+/* 投稿ツールの最終レイアウト。過去の重複スタイルより優先します。 */
+.post-toolbar { position: relative; z-index: 5; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; overflow: visible; }
+.post-tools { position: relative; z-index: 6; display: flex; align-items: center; gap: 10px; flex: 1 1 520px; flex-wrap: wrap; overflow: visible; }
+.post-tools select, .post-tools input, .post-tools button, .post-image-tool { position: relative; z-index: 7; pointer-events: auto; }
+.area-select { min-width: 130px; min-height: 48px; cursor: pointer; }
+.post-address-input { flex: 1 1 210px; min-height: 48px; }
+.location-tool-button, .post-image-tool { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; padding: 0 16px; border: 1px solid #b9d9ef; border-radius: 999px; background: #fff; color: #0874bd; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.post-submit-area { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.post-image-preview-area { position: relative; width: min(100%, 520px); margin: 12px 0; }
+.post-image-preview-area[hidden] { display: none; }
+.post-image-preview-area img { display: block; width: 100%; max-height: 360px; object-fit: cover; border-radius: 18px; border: 1px solid #cce4f3; }
+.post-image-preview-area button { position: absolute; top: 10px; right: 10px; width: 36px; height: 36px; border: 0; border-radius: 50%; background: rgba(15,23,42,.78); color: white; cursor: pointer; }
+.post-media-row { display: flex; align-items: center; gap: 12px; margin: 12px 0 14px; position: relative; z-index: 8; }
+.post-media-row .post-image-tool { flex: 0 0 auto; }
+.post-media-row small { color: #64748b; }
+@media (max-width: 760px) {
+  .post-tools { flex-basis: 100%; }
+  .area-select, .post-address-input { flex: 1 1 100%; width: 100%; }
+  .post-submit-area { width: 100%; justify-content: flex-end; }
+}
+
+/* 投稿フォームを固定高にせず、内容分だけのコンパクト表示に統一 */
+.composer-shell, .composer-shell-wide, .post-form-area, .post-form {
+  height: auto !important;
+  min-height: 0 !important;
+  justify-content: flex-start !important;
+}
+.post-form { display: block !important; }
+.post-media-row { margin: 10px 0 !important; }
+.post-toolbar {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin-top: 10px !important;
+}
+.post-tools { width: 100% !important; display: flex !important; flex-wrap: wrap !important; gap: 8px !important; }
+.post-submit-area { width: auto !important; margin: 0 !important; align-self: center !important; }
+@media (max-width: 1050px) {
+  .post-toolbar { grid-template-columns: 1fr !important; }
+  .post-submit-area { width: 100% !important; justify-content: flex-end !important; }
+}

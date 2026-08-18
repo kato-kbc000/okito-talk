@@ -1,7 +1,10 @@
+import { supabase } from '../../supabase.js';
+
 (() => {
   "use strict";
 
   const STORAGE_KEY = "okitalk-community-settings";
+  const communityId = new URLSearchParams(location.search).get('id');
   const DELETE_CONFIRM_TEXT = "沖縄の海が好き";
 
   const form = document.getElementById("communitySettingsForm");
@@ -163,11 +166,27 @@
     }, 3000);
   }
 
-  function loadSavedSettings() {
+  async function loadSavedSettings() {
     try {
+      if (communityId) {
+        const { data, error } = await supabase
+          .from('communities')
+          .select('name,description,is_private,header_url')
+          .eq('id', communityId)
+          .maybeSingle();
+        if (error) throw error;
+        if (data) {
+          applyState({
+            communityName: data.name,
+            communityDescription: data.description || '',
+            visibility: data.is_private ? 'private' : 'public',
+            imageDataUrl: data.header_url || ''
+          });
+        }
+      }
       const saved = localStorage.getItem(STORAGE_KEY);
 
-      if (saved) {
+      if (saved && !communityId) {
         const parsed = JSON.parse(saved);
         applyState(parsed);
       }
@@ -179,7 +198,7 @@
     }
   }
 
-  function saveSettings(event) {
+  async function saveSettings(event) {
     event.preventDefault();
 
     if (!validateForm()) {
@@ -190,6 +209,19 @@
     const state = getState();
 
     try {
+      if (communityId) {
+        const { error } = await supabase
+          .from('communities')
+          .update({
+            name: state.communityName,
+            description: state.communityDescription,
+            is_private: state.visibility === 'private',
+            header_url: state.imageDataUrl || null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', communityId);
+        if (error) throw error;
+      }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       initialState = state;
       updateSummary();

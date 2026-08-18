@@ -516,3 +516,4 @@ body {
         padding-left: 38px;
     }
 }
+.side-notification[hidden] { display: none !important; }

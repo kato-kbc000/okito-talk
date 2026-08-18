@@ -2123,3 +2123,14 @@ a {
     }
 
 }
+.comment-image-button { cursor: pointer; padding: 8px; border-radius: 50%; background: #eef7ff; }
+.comment-image { display: block; width: min(100%, 360px); max-height: 320px; object-fit: cover; border-radius: 12px; margin-top: 8px; }
+.comment-form { display: grid !important; grid-template-columns: 42px minmax(0,1fr) auto auto !important; align-items: center !important; gap: 10px !important; }
+.comment-form > img { width: 42px !important; height: 42px !important; }
+.comment-form input[name="comment"] { width: 100% !important; min-width: 0 !important; }
+.comment-form .comment-image-button { width: 42px !important; height: 42px !important; display: inline-grid !important; place-items: center !important; }
+.comment-form button[type="submit"] { width: auto !important; min-width: 72px !important; height: 42px !important; padding: 0 16px !important; border-radius: 999px !important; writing-mode: horizontal-tb !important; }
+@media (max-width: 600px) {
+  .comment-form { grid-template-columns: 36px minmax(0,1fr) 38px !important; }
+  .comment-form button[type="submit"] { grid-column: 2 / 4; justify-self: end; }
+}

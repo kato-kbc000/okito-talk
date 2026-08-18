@@ -24,6 +24,7 @@ async function initHeader() {
         <a href="${base}home.html"${active('home.html')}>ホーム</a>
         <a href="${base}home/search.html"${active('search.html')}>検索</a>
         <a href="${base}home/community.html"${active('community.html')}>コミュニティ</a>
+        <a href="${base}home.html#mapSection" class="header-link">追加（ピン）</a>
         <a href="${base}home/messages.html"${active('messages.html')}>メッセージ</a>
         <a href="${base}home/profile.html"${active('profile.html')} id="headerAccountLink">マイアカウント</a>
         <button type="button" class="header-logout-button" id="headerLogoutButton">ログアウト</button>
