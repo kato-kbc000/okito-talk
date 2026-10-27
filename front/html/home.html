@@ -26,9 +26,8 @@
     <!-- ホーム画面専用CSS -->
     <link
         rel="stylesheet"
-        href="../css/pages/home.css"
+        href="../css/pages/home.css?v=20261021-5"
     >
-    <link rel="stylesheet" href="../css/shell.css">
 </head>
 
 <body>
@@ -88,7 +87,6 @@
                     コミュニティ
                 </a>
 
-
                 <a href="home/messages.html" class="mobile-menu-link">
                     <span>✉</span>
                     メッセージ
@@ -98,10 +96,7 @@
                     <span>◎</span>
                     マイアカウント
                 </a>
-                <button type="button" class="mobile-menu-link mobile-logout" data-logout>
-                    <span>⇥</span>
-                    ログアウト
-                </button>
+                <button type="button" id="mobileLogoutButton" class="mobile-menu-link logout-link">↪ ログアウト</button>
             </nav>
         </aside>
     </div>
@@ -145,7 +140,6 @@
                 >
                     コミュニティ
                 </a>
-
 
                 <a
                     href="home/messages.html"
@@ -198,7 +192,6 @@
                     <span class="side-label">コミュニティ</span>
                 </a>
 
-
                 <a href="home/messages.html" class="side-link">
                     <span class="side-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>
@@ -214,10 +207,8 @@
                     <span class="side-label">マイアカウント</span>
                 </a>
 
-                <button type="button" class="side-link side-logout" data-logout>
-                    <span class="side-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4"/><path d="m16 8 4 4-4 4"/><path d="M20 12H9"/></svg>
-                    </span>
+                <button type="button" id="sideLogoutButton" class="side-link logout-link" aria-label="ログアウトする">
+                    <span class="side-icon" aria-hidden="true">↪</span>
                     <span class="side-label">ログアウト</span>
                 </button>
             </nav>
@@ -249,44 +240,36 @@
 
             </div>
 
-            <!-- 投稿フォーム -->
-            <section class="composer-shell composer-shell-wide">
-                <div class="composer-heading">
-                    <div>
-                        <span class="composer-eyebrow">SHARE OKINAWA</span>
-                        <h1>沖縄の「今」をシェア</h1>
-                    </div>
-                    <span class="composer-badge">🌺 Local SNS</span>
-                </div>
-
-                <section class="post-form-area">
-
+            <!-- コンパクトなSNS投稿フォーム -->
+            <section class="composer-shell composer-shell-wide compact-composer">
+              <div class="compact-composer-heading">
+                <span>🌺 沖縄の「今」をシェア</span>
+              </div>
+              <section class="post-form-area">
                 <div id="postFormAvatar" class="post-form-icon" aria-label="ログイン中のユーザー"></div>
-
-                <form
-                    id="postForm"
-                    class="post-form"
-                >
-
-                    <textarea
-                        id="postContent"
-                        maxlength="200"
-                        placeholder="今日見つけた景色、お店、イベントをシェアしよう…"
-                        required
-                    ></textarea>
-
-                    <div class="post-media-row">
-                        <label class="post-image-tool" for="postImageInput">📷 写真を追加</label>
-                        <input id="postImageInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden>
-                        <small>JPEG・PNG・WebP・GIF／1枚5MBまで・最大4枚 <span id="postImageCounter">0 / 4枚</span></small>
+                <form id="postForm" class="post-form">
+                  <textarea id="postContent" maxlength="200" placeholder="今なにしてる？ 沖縄の魅力をシェアしよう…" required></textarea>
+                  <div id="postImagePreviewArea" class="post-image-preview-area" hidden>
+                    <img id="postImagePreview" alt="投稿画像のプレビュー">
+                    <button type="button" id="removePostImageButton" aria-label="選択した画像を削除">✕</button>
+                  </div>
+                  <div id="postLocationStatus" class="post-location-status" aria-live="polite">
+                    <span id="postLocationStatusText"></span>
+                    <button type="button" id="cancelPostLocationButton" class="cancel-location-button">✕ キャンセル</button>
+                  </div>
+                  <div class="compact-composer-actions">
+                    <div class="compact-composer-tools">
+                      <label class="post-image-tool" for="postImageInput">📷 写真</label>
+                      <input id="postImageInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+                      <button id="togglePostLocationButton" class="location-tool-button" type="button" aria-expanded="false" aria-controls="postLocationOptions">📍 場所</button>
                     </div>
-
-                    <!-- 投稿ツール -->
-                    <div class="post-toolbar">
-
-                        <!-- 左側 -->
-                        <div class="post-tools">
-
+                    <div class="post-submit-area">
+                      <span id="characterCount">0 / 200</span>
+                      <button type="submit" class="button post-button post-button-nowrap">投稿する</button>
+                    </div>
+                  </div>
+                  <div id="postLocationOptions" class="compact-location-options" hidden>
+                    <label for="areaSelect">投稿するエリア</label>
                             <select
                                 id="areaSelect"
                                 class="area-select"
@@ -323,60 +306,14 @@
                                     うるま市
                                 </option>
                             </select>
-
-                            <button
-                                type="button"
-                                id="useCurrentLocationButton"
-                                class="location-tool-button"
-                                title="現在地を投稿に追加"
-                            >
-                                📍 現在地
-                            </button>
-
-                            <input id="postAddressInput" class="post-address-input" type="search" placeholder="住所・施設名で検索" aria-label="投稿場所の住所">
-                            <button type="button" id="searchPostAddressButton" class="location-tool-button">🔎 住所検索</button>
-
-                        </div>
-
-                        <!-- 右側 -->
-                        <div class="post-submit-area">
-
-                            <span id="characterCount">
-                                0 / 200
-                            </span>
-
-                            <button
-                                type="submit"
-                                class="button post-button post-button-nowrap"
-                            >
-                                投稿する
-                            </button>
-
-                        </div>
-
+                    <div class="compact-address-row">
+                      <input id="postAddressInput" class="post-address-input" type="search" placeholder="住所・施設名で検索" aria-label="投稿場所の住所">
+                      <button type="button" id="searchPostAddressButton" class="location-tool-button">🔎 住所検索</button>
+                      <button type="button" id="useCurrentLocationButton" class="location-tool-button" title="現在地を投稿に追加">📍 現在地</button>
                     </div>
-
-                    <div id="postImagePreviewArea" class="post-image-preview-area" hidden></div>
-
-                    <div
-                        id="postLocationStatus"
-                        class="post-location-status"
-                        aria-live="polite"
-                    >
-                        <span id="postLocationStatusText"></span>
-
-                        <button
-                            type="button"
-                            id="cancelPostLocationButton"
-                            class="cancel-location-button"
-                        >
-                            ✕ キャンセル
-                        </button>
-                    </div>
-
+                  </div>
                 </form>
-
-                </section>
+              </section>
             </section>
 
             <!-- エリア検索 -->
@@ -496,7 +433,16 @@
 
                 </div>
 
+                <p class="sns-map-subtitle">みんなのおすすめスポットを地図から見つけよう 🌺</p>
+                <div class="sns-map-filters" role="group" aria-label="地図のスポットカテゴリ">
+                    <button type="button" class="sns-map-filter active" data-map-category="all" aria-pressed="true">📍 すべて</button>
+                    <button type="button" class="sns-map-filter" data-map-category="food" aria-pressed="false">🍴 グルメ</button>
+                    <button type="button" class="sns-map-filter" data-map-category="cafe" aria-pressed="false">☕ カフェ</button>
+                    <button type="button" class="sns-map-filter" data-map-category="sight" aria-pressed="false">🌴 観光</button>
+                    <button type="button" class="sns-map-filter" data-map-category="shop" aria-pressed="false">🛍️ 買い物</button>
+                </div>
                 <div id="map"></div>
+                <div id="snsMapCount" class="sns-map-count" aria-live="polite"></div>
 
                 <p
                     id="mapStatus"
@@ -558,7 +504,6 @@
                             住所
                         </label>
 
-                        <div class="place-address-row">
                         <input
                             type="text"
                             id="placeAddress"
@@ -566,12 +511,9 @@
                             autocomplete="street-address"
                             required
                         >
-                        <button type="button" id="searchPinAddressButton" class="location-tool-button">🔎 住所検索</button>
-                    </div>
-                    <div id="pinCandidates" class="pin-candidates" hidden></div>
 
                         <p class="address-note">
-                            市町村名や番地まで入力するか、地図をクリックしてもピンを置けます。
+                            市町村名や番地まで入力すると、
                             正確に表示されやすくなります。
                         </p>
 
@@ -602,13 +544,12 @@
 
                     </div>
 
-                    <p id="pinLocationStatus" class="pin-location-status" aria-live="polite" hidden></p>
                     <button
                         type="button"
                         id="useCurrentLocationForPinButton"
                         class="current-pin-button"
                     >
-                        📍 現在地をピンにする
+                        📍 現在地を住所欄に使う
                     </button>
 
                     <button
@@ -617,7 +558,7 @@
                         class="clear-pin-location-button"
                         hidden
                     >
-                        ✕ ピンの選択を取り消す
+                        ✕ 現在地の選択を解除
                     </button>
 
                     <button
@@ -637,6 +578,59 @@
     </main>
 
 
+
+    <!-- SNS風ログアウト確認モーダル -->
+    <div id="logoutModal" class="logout-modal" hidden>
+      <div class="logout-modal-backdrop" data-close-logout></div>
+      <section class="logout-dialog" role="dialog" aria-modal="true" aria-labelledby="logoutTitle" aria-describedby="logoutDescription" tabindex="-1">
+        <div class="logout-icon" aria-hidden="true">↪</div>
+        <h2 id="logoutTitle">ログアウトしますか？</h2>
+        <p id="logoutDescription">再度ログインが必要になります。</p>
+        <p id="logoutError" class="logout-error" role="alert" hidden></p>
+        <button type="button" id="confirmLogoutButton" class="logout-confirm-button">ログアウト</button>
+        <button type="button" id="cancelLogoutButton" class="logout-cancel-button">キャンセル</button>
+      </section>
+    </div>
+
+
+    <!-- 投稿の編集・削除・通報モーダル -->
+    <div id="postActionModal" class="post-action-modal" hidden>
+      <div class="post-action-backdrop" data-close-post-action></div>
+      <section class="post-action-dialog" role="dialog" aria-modal="true" aria-labelledby="postActionTitle" tabindex="-1">
+        <header class="post-action-head">
+          <h2 id="postActionTitle"></h2>
+          <button type="button" id="postActionClose" class="post-action-x" aria-label="閉じる">✕</button>
+        </header>
+        <form id="postActionForm">
+          <div id="postActionEdit" hidden>
+            <label class="post-action-label" for="postActionContent">投稿内容</label>
+            <textarea id="postActionContent" maxlength="200" rows="5"></textarea>
+            <div id="postActionCount" class="post-action-count">0 / 200</div>
+          </div>
+          <div id="postActionDelete" hidden>
+            <div class="post-action-delete-icon">🗑️</div>
+            <p class="post-action-delete-title">投稿を削除しますか？</p>
+            <p class="post-action-muted">削除した投稿は元に戻せません。</p>
+          </div>
+          <div id="postActionReport" hidden>
+            <p class="post-action-muted">通報する理由を選択してください。</p>
+            <div class="post-action-reasons">
+              <label><input type="radio" name="reportReason" value="スパム・宣伝"> スパム・宣伝</label>
+              <label><input type="radio" name="reportReason" value="誹謗中傷"> 誹謗中傷</label>
+              <label><input type="radio" name="reportReason" value="不適切な内容"> 不適切な内容</label>
+              <label><input type="radio" name="reportReason" value="その他"> その他</label>
+            </div>
+            <p class="post-action-note">🔒 通報内容は投稿者には表示されません。</p>
+          </div>
+          <p id="postActionError" class="post-action-error" role="alert" hidden></p>
+          <div class="post-action-footer">
+            <button type="button" id="postActionCancel" class="post-action-cancel">キャンセル</button>
+            <button type="submit" id="postActionSubmit" class="post-action-submit">保存する</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
     <!-- 投稿詳細モーダル -->
     <div id="postDetailModal" class="post-detail-modal" hidden>
         <div class="post-detail-backdrop" data-close-detail></div>
@@ -651,9 +645,8 @@
         </section>
     </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script type="module" src="../js/pages/home.js"></script>
+    <script type="module" src="../js/pages/home.js?v=20261021-5"></script>
 
-  <script type="module" src="../js/page-shell.js"></script>
 </body>
 
 </html>

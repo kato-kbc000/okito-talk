@@ -4640,39 +4640,142 @@ body {
   .post-submit-area { width: 100% !important; justify-content: flex-end !important; }
 }
 
-/* ============================
-   複数画像・ピン追加・ログアウト（追記）
-============================ */
-.post-image-preview-area { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; width: 100%; }
-.post-image-preview-area[hidden] { display: none; }
-.post-image-thumb { position: relative; }
-.post-image-preview-area .post-image-thumb img { width: 100%; height: 120px; max-height: none; object-fit: cover; border-radius: 14px; }
-.post-image-preview-area .post-image-thumb button { top: 6px; right: 6px; width: 28px; height: 28px; font-size: 13px; }
 
-.post-image-grid { display: grid; gap: 6px; margin-top: 10px; }
-.post-image-grid.single { grid-template-columns: 1fr; }
-.post-image-grid.count-2, .post-image-grid.count-3, .post-image-grid.count-4 { grid-template-columns: 1fr 1fr; }
-.post-image-grid.count-3 .post-image:first-child { grid-row: span 2; }
-.post-image-grid .post-image { width: 100%; height: 100%; margin: 0; object-fit: cover; border-radius: 14px; }
-.post-image-grid:not(.single) .post-image { aspect-ratio: 4 / 3; }
-.post-image-grid.count-3 .post-image:first-child { aspect-ratio: auto; }
+/* ===== 2026-10-21 コンパクト投稿フォーム：既存CSSの末尾に配置 ===== */
+.compact-composer { padding: 16px !important; border-radius: 20px !important; }
+.compact-composer-heading { font-size: 15px; font-weight: 800; margin-bottom: 12px; color: #17324a; }
+.compact-composer .post-form-area { display: flex !important; gap: 12px !important; padding: 0 !important; margin: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; }
+.compact-composer .post-form-icon { width: 42px !important; height: 42px !important; flex: 0 0 42px !important; }
+.compact-composer .post-form { min-width: 0 !important; flex: 1 !important; }
+.compact-composer #postContent { min-height: 82px !important; height: 82px; width: 100%; padding: 12px 14px !important; background: #fff !important; border: 1px solid #d9e6ee !important; border-radius: 14px !important; resize: vertical; }
+.compact-composer-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.compact-composer-tools { display: flex; gap: 8px; align-items: center; }
+.compact-composer .post-image-tool, .compact-composer #togglePostLocationButton { display: inline-flex !important; align-items: center; justify-content: center; min-height: 36px !important; padding: 7px 13px !important; background: #eaf6ff !important; border: 1px solid #d3eafa !important; border-radius: 999px !important; color: #1675b7 !important; font-size: 13px !important; font-weight: 700; cursor: pointer; }
+.compact-composer .post-submit-area { display: flex !important; align-items: center; gap: 9px; margin-left: auto !important; width: auto !important; }
+.compact-composer .post-button { min-height: 37px !important; padding: 8px 18px !important; border-radius: 999px !important; white-space: nowrap; }
+.compact-location-options { margin-top: 13px; padding: 14px; border: 1px solid #dbeaf3; border-radius: 14px; background: #f7fbfe; }
+.compact-location-options[hidden] { display: none !important; }
+.compact-location-options > label { display: block; margin-bottom: 7px; font-size: 13px; font-weight: 700; }
+.compact-location-options .area-select { width: 100%; min-height: 40px !important; margin-bottom: 10px; }
+.compact-address-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.compact-address-row .post-address-input { min-width: 0 !important; flex: 1 1 100% !important; width: 100%; min-height: 40px !important; border-radius: 12px; }
+.compact-address-row .location-tool-button { min-height: 36px !important; padding: 7px 12px !important; font-size: 12px; }
+.compact-composer .post-image-preview-area { margin-top: 10px; }
+.compact-composer .post-location-status.active { margin-top: 10px; }
+@media(max-width: 600px) { .compact-composer { padding: 12px !important; } .compact-composer .post-form-icon { width: 34px !important; height: 34px !important; flex-basis: 34px !important; } .compact-composer .post-form-area { gap: 8px !important; } .compact-composer .post-submit-area { gap: 6px; } .compact-composer .post-button { padding: 8px 12px !important; } }
 
-.place-address-row { display: flex; gap: 8px; align-items: stretch; }
-.place-address-row input { flex: 1 1 auto; min-width: 0; }
-.place-address-row button { flex: 0 0 auto; }
-.pin-location-status { margin: 8px 0; padding: 8px 12px; border-radius: 12px; background: #ecfdf5; color: #0f766e; font-size: 13px; font-weight: 700; }
-.pin-location-status[hidden] { display: none; }
+/* ログアウト：メニューの最下部 */
+.side-menu { min-height: calc(100vh - 120px); }
+.side-navigation { min-height: calc(100vh - 160px); }
+.logout-link { width: 100%; text-align: left; font-weight: 800; color: #c0394c; background: #fff1f3; border: 1px solid #ffd4dc; cursor: pointer; }
+.side-navigation .logout-link { margin-top: auto; }
+.logout-link:hover { background: #ffe1e6; color: #a71d36; }
+.mobile-menu-navigation { display: flex; flex-direction: column; min-height: calc(100% - 80px); }
+.mobile-menu-navigation .logout-link { margin-top: 24px; padding: 15px; border-radius: 12px; }
 
-.side-logout { width: 100%; border: 0; background: transparent; font: inherit; text-align: left; cursor: pointer; color: #b42318; }
-.mobile-logout { width: 100%; border: 0; background: transparent; font: inherit; text-align: left; cursor: pointer; color: #b42318; }
+/* ===== SNS風ログアウト確認 ===== */
+.logout-modal[hidden], .logout-error[hidden] { display: none !important; }
+.logout-modal { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; padding: 20px; }
+.logout-modal-backdrop { position: absolute; inset: 0; background: rgba(19,35,55,.56); backdrop-filter: blur(3px); }
+.logout-dialog { position: relative; width: min(100%, 410px); padding: 34px 28px 28px; background: #fff; border-radius: 24px; box-shadow: 0 22px 75px rgba(16,31,49,.25); text-align: center; }
+.logout-icon { display: grid; place-items: center; width: 82px; height: 82px; margin: 0 auto 20px; border-radius: 50%; background: #fff0f3; color: #f23f63; font-size: 43px; font-weight: 700; }
+.logout-dialog h2 { margin: 0 0 10px; font-size: 23px; color: #24364b; }
+.logout-dialog p { margin: 0 0 24px; font-size: 14px; color: #718095; }
+.logout-dialog .logout-error { color: #c52e4a; margin-bottom: 12px; }
+.logout-confirm-button, .logout-cancel-button { width: 100%; min-height: 51px; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; }
+.logout-confirm-button { border: 0; background: linear-gradient(110deg,#ff4565,#f33158); color: white; margin-bottom: 10px; }
+.logout-cancel-button { border: 1px solid #d4dce6; background: white; color: #3a4a5e; }
+.logout-confirm-button:hover { filter: brightness(.96); }
+.logout-cancel-button:hover { background: #f5f8fc; }
+.logout-dialog button:disabled { opacity: .6; cursor: wait; }
+body.logout-modal-open { overflow: hidden; }
+@media(max-width:480px) { .logout-dialog { padding: 28px 20px 22px; border-radius: 20px; } .logout-dialog h2 { font-size: 20px; } }
 
-/* ピンの場所候補・過去投稿の終端メッセージ（追記） */
-.pin-candidates { display: grid; gap: 6px; margin: 8px 0; }
-.pin-candidates[hidden] { display: none; }
-.pin-candidate { display: grid; gap: 2px; width: 100%; padding: 10px 12px; text-align: left; border: 1px solid #cfe3f2; border-radius: 12px; background: #fff; font: inherit; cursor: pointer; }
-.pin-candidate:hover, .pin-candidate:focus-visible { border-color: #2589ff; background: #f3f9ff; }
-.pin-candidate strong { font-size: 14px; color: #0f2a43; }
-.pin-candidate span { font-size: 12px; color: #5b6b7a; overflow-wrap: anywhere; }
-.timeline-end-message { margin: 12px 0 28px; text-align: center; color: #7b8a99; font-size: 13px; }
-.timeline-end-message[hidden] { display: none; }
-.place-address-row .location-tool-button { min-height: 44px; padding: 0 14px; font-size: 13px; }
+/* ===== SNS風スポットマップ ===== */
+.sns-map-subtitle { margin: 8px 0 12px; color: #728299; font-size: 12px; line-height: 1.5; }
+.sns-map-filters { display: flex; gap: 7px; overflow-x: auto; padding: 2px 0 12px; scrollbar-width: thin; }
+.sns-map-filter { flex: 0 0 auto; white-space: nowrap; border: 1px solid #d7e5f2; background: white; color: #53667d; border-radius: 999px; padding: 8px 12px; font-size: 12px; font-weight: 700; cursor: pointer; transition: .2s; }
+.sns-map-filter:hover { background: #eff8ff; }
+.sns-map-filter.active { color: white; background: linear-gradient(110deg,#2595ef,#24bfcb); border-color: transparent; box-shadow: 0 3px 9px #2499de30; }
+#map { border: 4px solid #e1f5fc; border-radius: 17px; min-height: 300px; }
+.sns-map-count { margin: 8px 2px 2px; color: #708398; font-size: 12px; }
+.sns-map-popup { display: flex; gap: 10px; width: 235px; max-width: 100%; padding: 3px 0; font-family: 'Yu Gothic',sans-serif; }
+.sns-map-popup-photo,.sns-map-popup-placeholder { width: 76px; height: 85px; object-fit: cover; border-radius: 12px; flex-shrink: 0; }
+.sns-map-popup-placeholder { display: grid; place-items: center; background: #e4f7fa; font-size: 29px; }
+.sns-map-popup-content { min-width: 0; flex: 1; }
+.sns-map-popup-content strong { display: block; color: #1e3049; font-size: 13px; line-height: 1.5; }
+.sns-map-popup-user { display: block; margin-top: 3px; color: #7892aa; font-size: 11px; }
+.sns-map-popup-content p { margin: 7px 0 0; color: #53687e; font-size: 11px; line-height: 1.55; overflow-wrap: anywhere; }
+
+
+/* 投稿カード内コメント（既存の投稿デザインを維持） */
+.post-comment-section { margin-top: 13px; padding-top: 13px; border-top: 1px solid #e8edf3; }
+.post-comment-section[hidden] { display: none !important; }
+.post-comment-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 13px; font-size: 13px; color: #65748a; }
+.post-comment-item { display: flex; align-items: flex-start; gap: 9px; }
+.post-comment-avatar { flex: 0 0 32px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: linear-gradient(135deg,#7ab8ff,#48c6cb); color: white; font-size: 12px; font-weight: 700; background-position: center; background-size: cover; }
+.post-comment-bubble { flex: 1; min-width: 0; padding: 9px 12px; background: #f5f8fc; border-radius: 12px; color: #26364a; }
+.post-comment-bubble strong { font-size: 13px; }
+.post-comment-time { margin-left: 8px; color: #8995a5; font-size: 11px; }
+.post-comment-bubble p { margin: 5px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }
+.post-comment-empty { margin: 3px 0; color: #8995a5; }
+.post-comment-form { display: flex; align-items: center; gap: 8px; }
+.post-comment-input { flex: 1; min-width: 0; padding: 10px 13px; border: 1px solid #dce5ef; border-radius: 999px; background: #f8fafc; outline: none; }
+.post-comment-input:focus { border-color: #2589ff; box-shadow: 0 0 0 3px #2589ff1c; }
+.post-comment-send { padding: 9px 15px; border: 0; border-radius: 999px; background: #2589ff; color: white; font-weight: 700; cursor: pointer; }
+.post-comment-send:disabled { opacity: .5; cursor: wait; }
+.post-comment-delete { margin-top: 6px; padding: 0; border: 0; background: transparent; color: #df5970; font-size: 11px; cursor: pointer; }
+@media (max-width: 520px) { .post-comment-form { gap: 6px; } .post-comment-send { padding: 9px 12px; } }
+
+/* コメントボタンの省略表示を防ぐ */
+.post-action-button[data-comments] {
+  width: auto;
+  min-width: max-content;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  flex-shrink: 0;
+}
+
+/* ボタンが狭い画面では折り返せるようにする */
+.post-actions {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 投稿メニュー追加調整 */
+.post-menu-wrapper { position: relative; }
+.post-header-right { display: flex; align-items: center; gap: 8px; }
+.post-menu { z-index: 200; }
+.post-menu[hidden] { display: none !important; }
+
+
+/* 投稿操作モーダル */
+.post-action-modal[hidden], .post-action-modal [hidden] { display: none !important; }
+.post-action-modal { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; padding: 18px; }
+.post-action-backdrop { position: absolute; inset: 0; background: rgba(19,34,55,.55); backdrop-filter: blur(3px); }
+.post-action-dialog { position: relative; width: min(100%, 440px); max-height: min(90vh, 720px); overflow-y: auto; padding: 24px; border-radius: 22px; background: #fff; box-shadow: 0 24px 80px #11283a44; }
+.post-action-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+.post-action-head h2 { margin: 0; font-size: 19px; color: #1d344b; }
+.post-action-x { width: 32px; height: 32px; border: 0; border-radius: 50%; background: #f2f6fa; color: #536579; cursor: pointer; }
+.post-action-label { display: block; margin-bottom: 9px; font-weight: 700; }
+#postActionContent { width: 100%; padding: 14px; border: 1px solid #d6e3ec; border-radius: 14px; resize: vertical; outline: none; line-height: 1.7; }
+#postActionContent:focus { border-color: #29b7d0; box-shadow: 0 0 0 3px #29b7d020; }
+.post-action-count { text-align: right; margin-top: 6px; color: #7d8a99; font-size: 12px; }
+.post-action-muted { color: #697d90; line-height: 1.7; margin: 8px 0 18px; }
+.post-action-delete-icon { margin: 4px auto 12px; display: grid; place-items: center; width: 66px; height: 66px; border-radius: 50%; background: #fff0f0; font-size: 29px; }
+.post-action-delete-title { text-align: center; font-weight: 800; font-size: 18px; margin: 0; }
+#postActionDelete .post-action-muted { text-align: center; }
+.post-action-reasons { display: grid; gap: 9px; }
+.post-action-reasons label { display: flex; align-items: center; gap: 10px; padding: 14px; border: 1px solid #e2eaf1; border-radius: 13px; cursor: pointer; }
+.post-action-reasons label:has(input:checked) { border-color: #35b9d1; background: #effcff; }
+.post-action-reasons input { accent-color: #19aeca; }
+.post-action-note { background: #f4f9fb; color: #678092; padding: 12px; border-radius: 10px; font-size: 12px; line-height: 1.6; }
+.post-action-error { color: #c43242; font-size: 13px; }
+.post-action-footer { display: flex; gap: 10px; margin-top: 24px; }
+.post-action-footer button { flex: 1; padding: 12px; border-radius: 999px; font-weight: 700; cursor: pointer; }
+.post-action-cancel { background: #f1f5f8; color: #516274; border: 0; }
+.post-action-submit { background: #26b5d1; color: white; border: 0; }
+.post-action-submit.is-danger { background: #e85c69; }
+.post-action-submit:disabled { opacity: .6; cursor: wait; }
+@media(max-width:520px) { .post-action-dialog { padding: 20px 16px; border-radius: 18px; } }

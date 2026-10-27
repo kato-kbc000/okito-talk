@@ -1,3 +1,5 @@
+import * as authApi from "../api.js?v=20260818-4";
+import { supabase } from '../supabase.js';
 import {
   getCurrentUser,
   ensureCurrentProfile,
@@ -11,35 +13,31 @@ import {
   getUnreadMessageCount,
   subscribeToIncomingMessages,
   setPostLiked,
-  setPostSaved,
-  getPostImages,
-  MAX_POST_IMAGES
-} from '../api.js';
-import { loadGoogleMaps, isOkinawaCoordinate, searchPlaces, geocode, OKINAWA_BOUNDS } from '../maps.js';
-
-/* 沖縄県の市町村（市 → 町 → 村）。投稿の地域選択と、タイムラインの絞り込みの両方で使う */
-const OKINAWA_AREAS = [
-  { label: '市', items: ['那覇市', '浦添市', '宜野湾市', '沖縄市', 'うるま市', '名護市', '糸満市', '豊見城市', '南城市', '石垣市', '宮古島市'] },
-  { label: '町', items: ['北谷町', '嘉手納町', '金武町', '本部町', '西原町', '与那原町', '南風原町', '八重瀬町', '久米島町', '竹富町', '与那国町'] },
-  { label: '村', items: ['読谷村', '恩納村', '宜野座村', '北中城村', '中城村', '今帰仁村', '国頭村', '大宜味村', '東村', '伊江村', '伊平屋村', '伊是名村', '座間味村', '渡嘉敷村', '南大東村', '北大東村', '粟国村', '渡名喜村', '多良間村'] }
-];
-
-function fillAreaSelect(select, { withAll = false, withPrefecture = false } = {}) {
-  if (!select) return;
-  const current = select.value;
-  select.replaceChildren();
-  if (withAll) select.add(new Option('沖縄県すべて', 'all'));
-  if (withPrefecture) select.add(new Option('🌺 沖縄県', '沖縄県'));
-  OKINAWA_AREAS.forEach((group) => {
-    const optgroup = document.createElement('optgroup');
-    optgroup.label = group.label;
-    [...new Set(group.items)].forEach((name) => optgroup.append(new Option(name, name)));
-    select.append(optgroup);
-  });
-  if ([...select.options].some((option) => option.value === current)) select.value = current;
-}
+  setPostSaved
+} from '../api.js?v=20260818-4';
 
 const $ = (id) => document.getElementById(id);
+const GOOGLE_MAPS_API_KEY = 'AIzaSyCU4qTaXJ3m3Uq-v_dvU3rFgIfyc-gUJkY';
+let googleMapsPromise;
+
+function loadGoogleMaps() {
+  if (window.google?.maps) return Promise.resolve(window.google.maps);
+  if (googleMapsPromise) return googleMapsPromise;
+  googleMapsPromise = new Promise((resolve, reject) => {
+    const callbackName = `okitalkGoogleMapsReady${Date.now()}`;
+    window[callbackName] = () => {
+      delete window[callbackName];
+      resolve(window.google.maps);
+    };
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(GOOGLE_MAPS_API_KEY)}&callback=${callbackName}&language=ja&region=JP&v=weekly`;
+    script.async = true;
+    script.defer = true;
+    script.onerror = () => reject(new Error('Google Mapsを読み込めませんでした。APIキーの制限とMaps JavaScript APIの有効化を確認してください。'));
+    document.head.appendChild(script);
+  });
+  return googleMapsPromise;
+}
 
 const state = {
   user: null,
@@ -54,27 +52,19 @@ const state = {
   map: null,
   layers: null,
   mapReady: false,
+  mapCategory: 'all',
   loadingData: false,
   likedIds: new Set(),
   savedIds: new Set(),
   likeCounts: new Map(),
+  commentCounts: new Map(),
+  openCommentIds: new Set(),
   page: 0,
   pageSize: 30,
-  hasMorePosts: true,
-  loadingMore: false
-  ,postImages: []
-  ,mapTarget: 'post'
-  ,previewMarker: null
+  hasMorePosts: true
+  ,postImageFile: null
+  ,postImagePreviewUrl: null
 };
-
-function renderPostImages(post) {
-  const images = getPostImages(post);
-  if (!images.length) return '';
-  const cls = images.length === 1 ? 'post-image-grid single' : `post-image-grid count-${Math.min(images.length, 4)}`;
-  return `<div class="${cls}">${images
-    .map((url) => `<img class="post-image" src="${escapeHtml(url)}" alt="投稿画像" loading="lazy">`)
-    .join('')}</div>`;
-}
 
 function escapeHtml(value = '') {
   const element = document.createElement('div');
@@ -146,6 +136,95 @@ function getVisiblePosts() {
   });
 }
 
+async function loadPostComments(postId, section) {
+  if (!section) return;
+  const list = section.querySelector('.post-comment-list');
+  list.textContent = 'コメントを読み込んでいます…';
+  try {
+    const { data: comments, error } = await supabase
+      .from('post_comments')
+      .select('id, user_id, content, created_at')
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    const userIds = [...new Set((comments || []).map(item => item.user_id))];
+    let profiles = [];
+    if (userIds.length) {
+      const result = await supabase.from('profiles')
+        .select('id, display_name, username, avatar_url').in('id', userIds);
+      if (result.error) throw result.error;
+      profiles = result.data || [];
+    }
+    const byId = new Map(profiles.map(profile => [profile.id, profile]));
+    list.replaceChildren();
+    if (!comments?.length) {
+      const empty = document.createElement('p');
+      empty.className = 'post-comment-empty';
+      empty.textContent = 'まだコメントはありません。最初のコメントを投稿しよう！';
+      list.appendChild(empty);
+    }
+    for (const comment of comments || []) {
+      const profile = byId.get(comment.user_id) || {};
+      const item = document.createElement('div');
+      item.className = 'post-comment-item';
+      const avatar = document.createElement('div');
+      avatar.className = 'post-comment-avatar';
+      setAvatar(avatar, profile);
+      const body = document.createElement('div');
+      body.className = 'post-comment-bubble';
+      const name = document.createElement('strong');
+      name.textContent = profile.display_name || profile.username || 'ユーザー';
+      const time = document.createElement('span');
+      time.className = 'post-comment-time';
+      time.textContent = timeAgo(comment.created_at);
+      const content = document.createElement('p');
+      content.textContent = comment.content;
+      body.append(name, time, content);
+      if (comment.user_id === state.user?.id) {
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'post-comment-delete';
+        remove.textContent = '削除';
+        remove.addEventListener('click', async () => {
+          if (!confirm('このコメントを削除しますか？')) return;
+          remove.disabled = true;
+          const { error: deleteError } = await supabase.from('post_comments')
+            .delete().eq('id', comment.id).eq('user_id', state.user.id);
+          if (deleteError) {
+            alert(`削除できませんでした：${deleteError.message}`);
+            remove.disabled = false;
+            return;
+          }
+          state.commentCounts.set(postId, Math.max(0, (state.commentCounts.get(postId) || 1) - 1));
+          const button = section.closest('.post-card')?.querySelector('[data-comment-count]');
+          if (button) button.textContent = state.commentCounts.get(postId);
+          await loadPostComments(postId, section);
+        });
+        body.append(remove);
+      }
+      item.append(avatar, body);
+      list.append(item);
+    }
+  } catch (error) {
+    list.textContent = `コメントを読み込めませんでした：${error.message}`;
+  }
+}
+
+async function loadCommentCounts(posts) {
+  const ids = posts.map(post => post.id);
+  if (!ids.length) return;
+  const { data, error } = await supabase.from('post_comments')
+    .select('post_id').in('post_id', ids);
+  if (error) {
+    console.warn('コメント件数を取得できませんでした', error);
+    return;
+  }
+  ids.forEach(id => state.commentCounts.set(id, 0));
+  (data || []).forEach(item => state.commentCounts.set(
+    item.post_id, (state.commentCounts.get(item.post_id) || 0) + 1
+  ));
+}
+
 function renderPosts() {
   const list = $('postList');
   if (!list) return;
@@ -185,10 +264,21 @@ function renderPosts() {
             <strong>${escapeHtml(profile.display_name || 'ユーザー')}</strong>
             <span>@${escapeHtml(profile.username || 'user')}</span>
           </div>
-          <span class="post-time">${timeAgo(post.created_at)}</span>
+          <div class="post-header-right">
+            <span class="post-time">${timeAgo(post.created_at)}</span>
+            <div class="post-menu-wrapper">
+              <button type="button" class="post-menu-button" aria-label="投稿メニュー" aria-expanded="false">⋯</button>
+              <div class="post-menu" hidden>
+                ${post.user_id === state.user?.id
+                  ? `<button type="button" class="edit-post-button">✏️ 投稿を編集</button>
+                     <button type="button" class="delete-post-button">🗑️ 投稿を削除</button>`
+                  : `<button type="button" class="report-post-button">🚩 投稿を通報</button>`}
+              </div>
+            </div>
+          </div>
         </div>
         <p class="post-text">${escapeHtml(post.content).replaceAll('\n', '<br>')}</p>
-        ${renderPostImages(post)}
+        ${post.image_url ? `<img class="post-image" src="${escapeHtml(post.image_url)}" alt="投稿画像" loading="lazy">` : ''}
         <div class="post-bottom">
           ${post.location_name || post.location_address
             ? `<button type="button" class="map-focus-button">📍 ${escapeHtml(post.location_name || post.location_address)}</button>`
@@ -197,14 +287,28 @@ function renderPosts() {
             <button type="button" class="post-action-button ${state.likedIds.has(post.id) ? 'active' : ''}" data-like aria-pressed="${state.likedIds.has(post.id)}">
               ${state.likedIds.has(post.id) ? '♥' : '♡'} いいね <span>${state.likeCounts.get(post.id) || 0}</span>
             </button>
+            <button type="button" class="post-action-button" data-comments aria-expanded="${state.openCommentIds.has(post.id)}">
+              💬 コメント <span data-comment-count>${state.commentCounts.get(post.id) ?? 0}</span>
+            </button>
             <button type="button" class="post-action-button ${state.savedIds.has(post.id) ? 'active' : ''}" data-save aria-pressed="${state.savedIds.has(post.id)}">
               ${state.savedIds.has(post.id) ? '🔖' : '🔗'} 保存
             </button>
           </div>
         </div>
+        <section class="post-comment-section" ${state.openCommentIds.has(post.id) ? '' : 'hidden'}>
+          <div class="post-comment-list" aria-live="polite">コメントを読み込んでいます…</div>
+          <form class="post-comment-form">
+            <div class="post-comment-avatar" aria-hidden="true">${escapeHtml(firstChar(state.profile?.display_name || state.profile?.username || '沖'))}</div>
+            <input class="post-comment-input" type="text" maxlength="500" placeholder="コメントを入力…" aria-label="コメントを入力" required>
+            <button class="post-comment-send" type="submit">送信</button>
+          </form>
+        </section>
       </div>
     `;
 
+    if (state.openCommentIds.has(post.id)) {
+      loadPostComments(post.id, article.querySelector('.post-comment-section'));
+    }
     const avatar = article.querySelector('.post-user-icon');
     setAvatar(avatar, profile);
 
@@ -253,6 +357,70 @@ function renderPosts() {
       }
     });
 
+    const commentButton = article.querySelector('[data-comments]');
+    const commentSection = article.querySelector('.post-comment-section');
+    commentButton?.addEventListener('click', async () => {
+      const opening = !state.openCommentIds.has(post.id);
+      if (opening) state.openCommentIds.add(post.id);
+      else state.openCommentIds.delete(post.id);
+      commentButton.setAttribute('aria-expanded', String(opening));
+      commentSection.hidden = !opening;
+      if (opening) await loadPostComments(post.id, commentSection);
+    });
+    commentSection?.querySelector('form')?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const input = commentSection.querySelector('.post-comment-input');
+      const content = input.value.trim();
+      if (!content || !state.user) return;
+      const sendButton = commentSection.querySelector('.post-comment-send');
+      sendButton.disabled = true;
+      try {
+        const { error } = await supabase.from('post_comments').insert({
+          post_id: post.id, user_id: state.user.id, content
+        });
+        if (error) throw error;
+        input.value = '';
+        state.commentCounts.set(post.id, (state.commentCounts.get(post.id) || 0) + 1);
+        commentButton.querySelector('[data-comment-count]').textContent = state.commentCounts.get(post.id);
+        await loadPostComments(post.id, commentSection);
+      } catch (error) {
+        alert(`コメントを送信できませんでした：${error.message}`);
+      } finally {
+        sendButton.disabled = false;
+      }
+    });
+
+    // 投稿メニュー（編集・削除・通報）
+    const menuButton = article.querySelector('.post-menu-button');
+    const postMenu = article.querySelector('.post-menu');
+    menuButton?.addEventListener('click', (event) => {
+      event.stopPropagation();
+      document.querySelectorAll('.post-menu').forEach(menu => {
+        if (menu !== postMenu) {
+          menu.hidden = true;
+          menu.parentElement?.querySelector('.post-menu-button')?.setAttribute('aria-expanded', 'false');
+        }
+      });
+      postMenu.hidden = !postMenu.hidden;
+      menuButton.setAttribute('aria-expanded', String(!postMenu.hidden));
+    });
+
+    article.querySelector('.edit-post-button')?.addEventListener('click', () => {
+      postMenu.hidden = true;
+      menuButton.setAttribute('aria-expanded', 'false');
+      if (state.user?.id === post.user_id) openPostAction('edit', post);
+    });
+    article.querySelector('.delete-post-button')?.addEventListener('click', () => {
+      postMenu.hidden = true;
+      menuButton.setAttribute('aria-expanded', 'false');
+      if (state.user?.id === post.user_id) openPostAction('delete', post);
+    });
+    article.querySelector('.report-post-button')?.addEventListener('click', () => {
+      postMenu.hidden = true;
+      menuButton.setAttribute('aria-expanded', 'false');
+      if (state.user && state.user.id !== post.user_id) openPostAction('report', post);
+    });
+
     fragment.appendChild(article);
   });
 
@@ -281,203 +449,95 @@ async function initMap() {
   state.mapReady = true;
 
   state.map.addListener('click', (event) => {
-    chooseLocationOnMap(event.latLng.lat(), event.latLng.lng());
+    const latitude = event.latLng.lat();
+    const longitude = event.latLng.lng();
+    state.selectedPostLocation = {
+      latitude,
+      longitude
+    };
+
+    const text = $('postLocationStatusText');
+    if (text) {
+      text.textContent = `地図で選択：${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+    }
+    $('postLocationStatus')?.classList.add('active');
   });
 
   refreshMap();
 }
 
-/* ---------- 地図上の「選択中の場所」マーカー ---------- */
-
-function setPreviewMarker(latitude, longitude) {
-  if (!state.map || !window.google?.maps) return;
-  const position = { lat: latitude, lng: longitude };
-  if (!state.previewMarker) {
-    state.previewMarker = new window.google.maps.Marker({
-      position,
-      map: state.map,
-      draggable: true,
-      title: '選択中の場所（ドラッグで移動できます）',
-      animation: window.google.maps.Animation.DROP
-    });
-    state.previewMarker.addListener('dragend', (event) => {
-      chooseLocationOnMap(event.latLng.lat(), event.latLng.lng(), { keepMarker: true });
-    });
-  } else {
-    state.previewMarker.setPosition(position);
-  }
+function mapCategoryFor(item) {
+  const text = [item.category, item.name, item.description, item.content, item.location_name].filter(Boolean).join(' ').toLowerCase();
+  if (/カフェ|喫茶|コーヒー|coffee|cafe/.test(text)) return 'cafe';
+  if (/グルメ|食事|レストラン|料理|ランチ|ディナー|そば|ラーメン|食堂|パン|スイーツ|焼肉/.test(text)) return 'food';
+  if (/買い物|ショップ|ショッピング|市場|雑貨|お土産|shop/.test(text)) return 'shop';
+  if (/観光|ビーチ|海|公園|城|景色|絶景|神社|水族館|スポット|夕日/.test(text)) return 'sight';
+  return 'other';
 }
 
-function clearPreviewMarker() {
-  if (state.previewMarker) {
-    state.previewMarker.setMap(null);
-    state.previewMarker = null;
-  }
-}
-
-function updatePinClearButton() {
-  const button = $('clearPinLocationButton');
-  if (button) button.hidden = !state.selectedPinLocation;
-}
-
-function showPinStatus(text) {
-  const status = $('pinLocationStatus');
-  if (!status) return;
-  status.textContent = text || '';
-  status.hidden = !text;
-}
-
-function renderPinCandidates(list) {
-  const box = $('pinCandidates');
-  if (!box) return;
-  box.replaceChildren();
-  box.hidden = list.length === 0;
-  list.forEach((candidate) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'pin-candidate';
-    const title = document.createElement('strong');
-    title.textContent = candidate.name || candidate.address.split(/[ 、,]/)[0] || '候補';
-    const detail = document.createElement('span');
-    detail.textContent = candidate.address + (candidate.approximate ? '（おおよその位置）' : '');
-    button.append(title, detail);
-    button.addEventListener('click', () => pickPinCandidate(candidate));
-    box.append(button);
-  });
-}
-
-function pickPinCandidate(candidate, { fromSubmit = false } = {}) {
-  state.mapTarget = 'pin';
-  chooseLocationOnMap(candidate.latitude, candidate.longitude);
-  if ($('placeAddress') && candidate.address) {
-    $('placeAddress').value = candidate.address.replace(/^日本、?\s*/, '').replace(/^〒?\d{3}-\d{4}\s*/, '');
-    $('placeAddress').dataset.auto = '0';
-  }
-  if ($('placeName') && !$('placeName').value.trim() && candidate.name) $('placeName').value = candidate.name;
-  const warn = candidate.approximate ? '　⚠ おおよその位置です。地図のピンをドラッグして合わせてください。' : '';
-  const confirm = fromSubmit ? '　この位置でよければ、もう一度「地図に追加」を押してください。' : '';
-  showPinStatus(`📍 ${candidate.name ? `${candidate.name}／` : ''}${candidate.address || '選択した位置'}${warn}${confirm}`);
-  state.map?.setCenter({ lat: candidate.latitude, lng: candidate.longitude });
-  state.map?.setZoom(17);
-}
-
-/** 店名＋住所で場所を検索し、候補を出す。 */
-async function runPinSearch({ autoPick = false, fromSubmit = false } = {}) {
-  const name = $('placeName')?.value.trim() || '';
-  const address = $('placeAddress')?.value.trim() || '';
-  if (!name && !address) {
-    alert('場所の名前か住所を入力してください。');
-    return;
-  }
-  state.mapTarget = 'pin';
-  const button = $('searchPinAddressButton');
-  if (button) button.disabled = true;
-  try {
-    let list = await searchPlaces([name, address].filter(Boolean).join(' '));
-    if (!list.length && name && address) list = await searchPlaces(address);
-    renderPinCandidates(list);
-    if (!list.length) {
-      alert('沖縄県内の場所を見つけられませんでした。店名・市町村名・番地を確認するか、地図をクリックして位置を指定してください。');
-      return;
-    }
-    if (autoPick || list.length === 1) pickPinCandidate(list[0], { fromSubmit });
-    else showPinStatus('候補から選ぶか、地図をクリックして位置を指定してください。');
-  } catch (error) {
-    alert(error.message);
-  } finally {
-    if (button) button.disabled = false;
-  }
-}
-
-/** ピン用の選択を解除（住所欄・マーカー・状態をすべて戻す） */
-function clearPinLocation({ keepAddress = false } = {}) {
-  renderPinCandidates([]);
-  state.selectedPinLocation = null;
-  if (!keepAddress && $('placeAddress')) $('placeAddress').value = '';
-  if (state.mapTarget === 'pin') clearPreviewMarker();
-  showPinStatus('');
-  updatePinClearButton();
-}
-
-/** 投稿用の場所の選択を解除 */
-function clearPostLocation() {
-  state.selectedPostLocation = null;
-  if ($('postLocationStatusText')) $('postLocationStatusText').textContent = '';
-  if ($('postAddressInput')) $('postAddressInput').value = '';
-  $('postLocationStatus')?.classList.remove('active');
-  if (state.mapTarget === 'post') clearPreviewMarker();
-}
-
-/** 地図クリック / マーカー移動で場所を決める。ピン入力中ならピン、それ以外は投稿の場所。 */
-function chooseLocationOnMap(latitude, longitude, { keepMarker = false } = {}) {
-  if (!isOkinawaCoordinate(latitude, longitude)) {
-    alert('沖縄県内の場所を選択してください。');
-    return;
-  }
-  if (!keepMarker) setPreviewMarker(latitude, longitude);
-  const coords = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
-
-  if (state.mapTarget === 'pin') {
-    state.selectedPinLocation = { latitude, longitude };
-    if ($('placeAddress') && (!$('placeAddress').value.trim() || $('placeAddress').dataset.auto === '1')) {
-      $('placeAddress').value = '地図で選択した場所';
-      $('placeAddress').dataset.auto = '1';
-    }
-    showPinStatus(`📍 地図で選択：${coords}（ドラッグで微調整できます）`);
-    updatePinClearButton();
-  } else {
-    state.selectedPostLocation = { latitude, longitude };
-    if ($('postLocationStatusText')) $('postLocationStatusText').textContent = `地図で選択：${coords}`;
-    $('postLocationStatus')?.classList.add('active');
-  }
+function mapMarkerIcon(category) {
+  const colors = { cafe: '#b985e9', food: '#ffad39', sight: '#25bdb8', shop: '#ff6b9b', other: '#2789e8' };
+  const color = colors[category] || colors.other;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="58" viewBox="0 0 48 58"><path d="M24 3C12 3 3 12 3 24c0 17 21 31 21 31s21-14 21-31C45 12 36 3 24 3Z" fill="${color}" stroke="white" stroke-width="3"/><circle cx="24" cy="24" r="15" fill="white" opacity=".95"/></svg>`;
+  return { url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`, scaledSize: new google.maps.Size(40, 48), anchor: new google.maps.Point(20, 46), labelOrigin: new google.maps.Point(20, 20) };
 }
 
 function refreshMap() {
   if (!state.mapReady || !state.map || !window.google?.maps) return;
   state.layers.forEach(marker => marker.setMap(null));
   state.layers = [];
-  const bounds = new window.google.maps.LatLngBounds();
-  let markerCount = 0;
-  const visiblePostIds = new Set(getVisiblePosts().map((post) => post.id));
-
+  const bounds = new google.maps.LatLngBounds();
+  const visiblePostIds = new Set(getVisiblePosts().map(post => post.id));
   const items = [
-    ...state.posts
-      .filter((post) => visiblePostIds.has(post.id))
-      .map((post) => ({ ...post, kind: 'post' })),
-    ...state.places.map((place) => ({ ...place, kind: 'place' }))
+    ...state.posts.filter(post => visiblePostIds.has(post.id)).map(post => ({ ...post, kind: 'post' })),
+    ...state.places.map(place => ({ ...place, kind: 'place' }))
   ];
-
-  items.forEach((item) => {
-    const latitude = Number(item.latitude);
-    const longitude = Number(item.longitude);
-    if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || !isOkinawaCoordinate(latitude, longitude)) return;
-
-    const label = item.kind === 'post'
-      ? item.content
-      : `${item.name}${item.description ? `\n${item.description}` : ''}`;
-
-    const marker = new window.google.maps.Marker({
-      position: { lat: latitude, lng: longitude },
-      map: state.map,
-      title: label
-    });
-    const info = new window.google.maps.InfoWindow({
-      content: `<div>${escapeHtml(label).replaceAll('\n', '<br>')}</div>`
-    });
-    marker.addListener('click', () => info.open({ map: state.map, anchor: marker }));
+  const info = new google.maps.InfoWindow({ maxWidth: 260 });
+  let count = 0;
+  items.forEach(item => {
+    const lat = Number(item.latitude), lng = Number(item.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || !isOkinawaCoordinate(lat, lng)) return;
+    const category = mapCategoryFor(item);
+    if (state.mapCategory !== 'all' && category !== state.mapCategory) return;
+    const title = item.kind === 'post' ? (item.location_name || 'みんなの投稿') : (item.name || 'おすすめスポット');
+    const description = item.kind === 'post' ? item.content : item.description;
+    const profile = item.profiles || {};
+    const username = profile.display_name || profile.username || (item.kind === 'post' ? '投稿者' : 'おすすめスポット');
+    const imageUrl = item.kind === 'post' && /^https:\/\//i.test(item.image_url || '') ? item.image_url : null;
+    const photo = imageUrl ? `<img class="sns-map-popup-photo" src="${escapeHtml(imageUrl)}" alt="スポット写真">` : `<div class="sns-map-popup-placeholder">🌺</div>`;
+    const html = `<div class="sns-map-popup">${photo}<div class="sns-map-popup-content"><strong>${escapeHtml(title)}</strong><span class="sns-map-popup-user">${item.kind === 'post' ? '👤 ' : '📍 '}${escapeHtml(username)}</span><p>${escapeHtml(String(description || '沖縄のおすすめスポット')).slice(0, 130)}</p></div></div>`;
+    const emoji = { cafe: '☕', food: '🍴', sight: '🌴', shop: '🛍', other: '📍' }[category];
+    const marker = new google.maps.Marker({ map: state.map, position: {lat,lng}, title, icon: mapMarkerIcon(category), label: { text: emoji, fontSize: '16px' } });
+    marker.addListener('click', () => { info.setContent(html); info.open({map:state.map,anchor:marker}); });
     state.layers.push(marker);
     bounds.extend(marker.getPosition());
-    markerCount += 1;
+    count++;
   });
-
-  if (markerCount) {
+  const label = document.getElementById('snsMapCount');
+  if (label) label.textContent = count ? `📍 ${count}件のスポットを表示中` : 'このカテゴリのスポットはまだありません';
+  if (count) {
     state.map.fitBounds(bounds, 24);
-    window.google.maps.event.addListenerOnce(state.map, 'idle', () => {
+    google.maps.event.addListenerOnce(state.map, 'idle', () => {
       if (state.map.getZoom() > 13) state.map.setZoom(13);
     });
   }
 }
 
+document.querySelectorAll('[data-map-category]').forEach(button => {
+  button.addEventListener('click', () => {
+    state.mapCategory = button.dataset.mapCategory;
+    document.querySelectorAll('[data-map-category]').forEach(other => {
+      const active = other === button;
+      other.classList.toggle('active', active);
+      other.setAttribute('aria-pressed', String(active));
+    });
+    refreshMap();
+  });
+});
+
+function isOkinawaCoordinate(latitude, longitude) {
+  return latitude >= 24 && latitude <= 28.8 && longitude >= 122.5 && longitude <= 131.5;
+}
 
 function focusPost(post) {
   const latitude = Number(post.latitude);
@@ -491,6 +551,37 @@ function focusPost(post) {
   $('mapSection')?.scrollIntoView({ behavior: 'smooth' });
 }
 
+async function geocode(address) {
+  const query = /沖縄/.test(address) ? address : `沖縄県 ${address}`;
+  try {
+    await loadGoogleMaps();
+    const geocoder = new window.google.maps.Geocoder();
+    const { results } = await geocoder.geocode({ address: query, region: 'JP' });
+    if (results?.[0]) {
+      const result = {
+        latitude: results[0].geometry.location.lat(),
+        longitude: results[0].geometry.location.lng(),
+        formattedAddress: results[0].formatted_address
+      };
+      if (isOkinawaCoordinate(result.latitude, result.longitude)) return result;
+    }
+  } catch (error) {
+    console.warn('Google Geocoderを利用できないため代替検索を使用します。', error);
+  }
+
+  const response = await fetch(
+    `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=jp&viewbox=122.5,28.8,131.5,24&bounded=1&q=${encodeURIComponent(query)}`,
+    { headers: { 'Accept-Language': 'ja' } }
+  );
+  if (!response.ok) throw new Error('住所検索サービスへ接続できませんでした。');
+  const rows = await response.json();
+  const latitude = Number(rows?.[0]?.lat);
+  const longitude = Number(rows?.[0]?.lon);
+  if (!isOkinawaCoordinate(latitude, longitude)) {
+    throw new Error('沖縄県内の住所を確認できませんでした。市町村名・番地まで入力してください。');
+  }
+  return { latitude, longitude, formattedAddress: rows[0].display_name };
+}
 
 async function loadData({ force = false } = {}) {
   if (state.loadingData) return;
@@ -518,6 +609,7 @@ async function loadData({ force = false } = {}) {
     state.likedIds = engagement.likedIds;
     state.savedIds = engagement.savedIds;
     state.likeCounts = engagement.likeCounts;
+    await loadCommentCounts(state.posts);
 
     setTimelineStatus('');
     renderPosts();
@@ -540,23 +632,11 @@ function updateLoadMoreButton() {
   button.hidden = !state.hasMorePosts;
   button.disabled = false;
   button.textContent = '過去の投稿をさらに見る';
-
-  let end = $('timelineEndMessage');
-  if (!end) {
-    end = document.createElement('p');
-    end.id = 'timelineEndMessage';
-    end.className = 'timeline-end-message';
-    button.after(end);
-  }
-  const reachedEnd = !state.hasMorePosts && state.posts.length > 0;
-  end.hidden = !reachedEnd;
-  end.textContent = reachedEnd ? `これより古い投稿はありません（${state.posts.length}件）` : '';
 }
 
 async function loadOlderPosts() {
   const button = $('loadMorePostsButton');
-  if (!button || !state.hasMorePosts || state.loadingMore) return;
-  state.loadingMore = true;
+  if (!button || !state.hasMorePosts) return;
   button.disabled = true;
   button.textContent = '読み込み中…';
   try {
@@ -567,35 +647,20 @@ async function loadOlderPosts() {
     state.posts.push(...additions);
     state.page = nextPage;
     state.hasMorePosts = (rows || []).length === state.pageSize;
-    if (additions.length) {
-      const engagement = await getPostEngagement(additions.map(post => post.id), state.user.id);
-      engagement.likedIds.forEach(id => state.likedIds.add(id));
-      engagement.savedIds.forEach(id => state.savedIds.add(id));
-      engagement.likeCounts.forEach((count, id) => state.likeCounts.set(id, count));
-    }
-    setTimelineStatus('');
+    const engagement = await getPostEngagement(additions.map(post => post.id), state.user.id);
+    engagement.likedIds.forEach(id => state.likedIds.add(id));
+    engagement.savedIds.forEach(id => state.savedIds.add(id));
+    engagement.likeCounts.forEach((count, id) => state.likeCounts.set(id, count));
+    await loadCommentCounts(additions);
     renderPosts();
   } catch (error) {
-    console.error(error);
-    setTimelineStatus(`過去の投稿を読み込めませんでした：${error.message}（もう一度ボタンを押してください）`, true);
+    alert(`過去の投稿を読み込めませんでした：${error.message}`);
   } finally {
-    state.loadingMore = false;
     updateLoadMoreButton();
   }
 }
 
-/* 一覧の最後までスクロールしたら、自動で古い投稿を続けて読み込む */
-(() => {
-  const target = $('loadMorePostsButton');
-  if (!target || !('IntersectionObserver' in window)) return;
-  new IntersectionObserver((entries) => {
-    if (entries.some((entry) => entry.isIntersecting) && state.hasMorePosts && !state.loadingMore) loadOlderPosts();
-  }, { rootMargin: '300px' }).observe(target);
-})();
-
 async function init() {
-  fillAreaSelect($('areaSelect'), { withPrefecture: true });
-  fillAreaSelect($('areaFilterSelect'), { withAll: true });
   try {
     state.user = await getCurrentUser();
     if (!state.user) {
@@ -606,16 +671,7 @@ async function init() {
     state.profile = await ensureCurrentProfile(state.user);
     setAvatar($('postFormAvatar'), state.profile);
 
-    initMap().catch((error) => {
-      console.warn('地図を初期化できませんでした。', error);
-      const note = $('mapSection');
-      if (note && !note.querySelector('.map-load-error')) {
-        const p = document.createElement('p');
-        p.className = 'map-load-error';
-        p.textContent = `地図を読み込めませんでした：${error.message}`;
-        note.prepend(p);
-      }
-    });
+    await initMap();
     await loadData();
     await refreshUnreadBadge();
     subscribeToIncomingMessages(state.user.id, refreshUnreadBadge);
@@ -636,58 +692,28 @@ $('postContent')?.addEventListener('input', (event) => {
   }
 });
 
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-
-function renderPostImagePreviews() {
-  const area = $('postImagePreviewArea');
-  if (!area) return;
-  area.replaceChildren();
-  area.hidden = state.postImages.length === 0;
-  state.postImages.forEach((image, index) => {
-    const item = document.createElement('div');
-    item.className = 'post-image-thumb';
-    const img = document.createElement('img');
-    img.src = image.url;
-    img.alt = `投稿画像${index + 1}のプレビュー`;
-    const remove = document.createElement('button');
-    remove.type = 'button';
-    remove.textContent = '✕';
-    remove.setAttribute('aria-label', `画像${index + 1}を削除`);
-    remove.addEventListener('click', () => {
-      URL.revokeObjectURL(image.url);
-      state.postImages.splice(index, 1);
-      renderPostImagePreviews();
-    });
-    item.append(img, remove);
-    area.append(item);
-  });
-  const counter = $('postImageCounter');
-  if (counter) counter.textContent = `${state.postImages.length} / ${MAX_POST_IMAGES}枚`;
-}
-
-function clearPostImages() {
-  state.postImages.forEach((image) => URL.revokeObjectURL(image.url));
-  state.postImages = [];
-  if ($('postImageInput')) $('postImageInput').value = '';
-  renderPostImagePreviews();
-}
-
 $('postImageInput')?.addEventListener('change', (event) => {
-  const files = [...(event.target.files || [])];
-  event.target.value = '';
-  if (!files.length) return;
-  const room = MAX_POST_IMAGES - state.postImages.length;
-  if (files.length > room) {
-    alert(`画像は最大${MAX_POST_IMAGES}枚までです。先頭の${Math.max(room, 0)}枚だけ追加します。`);
+  const file = event.target.files?.[0] || null;
+  if (!file) return;
+  if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+    alert('JPEG・PNG・WebP・GIFの5MB以下の画像を選択してください。');
+    event.target.value = '';
+    return;
   }
-  for (const file of files.slice(0, Math.max(room, 0))) {
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type) || file.size > 5 * 1024 * 1024) {
-      alert(`「${file.name}」は追加できません。JPEG・PNG・WebP・GIFの5MB以下を選択してください。`);
-      continue;
-    }
-    state.postImages.push({ file, url: URL.createObjectURL(file) });
-  }
-  renderPostImagePreviews();
+  if (state.postImagePreviewUrl) URL.revokeObjectURL(state.postImagePreviewUrl);
+  state.postImageFile = file;
+  state.postImagePreviewUrl = URL.createObjectURL(file);
+  $('postImagePreview').src = state.postImagePreviewUrl;
+  $('postImagePreviewArea').hidden = false;
+});
+
+$('removePostImageButton')?.addEventListener('click', () => {
+  if (state.postImagePreviewUrl) URL.revokeObjectURL(state.postImagePreviewUrl);
+  state.postImageFile = null;
+  state.postImagePreviewUrl = null;
+  if ($('postImageInput')) $('postImageInput').value = '';
+  $('postImagePreviewArea').hidden = true;
+  $('postImagePreview').removeAttribute('src');
 });
 
 $('placeDescription')?.addEventListener('input', (event) => {
@@ -723,8 +749,9 @@ $('resetMapButton')?.addEventListener('click', () => {
 });
 
 $('cancelPostLocationButton')?.addEventListener('click', () => {
-  state.mapTarget = 'post';
-  clearPostLocation();
+  state.selectedPostLocation = null;
+  if ($('postLocationStatusText')) $('postLocationStatusText').textContent = '';
+  $('postLocationStatus')?.classList.remove('active');
 });
 
 $('searchPostAddressButton')?.addEventListener('click', async () => {
@@ -734,11 +761,9 @@ $('searchPostAddressButton')?.addEventListener('click', async () => {
   button.disabled = true;
   try {
     const coordinates = await geocode(address);
-    state.mapTarget = 'post';
     state.selectedPostLocation = { ...coordinates, address };
     $('postLocationStatusText').textContent = `住所：${address}`;
     $('postLocationStatus')?.classList.add('active');
-    setPreviewMarker(coordinates.latitude, coordinates.longitude);
     state.map?.setCenter({ lat: coordinates.latitude, lng: coordinates.longitude });
     state.map?.setZoom(15);
   } catch (error) {
@@ -758,11 +783,6 @@ $('useCurrentLocationButton')?.addEventListener('click', () => {
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
-      if (!isOkinawaCoordinate(position.coords.latitude, position.coords.longitude)) {
-        alert('現在地が沖縄県外のため、場所として追加できません。');
-        return;
-      }
-      state.mapTarget = 'post';
       state.selectedPostLocation = {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude
@@ -771,7 +791,6 @@ $('useCurrentLocationButton')?.addEventListener('click', () => {
         $('postLocationStatusText').textContent = '現在地を投稿に追加します。';
       }
       $('postLocationStatus')?.classList.add('active');
-      setPreviewMarker(position.coords.latitude, position.coords.longitude);
       state.map?.setCenter({ lat: position.coords.latitude, lng: position.coords.longitude });
       state.map?.setZoom(15);
     },
@@ -790,24 +809,29 @@ $('postForm')?.addEventListener('submit', async (event) => {
   button.disabled = true;
 
   try {
-    const imageUrls = await Promise.all(
-      state.postImages.map((image) => uploadPostImage(state.user.id, image.file))
-    );
+    const imageUrl = state.postImageFile
+      ? await uploadPostImage(state.user.id, state.postImageFile)
+      : null;
     await createPost({
       userId: state.user.id,
       content,
       locationName: $('areaSelect')?.value || null,
       locationAddress: state.selectedPostLocation?.address ?? null,
-      imageUrls,
+      imageUrl,
       latitude: state.selectedPostLocation?.latitude ?? null,
       longitude: state.selectedPostLocation?.longitude ?? null
     });
 
     form.reset();
-    clearPostImages();
+    if (state.postImagePreviewUrl) URL.revokeObjectURL(state.postImagePreviewUrl);
+    state.postImageFile = null;
+    state.postImagePreviewUrl = null;
+    $('postImagePreviewArea').hidden = true;
+    $('postImagePreview').removeAttribute('src');
     if ($('characterCount')) $('characterCount').textContent = '0 / 200';
-    state.mapTarget = 'post';
-    clearPostLocation();
+    state.selectedPostLocation = null;
+    if ($('postLocationStatusText')) $('postLocationStatusText').textContent = '';
+    $('postLocationStatus')?.classList.remove('active');
 
     await loadData({ force: true });
   } catch (error) {
@@ -826,17 +850,7 @@ $('placeForm')?.addEventListener('submit', async (event) => {
 
   try {
     const address = $('placeAddress')?.value.trim();
-    if (!$('placeName')?.value.trim()) {
-      alert('場所の名前を入力してください。');
-      return;
-    }
-
-    // 位置が未確定なら、候補を検索して地図に仮置きする（住所だけで黙って登録しない）
-    if (!state.selectedPinLocation) {
-      await runPinSearch({ autoPick: true, fromSubmit: true });
-      return;
-    }
-    const coordinates = state.selectedPinLocation;
+    const coordinates = state.selectedPinLocation || await geocode(address);
 
     await createPlace({
       userId: state.user.id,
@@ -847,8 +861,8 @@ $('placeForm')?.addEventListener('submit', async (event) => {
     });
 
     form.reset();
-    state.mapTarget = 'pin';
-    clearPinLocation();
+    state.selectedPinLocation = null;
+    if ($('clearPinLocationButton')) $('clearPinLocationButton').hidden = true;
     await loadData({ force: true });
   } catch (error) {
     alert(`ピンを追加できませんでした：${error.message}`);
@@ -865,40 +879,22 @@ $('useCurrentLocationForPinButton')?.addEventListener('click', () => {
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
-      const { latitude, longitude } = position.coords;
-      if (!isOkinawaCoordinate(latitude, longitude)) {
-        alert('現在地が沖縄県外のため、ピンにできません。');
-        return;
-      }
-      state.mapTarget = 'pin';
-      chooseLocationOnMap(latitude, longitude);
-      if ($('placeAddress')) {
-        $('placeAddress').value = '現在地';
-        $('placeAddress').dataset.auto = '1';
-      }
-      state.map?.setCenter({ lat: latitude, lng: longitude });
-      state.map?.setZoom(16);
+      state.selectedPinLocation = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude
+      };
+      if ($('placeAddress')) $('placeAddress').value = '現在地';
+      if ($('clearPinLocationButton')) $('clearPinLocationButton').hidden = false;
     },
     () => alert('現在地を取得できませんでした。')
   );
 });
 
-$('searchPinAddressButton')?.addEventListener('click', () => runPinSearch());
-
-/* 住所を打ち直したら、古い選択（現在地など）は無効にする */
-$('placeAddress')?.addEventListener('input', (event) => {
-  event.target.dataset.auto = '0';
-  if (state.selectedPinLocation) clearPinLocation({ keepAddress: true });
-});
-
 $('clearPinLocationButton')?.addEventListener('click', () => {
-  state.mapTarget = 'pin';
-  clearPinLocation();
+  state.selectedPinLocation = null;
+  if ($('placeAddress')) $('placeAddress').value = '';
+  $('clearPinLocationButton').hidden = true;
 });
-
-/* 今どちらのフォームを触っているかで、地図クリックの行き先を切り替える */
-$('placeForm')?.addEventListener('focusin', () => { state.mapTarget = 'pin'; });
-$('postForm')?.addEventListener('focusin', () => { state.mapTarget = 'post'; });
 
 const menu = $('mobileMenuDrawer');
 function toggleMenu(open) {
@@ -921,3 +917,183 @@ window.addEventListener('pagehide', () => {
 });
 
 document.addEventListener('DOMContentLoaded', init);
+
+
+// 投稿の場所設定を必要なときだけ開く
+$('togglePostLocationButton')?.addEventListener('click', () => {
+  const panel = $('postLocationOptions');
+  const button = $('togglePostLocationButton');
+  if (!panel || !button) return;
+  panel.hidden = !panel.hidden;
+  button.setAttribute('aria-expanded', String(!panel.hidden));
+});
+
+// SNS風ログアウト確認モーダル（SupabaseのlogoutUserを利用）
+let logoutReturnFocus = null;
+let logoutBusy = false;
+function openLogoutModal() {
+  const modal = $('logoutModal');
+  if (!modal) return;
+  logoutReturnFocus = document.activeElement;
+  $('logoutError').hidden = true;
+  modal.hidden = false;
+  document.body.classList.add('logout-modal-open');
+  $('cancelLogoutButton').focus();
+}
+function closeLogoutModal() {
+  if (logoutBusy) return;
+  $('logoutModal').hidden = true;
+  document.body.classList.remove('logout-modal-open');
+  logoutReturnFocus?.focus?.();
+}
+$('sideLogoutButton')?.addEventListener('click', openLogoutModal);
+$('mobileLogoutButton')?.addEventListener('click', openLogoutModal);
+$('cancelLogoutButton')?.addEventListener('click', closeLogoutModal);
+$('logoutModal')?.querySelector('[data-close-logout]')?.addEventListener('click', closeLogoutModal);
+document.addEventListener('keydown', (event) => {
+  const modal = $('logoutModal');
+  if (!modal || modal.hidden) return;
+  if (event.key === 'Escape') { event.preventDefault(); closeLogoutModal(); }
+  if (event.key === 'Tab') {
+    const buttons = [...modal.querySelectorAll('button:not(:disabled)')];
+    if (!buttons.length) return;
+    const first = buttons[0], last = buttons[buttons.length - 1];
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  }
+});
+$('confirmLogoutButton')?.addEventListener('click', async () => {
+  if (logoutBusy) return;
+  logoutBusy = true;
+  const confirm = $('confirmLogoutButton');
+  const cancel = $('cancelLogoutButton');
+  confirm.disabled = true;
+  cancel.disabled = true;
+  confirm.textContent = 'ログアウト中…';
+  $('logoutError').hidden = true;
+  try {
+    await authApi.logoutUser();
+    sessionStorage.removeItem('okitalk_home_scroll_y');
+    window.location.replace('login.html');
+  } catch (error) {
+    const message = $('logoutError');
+    message.textContent = `ログアウトできませんでした：${error?.message || String(error)}`;
+    message.hidden = false;
+    logoutBusy = false;
+    confirm.disabled = false;
+    cancel.disabled = false;
+    confirm.textContent = 'ログアウト';
+    confirm.focus();
+  }
+});
+
+
+// SNS風 投稿操作モーダル
+let currentPostAction = null;
+let previousPostActionFocus = null;
+function closePostAction() {
+  const modal = $('postActionModal');
+  if (!modal) return;
+  modal.hidden = true;
+  document.body.style.overflow = '';
+  currentPostAction = null;
+  previousPostActionFocus?.focus?.();
+}
+function openPostAction(type, post) {
+  const modal = $('postActionModal');
+  if (!modal) return;
+  previousPostActionFocus = document.activeElement;
+  currentPostAction = { type, post };
+  $('postActionEdit').hidden = type !== 'edit';
+  $('postActionDelete').hidden = type !== 'delete';
+  $('postActionReport').hidden = type !== 'report';
+  $('postActionError').hidden = true;
+  $('postActionForm').reset();
+  const names = { edit: '✏️ 投稿を編集', delete: '投稿の削除', report: '🚩 投稿を通報' };
+  $('postActionTitle').textContent = names[type];
+  const submit = $('postActionSubmit');
+  submit.textContent = { edit: '変更を保存', delete: '投稿を削除', report: '通報する' }[type];
+  submit.classList.toggle('is-danger', type === 'delete');
+  submit.disabled = false;
+  if (type === 'edit') {
+    $('postActionContent').value = post.content || '';
+    $('postActionCount').textContent = `${[...$('postActionContent').value].length} / 200`;
+  }
+  modal.hidden = false;
+  document.body.style.overflow = 'hidden';
+  (type === 'edit' ? $('postActionContent') : $('postActionClose')).focus();
+}
+function setupPostActionModal() {
+  const modal = $('postActionModal');
+  if (!modal) return;
+  const showError = (message) => {
+    $('postActionError').textContent = message;
+    $('postActionError').hidden = false;
+  };
+  $('postActionClose').addEventListener('click', closePostAction);
+  $('postActionCancel').addEventListener('click', closePostAction);
+  modal.querySelector('[data-close-post-action]').addEventListener('click', closePostAction);
+  document.addEventListener('keydown', event => {
+    if (modal.hidden) return;
+    if (event.key === 'Escape') closePostAction();
+    if (event.key === 'Tab') {
+      const focusables = [...modal.querySelectorAll('button:not(:disabled), input:not(:disabled), textarea:not(:disabled)')]
+        .filter(el => el.getClientRects().length);
+      if (!focusables.length) return;
+      const first = focusables[0], last = focusables.at(-1);
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    }
+  });
+  $('postActionContent').addEventListener('input', event => {
+    $('postActionCount').textContent = `${[...event.target.value].length} / 200`;
+  });
+  $('postActionForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    if (!currentPostAction || !state.user) return;
+    const { type, post } = currentPostAction;
+    const submit = $('postActionSubmit');
+    $('postActionError').hidden = true;
+    let content, reason;
+    if (type === 'edit') {
+      content = $('postActionContent').value.trim();
+      if (!content || [...content].length > 200) return showError('1〜200文字で入力してください。');
+    }
+    if (type === 'report') {
+      reason = modal.querySelector('input[name="reportReason"]:checked')?.value;
+      if (!reason) return showError('通報理由を選んでください。');
+    }
+    if ((type === 'edit' || type === 'delete') && post.user_id !== state.user.id) return showError('操作する権限がありません。');
+    if (type === 'report' && post.user_id === state.user.id) return showError('自分の投稿は通報できません。');
+    submit.disabled = true;
+    try {
+      if (type === 'edit') {
+        const { data, error } = await supabase.from('posts').update({ content })
+          .eq('id', post.id).eq('user_id', state.user.id).select('id');
+        if (error) throw error;
+        if (!data?.length) throw new Error('更新対象が見つからないか、権限がありません。');
+        post.content = content;
+      } else if (type === 'delete') {
+        const { data, error } = await supabase.from('posts').delete()
+          .eq('id', post.id).eq('user_id', state.user.id).select('id');
+        if (error) throw error;
+        if (!data?.length) throw new Error('削除対象が見つからないか、権限がありません。');
+        state.posts = state.posts.filter(item => item.id !== post.id);
+        state.openCommentIds.delete(post.id);
+      } else {
+        const { error } = await supabase.from('post_reports').insert({
+          post_id: post.id, reporter_id: state.user.id, reason
+        });
+        if (error) throw error;
+      }
+      closePostAction();
+      if (type !== 'report') renderPosts();
+      alert({ edit: '投稿を更新しました！', delete: '投稿を削除しました。', report: '通報を受け付けました。' }[type]);
+    } catch (error) {
+      showError(error.code === '23505' ? 'この投稿はすでに通報済みです。' : error.message);
+    } finally {
+      submit.disabled = false;
+    }
+  });
+}
+setupPostActionModal();
