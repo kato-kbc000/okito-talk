@@ -25,6 +25,8 @@ import {
     saveProfileSettings,
     getLocationShareTargets,
     replaceLocationShareTargets
+  , getPostImages,
+    uploadProfileImage
 } from '../api.js';
 
 const $ = id => document.getElementById(id);
@@ -244,7 +246,7 @@ function createPostCard(post, { editable = false } = {}) {
             </div>
             <span class="visibility-label">${post.visibility === 'private' ? '🔒 自分のみ' : post.visibility === 'followers' ? '👥 フォロワーのみ' : '🌐 全体公開'}</span>
             <p class="post-text">${esc(post.content).replaceAll('\n', '<br>')}</p>
-            ${post.image_url ? `<img class="profile-post-image" src="${esc(post.image_url)}" alt="投稿画像">` : ''}
+            ${getPostImages(post).map((url) => `<img class="profile-post-image" src="${esc(url)}" alt="投稿画像">`).join('')}
             ${post.location_name ? `<p class="post-location">📍 ${esc(post.location_name)}</p>` : ''}
             <div class="post-action">
                 <button type="button" class="post-action-button ${state.likedIds.has(post.id) ? 'active' : ''}" data-like aria-pressed="${state.likedIds.has(post.id)}">
@@ -606,12 +608,18 @@ async function changeTab(tab) {
 
 function readFile(input, callback) {
     const file = input.files?.[0];
+    input.value = '';
     if (!file) return;
-    if (!['image/jpeg', 'image/png'].includes(file.type)) { alert('JPEGまたはPNG画像を選択してください。'); return; }
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { alert('JPEG・PNG・WebP画像を選択してください。'); return; }
     if (file.size > 2 * 1024 * 1024) { alert('画像は2MB以下にしてください。'); return; }
-    const reader = new FileReader();
-    reader.onload = () => callback(String(reader.result));
-    reader.readAsDataURL(file);
+    callback({ file, preview: URL.createObjectURL(file) });
+}
+
+/** 選択済みの画像をStorageへアップロードしてURLを返す。未変更なら現在の値、削除なら null */
+async function resolveProfileImage(pending, current) {
+    if (pending === null) return current;
+    if (pending === '') return null;
+    return uploadProfileImage(state.authUser.id, pending.file);
 }
 
 async function init() {
@@ -725,13 +733,17 @@ $('profileEditForm')?.addEventListener('submit', async event => {
     try {
         if (!/^[A-Za-z0-9_]+$/.test(username)) throw new Error('ユーザーIDは半角英数字とアンダーバーで入力してください。');
         if (await isUsernameTaken(username, state.authUser.id)) throw new Error('このユーザーIDは使用されています。');
+        const [avatarUrl, headerUrl] = await Promise.all([
+            resolveProfileImage(state.pendingIcon, state.ownProfile.avatar_url),
+            resolveProfileImage(state.pendingHeader, state.ownProfile.header_url)
+        ]);
         state.ownProfile = await updateProfile(state.authUser.id, {
             username,
             displayName,
             bio: $('editDescription').value.trim(),
             city: $('editLocation').value.trim(),
-            avatarUrl: state.pendingIcon === null ? state.ownProfile.avatar_url : state.pendingIcon,
-            headerUrl: state.pendingHeader === null ? state.ownProfile.header_url : state.pendingHeader,
+            avatarUrl,
+            headerUrl,
             isPrivate: state.ownProfile.is_private,
             themeColor: state.ownProfile.theme_color
         });

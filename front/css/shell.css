@@ -1,0 +1,167 @@
+/* =========================================
+   サイドバー付きページ共通（home / search / community / messages）
+   ページ別CSSの差で見た目がずれないよう、ここで揃える
+========================================= */
+
+/* 未読バッジ：0件のときは出さない */
+.side-notification[hidden],
+.header-badge[hidden] { display: none !important; }
+
+/* ログアウトボタン（<button> のブラウザ標準スタイルを打ち消す） */
+button.side-link,
+button.mobile-menu-link {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    margin: 0;
+    background: transparent;
+    border: 1px solid transparent;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.side-logout,
+.mobile-logout {
+    color: #b42318;
+    font-weight: 700;
+}
+
+.side-logout:hover,
+.side-logout:focus-visible,
+.mobile-logout:hover {
+    color: #b42318;
+    background: rgba(254, 226, 226, 0.7);
+}
+
+.side-logout .side-icon svg { stroke: currentColor; }
+
+/* 入力欄＋ボタンの横並び：入力を広く、ボタンは内容なりの幅に */
+.search-box .button,
+.message-form .button,
+.community-search-form .button {
+    width: auto;
+    flex: 0 0 auto;
+    margin: 0;
+}
+
+/* =========================================
+   共通レイアウト：左メニュー + 本文（ホームと同じ）
+   <div class="app-shell">
+     <aside class="side-menu" data-common-sidebar></aside>
+     <div class="app-content">…</div>
+   </div>
+========================================= */
+.app-shell {
+    width: min(1540px, calc(100% - 32px));
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 28px;
+    align-items: start;
+    padding: 22px 0 80px;
+}
+.app-content { min-width: 0; }
+
+.side-menu[data-common-sidebar] {
+    position: sticky;
+    top: 96px;
+    height: min(820px, calc(100vh - 118px));
+    min-height: 650px;
+    padding: 20px 14px;
+    overflow: hidden;
+    isolation: isolate;
+    border: 1px solid rgba(255, 255, 255, 0.92);
+    border-radius: 30px;
+    background: linear-gradient(180deg, rgba(220,247,255,.98), rgba(243,252,255,.96) 46%, rgba(181,230,255,.95));
+    box-shadow: 0 22px 60px rgba(46,100,145,.14), inset 0 1px 0 rgba(255,255,255,.95);
+}
+[data-common-sidebar] .side-background { position: absolute; inset: 0; z-index: 0; }
+[data-common-sidebar] .side-background img { width: 100%; height: 100%; display: block; object-fit: cover; }
+[data-common-sidebar] .side-navigation {
+    position: relative; z-index: 2; display: flex; flex-direction: column; gap: 10px; padding: 8px;
+    border: 1px solid rgba(255,255,255,.88); border-radius: 24px; background: rgba(255,255,255,.68);
+    box-shadow: 0 16px 38px rgba(52,98,135,.09), inset 0 1px 0 rgba(255,255,255,.84);
+}
+[data-common-sidebar] .side-link {
+    position: relative; min-height: 58px; display: flex; align-items: center; gap: 15px; padding: 13px; overflow: hidden;
+    color: #162a50; border: 1px solid transparent; border-radius: 17px; font-size: 15px; font-weight: 800;
+    text-decoration: none; white-space: nowrap;
+    transition: transform .2s ease, background .2s ease, color .2s ease, box-shadow .2s ease;
+}
+[data-common-sidebar] .side-link:hover { transform: translateX(2px); color: #198ced; background: rgba(233,248,255,.92); }
+[data-common-sidebar] .side-link.active {
+    color: #178ced;
+    background: linear-gradient(135deg, rgba(230,247,255,.98), rgba(219,243,255,.98));
+    border-color: rgba(109,193,248,.22); box-shadow: 0 9px 20px rgba(42,150,225,.11);
+}
+[data-common-sidebar] .active-line { position: absolute; left: 0; top: 15px; bottom: 15px; width: 4px; border-radius: 0 999px 999px 0; background: linear-gradient(180deg, #2f9bff, #22c4c5); }
+[data-common-sidebar] .side-icon { width: 30px; height: 30px; display: grid; place-items: center; flex: 0 0 30px; font-size: 0; }
+[data-common-sidebar] .side-icon svg { width: 25px; height: 25px; display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+[data-common-sidebar] .side-link.active .side-icon { width: 34px; height: 34px; margin-left: -2px; border-radius: 12px; background: rgba(255,255,255,.74); box-shadow: 0 6px 14px rgba(37,146,225,.12); }
+[data-common-sidebar] .side-notification {
+    min-width: 22px; height: 22px; margin-left: auto; display: grid; place-items: center; color: #fff; background: #ff4f62;
+    border: 2px solid #fff; border-radius: 999px; font-size: 11px; font-weight: 900; box-shadow: 0 5px 12px rgba(255,79,98,.25);
+}
+[data-common-sidebar] .side-notification[hidden] { display: none !important; }
+
+@media (max-width: 1000px) and (min-width: 761px) {
+    .app-shell { grid-template-columns: 200px minmax(0, 1fr); gap: 18px; }
+}
+@media (max-width: 760px) {
+    .app-shell { display: block; width: 100%; padding: 12px 0 60px; }
+    .side-menu[data-common-sidebar] { display: none; }
+    .app-content { padding: 0 12px; }
+}
+
+/* サイドバー付きの汎用レイアウト（検索・作成ページ用） */
+.layout-with-sidebar {
+    width: min(1540px, calc(100% - 32px));
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 28px;
+    align-items: start;
+    padding: 22px 0 80px;
+}
+.layout-with-sidebar > * { min-width: 0; }
+@media (max-width: 1000px) and (min-width: 761px) { .layout-with-sidebar { grid-template-columns: 200px minmax(0, 1fr); gap: 18px; } }
+@media (max-width: 760px) {
+    .layout-with-sidebar { display: block; width: 100%; padding: 12px 12px 60px; }
+    .layout-with-sidebar > .side-menu { display: none; }
+}
+
+
+/* =========================================
+   スマホ用タブバー（common-header.js が描画）
+========================================= */
+.mobile-tabbar { display: none; }
+@media (max-width: 760px) {
+    .mobile-tabbar {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 9000;
+        display: grid; grid-template-columns: repeat(6, 1fr);
+        padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+        background: rgba(255, 255, 255, 0.97);
+        border-top: 1px solid #dfe7f1;
+        box-shadow: 0 -8px 24px rgba(31, 62, 101, 0.1);
+        backdrop-filter: blur(8px);
+    }
+    .mobile-tab {
+        position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px;
+        padding: 6px 0; border: 0; background: transparent; font: inherit; white-space: nowrap;
+        color: #5b6b82; font-size: 9.5px; letter-spacing: -0.02em; font-weight: 800; text-decoration: none; cursor: pointer;
+    }
+    .mobile-tab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .mobile-tab.active { color: #1478d8; }
+    .mobile-tab.active svg { stroke: #2f9bff; }
+    .mobile-tab-logout { color: #b42318; }
+    .mobile-tab-badge {
+        position: absolute; top: 2px; left: calc(50% + 6px); min-width: 17px; height: 17px; padding: 0 4px;
+        display: grid; place-items: center; border-radius: 999px; background: #ff4f62; color: #fff;
+        font-style: normal; font-size: 10px; font-weight: 900;
+    }
+    .mobile-tab-badge[hidden] { display: none !important; }
+    body.has-mobile-tabbar { padding-bottom: 72px; }
+    /* 上のヘッダーのメニューはタブバーに置き換える */
+    body.has-mobile-tabbar .site-header .header-nav { display: none; }
+}

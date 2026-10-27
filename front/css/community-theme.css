@@ -1,0 +1,228 @@
+/* =========================================
+   コミュニティ画面をホームの見た目に揃えるテーマ
+   （各ページのCSSの後に読み込む）
+   - 背景・文字・カード・ボタンの色や角丸をホームと同じにする
+   - 左メニューは共通（shell.css の .app-shell）
+========================================= */
+
+:root {
+    --ok-bg: #f4f7fb;
+    --ok-card: #ffffff;
+    --ok-border: #e1e6ed;
+    --ok-radius: 22px;
+    --ok-shadow: 0 10px 30px rgba(31, 62, 101, 0.06);
+    --ok-blue: #2f9bff;
+    --ok-cyan: #00d4ff;
+    --ok-text: #182033;
+    --ok-sub: #6b7a90;
+    --ok-grad: linear-gradient(135deg, #2f9bff 0%, #22c4c5 100%);
+    --ok-soft: linear-gradient(135deg, #e6f7ff 0%, #f3fcff 60%, #fff9e6 100%);
+}
+
+body {
+    color: var(--ok-text);
+    background: var(--ok-bg);
+    font-family: "Yu Gothic", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+}
+
+/* ---------- 本文の幅（左メニューの右側いっぱい） ---------- */
+.app-content .community-hero,
+.app-content .community-home-layout,
+.app-content .community-subnav {
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+}
+.app-content .community-hero { margin-top: 0; }
+
+/* ---------- ヒーロー ---------- */
+.community-hero {
+    border: 1px solid var(--ok-border);
+    border-radius: 28px;
+    box-shadow: var(--ok-shadow);
+}
+.community-hero-cover { height: 160px; }
+
+/* ---------- コミュニティ内のサブメニュー（旧・左サイドバー） ---------- */
+.community-subnav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 18px 0 0;
+    padding: 8px;
+    background: var(--ok-card);
+    border: 1px solid var(--ok-border);
+    border-radius: 999px;
+    box-shadow: var(--ok-shadow);
+}
+.community-subnav[hidden] { display: none; }
+.community-subnav-item {
+    padding: 10px 20px;
+    border-radius: 999px;
+    color: #3a4a63;
+    font-size: 14px;
+    font-weight: 800;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.community-subnav-item[hidden] { display: none; }
+.community-subnav-item:hover { background: #eef6ff; color: #1478d8; }
+.community-subnav-item.active { color: #fff; background: var(--ok-grad); box-shadow: 0 8px 18px rgba(30, 144, 255, 0.28); }
+
+/* ---------- 2カラム（中央 + 右） ---------- */
+.community-home-layout {
+    margin-top: 22px;
+    margin-bottom: 0;
+    grid-template-columns: minmax(0, 1fr) minmax(250px, 310px);
+    gap: 22px;
+}
+.community-center { min-width: 0; display: flex; flex-direction: column; gap: 22px; }
+.community-right-sidebar { top: 96px; }
+
+/* ---------- カード ---------- */
+.community-tabs,
+.community-post,
+.community-post-form,
+.community-right-sidebar > section,
+.community-right-sidebar > article {
+    border: 1px solid var(--ok-border);
+    border-radius: var(--ok-radius);
+    box-shadow: var(--ok-shadow);
+}
+.community-post-form {
+    background: var(--ok-soft);
+    border-color: #cfe8f7;
+}
+.community-post-form textarea { background: #fff; border-radius: 18px; border: 1px solid #cfe3f2; }
+
+/* ---------- ボタン（ホームと同じ青グラデ） ---------- */
+.community-submit-button,
+.community-tab.active {
+    background: var(--ok-grad);
+    border-radius: 999px;
+}
+.community-tab { border-radius: 999px; }
+.post-option-button {
+    background: #fff;
+    border: 1px solid #b9d9ef;
+    border-radius: 999px;
+    color: #0874bd;
+}
+.post-option-button:hover { background: #f1f9ff; }
+
+/* ---------- コミュニティマップ ---------- */
+.community-map-card {
+    padding: 22px;
+    background: var(--ok-soft);
+    border: 1px solid #cfe8f7;
+    border-radius: 26px;
+    box-shadow: var(--ok-shadow);
+}
+.community-map-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.community-map-label { display: block; font-size: 11px; font-weight: 900; letter-spacing: .14em; color: #1a87e0; }
+.community-map-head h2 { margin: 4px 0 4px; font-size: 22px; }
+.community-map-head p { margin: 0; color: var(--ok-sub); font-size: 13px; }
+
+.location-status {
+    padding: 7px 14px; border-radius: 999px; font-size: 12px; font-weight: 800; white-space: nowrap;
+    background: #eef1f5; color: #6b7a90;
+}
+.location-status.on { background: #e3f8ec; color: #15803d; }
+
+.community-map {
+    width: 100%;
+    height: 380px;
+    margin-top: 16px;
+    overflow: hidden;
+    border-radius: 20px;
+    border: 1px solid #cfe3f2;
+    background: #dff0fa;
+}
+.community-map.map-error { display: grid; place-items: center; padding: 20px; text-align: center; color: #b42318; font-size: 13px; }
+
+.community-map-legend { display: flex; flex-wrap: wrap; gap: 16px; margin: 12px 2px 0; font-size: 12px; color: var(--ok-sub); }
+.community-map-legend .dot { display: inline-block; width: 11px; height: 11px; margin-right: 6px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px #cbd5e1; vertical-align: -1px; }
+.dot-me { background: #16a34a; }
+.dot-member { background: #2f8cff; }
+.dot-post { background: #ef4444; }
+
+.community-map-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; align-items: center; }
+.location-share-button {
+    min-height: 46px; padding: 0 22px; border: 0; border-radius: 999px; color: #fff; cursor: pointer;
+    background: var(--ok-grad); font-size: 14px; font-weight: 800; box-shadow: 0 8px 20px rgba(30, 144, 255, .26);
+}
+.location-share-button.stop { background: linear-gradient(135deg, #ef4444, #f97316); box-shadow: 0 8px 20px rgba(239, 68, 68, .24); }
+.location-share-button:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; }
+.map-small-button {
+    min-height: 40px; padding: 0 16px; border: 1px solid #b9d9ef; border-radius: 999px; background: #fff;
+    color: #0874bd; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.map-small-button[hidden] { display: none; }
+.location-share-message { margin: 12px 2px 0; font-size: 12.5px; color: var(--ok-sub); line-height: 1.7; }
+.location-share-message.error { color: #b42318; font-weight: 700; }
+
+/* 投稿の場所ボタン／候補 */
+button.post-location {
+    display: inline-flex; align-items: center; gap: 4px; margin: 6px 0 0; padding: 4px 10px;
+    border: 0; border-radius: 999px; background: #eef6ff; color: #1478d8; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer;
+}
+button.post-location:disabled { cursor: default; background: #f1f4f8; color: #6b7a90; }
+.location-hint { margin: 10px 2px 0; font-size: 12px; color: var(--ok-sub); }
+.location-candidates { display: grid; gap: 6px; margin-top: 10px; }
+.location-candidates[hidden] { display: none; }
+.location-candidate { display: grid; gap: 2px; width: 100%; padding: 10px 12px; text-align: left; border: 1px solid #cfe3f2; border-radius: 12px; background: #fff; font: inherit; cursor: pointer; }
+.location-candidate:hover { border-color: var(--ok-blue); background: #f3f9ff; }
+.location-candidate strong { font-size: 14px; }
+.location-candidate span { font-size: 12px; color: var(--ok-sub); overflow-wrap: anywhere; }
+
+@media (max-width: 1100px) {
+    .community-home-layout { grid-template-columns: minmax(0, 1fr); }
+    .community-right-sidebar { position: static; }
+}
+@media (max-width: 760px) {
+    .community-map { height: 300px; }
+    .community-subnav { border-radius: 22px; }
+}
+
+/* 設定タブの承認待ちバッジ・コメント削除 */
+.subnav-badge { display: inline-grid; place-items: center; min-width: 20px; height: 20px; margin-left: 6px; padding: 0 6px; border-radius: 999px; background: #ff4f62; color: #fff; font-size: 11px; font-weight: 900; }
+.comment-item { position: relative; }
+.comment-delete { margin-left: auto; align-self: flex-start; border: 0; background: transparent; color: #9aa7b8; font-size: 13px; cursor: pointer; padding: 2px 6px; border-radius: 8px; }
+.comment-delete:hover { color: #ef4444; background: #fff1f1; }
+
+/* =========================================
+   主要ボタン：ホームと同じ明るい青のグラデーションに統一
+========================================= */
+.header-create-button,
+.search-submit-button,
+.modal-join-button,
+.empty-create-button,
+.create-community-button,
+.modal-confirm-button,
+.button-primary,
+.community-join-button:not(.joined):not(.approval):not(.private):not(:disabled),
+.category-filter-button.active {
+    background: var(--ok-grad) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+    box-shadow: 0 8px 20px rgba(47, 155, 255, 0.28) !important;
+}
+.header-create-button:hover,
+.search-submit-button:hover,
+.create-community-button:hover,
+.button-primary:hover {
+    filter: brightness(1.05);
+}
+.category-filter-button.active { box-shadow: 0 6px 14px rgba(47, 155, 255, 0.22) !important; }
+.community-join-button.joined { color: #1478d8; background: #eaf4ff; border-color: #cfe3f2; }
+.progress-bar { background: var(--ok-grad) !important; }
+
+/* 作成ページ：番号バッジ・プレビューをホームの明るい青に */
+.section-number { background: var(--ok-grad) !important; box-shadow: 0 6px 14px rgba(47, 155, 255, 0.25) !important; }
+.preview-cover-background {
+    background:
+        radial-gradient(circle at 20% 25%, rgba(255,255,255,.38), transparent 25%),
+        radial-gradient(circle at 80% 20%, rgba(255,255,255,.22), transparent 20%),
+        linear-gradient(135deg, #6bd5ff, #2f8cff) !important;
+}

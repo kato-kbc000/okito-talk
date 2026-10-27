@@ -592,3 +592,36 @@
     .header-nav { gap: .35rem; overflow-x: auto; }
     .header-link, .header-logout-button { white-space: nowrap; font-size: .82rem; }
 }
+
+/* ============================
+   幅が足りないときの崩れ対策（追記）
+============================ */
+.header-inner { gap: 12px; flex-wrap: wrap; }
+.header-nav { flex-wrap: wrap; row-gap: 8px; min-width: 0; }
+.header-link,
+.header-logout-button { white-space: nowrap; flex-shrink: 0; }
+.header-link { position: relative; }
+.header-badge {
+    display: inline-grid;
+    place-items: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    margin-left: 6px;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1;
+}
+.header-badge[hidden] { display: none; }
+
+@media (max-width: 1280px) {
+    .header-nav { gap: 8px; }
+    .header-link { padding: 8px 14px; }
+}
+@media (max-width: 1100px) {
+    .header-link { padding: 7px 11px; font-size: 13px; }
+    .header-logout-button { padding: .45rem .75rem; font-size: 13px; }
+}

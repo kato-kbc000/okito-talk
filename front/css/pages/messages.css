@@ -517,3 +517,30 @@ body {
     }
 }
 .side-notification[hidden] { display: none !important; }
+
+/* =========================
+   見切れ対策・入力欄の比率（追記）
+========================= */
+.messages-page {
+    height: calc(100vh - 150px);
+    min-height: 520px;
+    grid-template-rows: minmax(0, 1fr);
+}
+.conversation-list { min-height: 0; }
+.chat-panel { min-height: 0; height: 100%; }
+.chat-header { flex: 0 0 auto; }
+.chat-messages { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.message-form { flex: 0 0 auto; align-items: center; background: #fff; }
+.message-form input { flex: 1 1 auto; min-width: 0; }
+.message-form .button {
+    width: auto;
+    flex: 0 0 auto;
+    min-height: 46px;
+    padding: 0 22px;
+    font-size: 15px;
+    border-radius: 999px;
+}
+@media (max-width: 760px) {
+    .messages-page { height: auto; min-height: 0; grid-template-rows: auto; }
+    .chat-panel { height: 70vh; min-height: 420px; }
+}

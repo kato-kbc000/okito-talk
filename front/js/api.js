@@ -23,7 +23,7 @@ function isPendingDatabaseFeature(error) {
 
 function createPendingFeatureError(featureName) {
     const error = new Error(
-        `${featureName}はデータベース準備中です。DB担当メンバーによるテーブル作成後に利用できます。`
+        `${featureName}はデータベースの準備ができていません。supabase/setup.sql を実行してください。`
     );
     error.name = "PendingDatabaseFeatureError";
     error.isPendingDatabaseFeature = true;
@@ -398,11 +398,20 @@ export async function updateProfile(userId, values) {
     return updatedProfile;
 }
 
-export async function createPost({ userId, content, locationName = null, locationAddress = null, latitude = null, longitude = null, imageUrl = null, visibility = "public" }) {
+export const MAX_POST_IMAGES = 4;
+
+/** 投稿の画像URL一覧（旧データの image_url 単体にも対応） */
+export function getPostImages(post) {
+    if (Array.isArray(post?.image_urls) && post.image_urls.length) return post.image_urls;
+    return post?.image_url ? [post.image_url] : [];
+}
+
+export async function createPost({ userId, content, locationName = null, locationAddress = null, latitude = null, longitude = null, imageUrl = null, imageUrls = null, visibility = "public", communityId = null }) {
+    const images = (imageUrls && imageUrls.length ? imageUrls : (imageUrl ? [imageUrl] : [])).slice(0, MAX_POST_IMAGES);
     const baseValues = {
         user_id: userId,
         content,
-        image_url: imageUrl,
+        image_url: images[0] ?? null,
         location_name: locationName,
         location_address: locationAddress,
         latitude,
@@ -413,12 +422,15 @@ export async function createPost({ userId, content, locationName = null, locatio
         .from("posts")
         .insert({
             ...baseValues,
-            visibility
+            image_urls: images,
+            visibility,
+            community_id: communityId
         })
         .select()
         .single();
 
-    if (response.error && isPendingDatabaseFeature(response.error)) {
+    // DBの更新前でも通常投稿は動くようにする（コミュニティ投稿は公開範囲が変わるため対象外）
+    if (response.error && isPendingDatabaseFeature(response.error) && !communityId) {
         response = await supabase
             .from("posts")
             .insert(baseValues)
@@ -427,27 +439,41 @@ export async function createPost({ userId, content, locationName = null, locatio
     }
 
     if (response.error) throw response.error;
-    removeApiCacheByPrefix(`${API_CACHE_PREFIX}timeline:`);
-    removeApiCache(createCacheKey("user-posts", userId));
+    if (!communityId) {
+        removeApiCacheByPrefix(`${API_CACHE_PREFIX}timeline:`);
+        removeApiCache(createCacheKey("user-posts", userId));
+    }
     return response.data;
 }
 
-export async function uploadPostImage(userId, file) {
+export async function uploadImage(bucket, userId, file, maxMb = 5) {
     if (!userId || !file) throw new Error("画像ファイルを確認できません。");
     const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
     if (!allowed.includes(file.type)) throw new Error("JPEG・PNG・WebP・GIF画像を選択してください。");
-    if (file.size > 5 * 1024 * 1024) throw new Error("投稿画像は5MB以下にしてください。");
+    if (file.size > maxMb * 1024 * 1024) throw new Error(`画像は${maxMb}MB以下にしてください。`);
 
     const extension = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
     const path = `${userId}/${crypto.randomUUID()}.${extension || "jpg"}`;
     const { error } = await supabase.storage
-        .from("post-images")
+        .from(bucket)
         .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
     if (error) throw error;
 
-    const { data } = supabase.storage.from("post-images").getPublicUrl(path);
+    const { data } = supabase.storage.from(bucket).getPublicUrl(path);
     if (!data?.publicUrl) throw new Error("画像URLを取得できませんでした。");
     return data.publicUrl;
+}
+
+export function uploadPostImage(userId, file) {
+    return uploadImage("post-images", userId, file, 5);
+}
+
+export function uploadProfileImage(userId, file) {
+    return uploadImage("profile-images", userId, file, 2);
+}
+
+export function uploadCommunityImage(userId, file) {
+    return uploadImage("community-images", userId, file, 2);
 }
 
 export async function getTimelinePosts({ force = false, page = 0, pageSize = 30 } = {}) {
@@ -463,6 +489,7 @@ export async function getTimelinePosts({ force = false, page = 0, pageSize = 30 
             const { data, error } = await supabase
                 .from("posts")
                 .select("*, profiles:user_id(username, display_name, avatar_url)")
+                .is("community_id", null)
                 .order("created_at", { ascending: false })
                 .range(safePage * safePageSize, (safePage + 1) * safePageSize - 1);
 
@@ -484,6 +511,7 @@ export async function getUserPosts(userId, { force = false } = {}) {
                 .from("posts")
                 .select("*")
                 .eq("user_id", userId)
+                .is("community_id", null)
                 .order("created_at", { ascending: false });
 
             if (error) throw error;
@@ -505,6 +533,7 @@ export async function searchPosts(keyword = '') {
     let query = supabase
         .from('posts')
         .select('*, profiles:user_id(username, display_name, avatar_url)')
+        .is('community_id', null)
         .order('created_at', { ascending: false });
     const term = keyword.trim();
     if (term) query = query.ilike('content', `%${term}%`);
@@ -664,24 +693,6 @@ export function subscribeToIncomingMessages(userId, callback) {
         .subscribe();
     return () => { supabase.removeChannel(channel); };
 }
-export async function getCommunities() {
-    const { data, error } = await supabase.from('communities').select('*, profiles:owner_id(username, display_name)').order('created_at', { ascending: false });
-    if (error) throw error;
-    return data ?? [];
-}
-export async function createCommunity({ ownerId, name, description }) {
-    const { data, error } = await supabase.from('communities').insert({ owner_id: ownerId, name, description }).select().single();
-    if (error) throw error;
-    await supabase.from('community_members').insert({ community_id: data.id, user_id: ownerId });
-    return data;
-}
-export async function joinCommunity(communityId, userId) {
-    const { error } = await supabase.from('community_members').upsert({ community_id: communityId, user_id: userId }, { onConflict: 'community_id,user_id' });
-    if (error) throw error;
-
-    removeApiCache(createCacheKey("community-members", communityId));
-}
-
 // ========================================
 // プロフィール拡張機能（Supabase）
 // ========================================
@@ -954,7 +965,7 @@ export async function getUserPlaces(userId) {
 
     return (data ?? []).map((spot) => ({
         ...spot,
-        address: spot.city,
+        address: spot.address || spot.city,
         description: spot.memo
     }));
 }
@@ -1080,5 +1091,272 @@ export async function replaceLocationShareTargets(ownerId, targetIds) {
     if (error && isPendingDatabaseFeature(error)) {
         throw createPendingFeatureError("位置情報共有");
     }
+    if (error) throw error;
+}
+
+
+/* ========================================
+   コミュニティ
+======================================== */
+
+const COMMUNITY_SELECT =
+    "*, category:category_id(id,name), owner:owner_id(id,username,display_name,avatar_url), " +
+    "members:community_members(count), posts(count)";
+
+function normalizeCommunity(row) {
+    return {
+        ...row,
+        categoryName: row.category?.name || "その他",
+        ownerName: row.owner?.display_name || row.owner?.username || "管理者",
+        memberCount: row.members?.[0]?.count ?? 0,
+        postCount: row.posts?.[0]?.count ?? 0
+    };
+}
+
+export async function getCategories() {
+    const { data, error } = await supabase.from("categories").select("id,name").order("name");
+    if (error) throw error;
+    return data ?? [];
+}
+
+export async function listCommunities() {
+    const { data, error } = await supabase
+        .from("communities")
+        .select(COMMUNITY_SELECT)
+        .eq("members.status", "approved")
+        .order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map(normalizeCommunity);
+}
+
+export async function getCommunity(communityId) {
+    const { data, error } = await supabase
+        .from("communities")
+        .select(COMMUNITY_SELECT)
+        .eq("id", communityId)
+        .eq("members.status", "approved")
+        .maybeSingle();
+    if (error) throw error;
+    return data ? normalizeCommunity(data) : null;
+}
+
+/** 自分の参加状況 { [communityId]: { role, status } } */
+export async function getMyMemberships(userId) {
+    const { data, error } = await supabase
+        .from("community_members")
+        .select("community_id, role, status")
+        .eq("user_id", userId);
+    if (error) throw error;
+    return Object.fromEntries((data ?? []).map((row) => [row.community_id, row]));
+}
+
+export async function getCommunityMembers(communityId, status = "approved") {
+    const { data, error } = await supabase
+        .from("community_members")
+        .select("community_id, user_id, role, status, joined_at, profile:user_id(id,username,display_name,avatar_url,bio,city)")
+        .eq("community_id", communityId)
+        .eq("status", status)
+        .order("joined_at", { ascending: true });
+    if (error) throw error;
+    return data ?? [];
+}
+
+/** 公開 → 即参加 / 承認制・非公開 → 申請(pending)。結果の status を返す */
+export async function joinCommunity(community, userId) {
+    const status = community.visibility === "public" ? "approved" : "pending";
+    const { error } = await supabase
+        .from("community_members")
+        .insert({ community_id: community.id, user_id: userId, role: "member", status });
+    if (error) throw error;
+    return status;
+}
+
+export async function leaveCommunity(communityId, userId) {
+    const { error } = await supabase
+        .from("community_members")
+        .delete()
+        .eq("community_id", communityId)
+        .eq("user_id", userId);
+    if (error) throw error;
+}
+
+export async function createCommunityRecord({ ownerId, name, description, categoryName, visibility, rules, iconEmoji, iconUrl = null, headerUrl = null }) {
+    const { data: category, error: categoryError } = await supabase
+        .from("categories").select("id").eq("name", categoryName).maybeSingle();
+    if (categoryError) throw categoryError;
+    if (!category) throw new Error(`カテゴリ「${categoryName}」がありません。supabase/setup.sql を実行してください。`);
+
+    const { data, error } = await supabase
+        .from("communities")
+        .insert({
+            owner_id: ownerId, name, description, category_id: category.id,
+            visibility, is_private: visibility === "private",
+            rules, icon_emoji: iconEmoji, icon_url: iconUrl, header_url: headerUrl
+        })
+        .select("id").single();
+    if (error) throw error;
+
+    const { error: memberError } = await supabase
+        .from("community_members")
+        .insert({ community_id: data.id, user_id: ownerId, role: "owner", status: "approved" });
+    if (memberError) {
+        await supabase.from("communities").delete().eq("id", data.id);
+        throw memberError;
+    }
+    return data;
+}
+
+export async function updateCommunityRecord(communityId, values) {
+    const patch = { updated_at: new Date().toISOString() };
+    if (values.name !== undefined) patch.name = values.name;
+    if (values.description !== undefined) patch.description = values.description;
+    if (values.rules !== undefined) patch.rules = values.rules;
+    if (values.iconEmoji !== undefined) patch.icon_emoji = values.iconEmoji;
+    if (values.iconUrl !== undefined) patch.icon_url = values.iconUrl;
+    if (values.headerUrl !== undefined) patch.header_url = values.headerUrl;
+    if (values.visibility !== undefined) {
+        patch.visibility = values.visibility;
+        patch.is_private = values.visibility === "private";
+    }
+    if (values.categoryName !== undefined) {
+        const { data: category, error: categoryError } = await supabase
+            .from("categories").select("id").eq("name", values.categoryName).maybeSingle();
+        if (categoryError) throw categoryError;
+        if (category) patch.category_id = category.id;
+    }
+    const { data, error } = await supabase
+        .from("communities").update(patch).eq("id", communityId).select("id").single();
+    if (error) throw error;
+    return data;
+}
+
+/** 関連データを先に消してからコミュニティを削除する（外部キー制約のため） */
+export async function deleteCommunityRecord(communityId) {
+    const { data: posts, error: postError } = await supabase
+        .from("posts").select("id").eq("community_id", communityId);
+    if (postError) throw postError;
+    const postIds = (posts ?? []).map((post) => post.id);
+    if (postIds.length) {
+        for (const table of ["comments", "likes", "bookmarks"]) {
+            const { error } = await supabase.from(table).delete().in("post_id", postIds);
+            if (error) throw error;
+        }
+        const { error } = await supabase.from("posts").delete().in("id", postIds);
+        if (error) throw error;
+    }
+    for (const table of ["community_location_shares", "community_keywords", "community_members"]) {
+        const { error } = await supabase.from(table).delete().eq("community_id", communityId);
+        if (error) throw error;
+    }
+    const { error } = await supabase.from("communities").delete().eq("id", communityId);
+    if (error) throw error;
+}
+
+export async function setMemberStatus(communityId, userId, status) {
+    const { error } = await supabase
+        .from("community_members").update({ status })
+        .eq("community_id", communityId).eq("user_id", userId);
+    if (error) throw error;
+}
+
+export async function setMemberRole(communityId, userId, role) {
+    const { error } = await supabase
+        .from("community_members").update({ role })
+        .eq("community_id", communityId).eq("user_id", userId);
+    if (error) throw error;
+}
+
+/* ---------- コミュニティ投稿・コメント ---------- */
+
+/** 投稿 + いいね数 + 自分のいいね/保存 + コメントをまとめて取得 */
+export async function getCommunityPosts(communityId, userId) {
+    const { data: posts, error } = await supabase
+        .from("posts")
+        .select("*, profiles:user_id(username, display_name, avatar_url)")
+        .eq("community_id", communityId)
+        .order("created_at", { ascending: false })
+        .limit(200);
+    if (error) throw error;
+    const rows = posts ?? [];
+    if (!rows.length) return [];
+
+    const ids = rows.map((post) => post.id);
+    const [engagement, commentResult] = await Promise.all([
+        getPostEngagement(ids, userId),
+        supabase
+            .from("comments")
+            .select("*, profiles:user_id(username, display_name, avatar_url)")
+            .in("post_id", ids)
+            .order("created_at", { ascending: true })
+    ]);
+    if (commentResult.error) throw commentResult.error;
+
+    const commentsByPost = new Map();
+    for (const comment of commentResult.data ?? []) {
+        if (!commentsByPost.has(comment.post_id)) commentsByPost.set(comment.post_id, []);
+        commentsByPost.get(comment.post_id).push(comment);
+    }
+    return rows.map((post) => ({
+        ...post,
+        likeCount: engagement.likeCounts.get(post.id) || 0,
+        liked: engagement.likedIds.has(post.id),
+        saved: engagement.savedIds.has(post.id),
+        comments: commentsByPost.get(post.id) ?? []
+    }));
+}
+
+export async function addComment({ postId, userId, content, imageUrl = null }) {
+    const { data, error } = await supabase
+        .from("comments")
+        .insert({ post_id: postId, user_id: userId, content, image_url: imageUrl })
+        .select("*, profiles:user_id(username, display_name, avatar_url)")
+        .single();
+    if (error) throw error;
+    return data;
+}
+
+/* ---------- コミュニティ内の位置共有（現在地の追跡） ---------- */
+
+/** 位置情報の有効期間。更新が止まる（ページを閉じる等）と、この時間で自動的に消える */
+export const LOCATION_SHARE_TTL_MINUTES = 30;
+
+export async function upsertCommunityLocation({ communityId, userId, label, latitude, longitude }) {
+    const now = new Date();
+    const { error } = await supabase
+        .from("community_location_shares")
+        .upsert({
+            community_id: communityId,
+            user_id: userId,
+            label: label || "現在地",
+            latitude,
+            longitude,
+            updated_at: now.toISOString(),
+            expires_at: new Date(now.getTime() + LOCATION_SHARE_TTL_MINUTES * 60000).toISOString()
+        }, { onConflict: "community_id,user_id" });
+    if (error) throw error;
+}
+
+export async function stopCommunityLocation(communityId, userId) {
+    const { error } = await supabase
+        .from("community_location_shares")
+        .delete()
+        .eq("community_id", communityId)
+        .eq("user_id", userId);
+    if (error) throw error;
+}
+
+/** 有効期限内の共有位置（自分を含む）。RLSによりコミュニティの参加者だけが読める */
+export async function getCommunityLocations(communityId) {
+    const { data, error } = await supabase
+        .from("community_location_shares")
+        .select("*, profile:user_id(id,username,display_name,avatar_url)")
+        .eq("community_id", communityId)
+        .gt("expires_at", new Date().toISOString());
+    if (error) throw error;
+    return data ?? [];
+}
+
+export async function deleteComment(commentId) {
+    const { error } = await supabase.from("comments").delete().eq("id", commentId);
     if (error) throw error;
 }

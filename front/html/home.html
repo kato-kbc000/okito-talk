@@ -26,8 +26,9 @@
     <!-- ホーム画面専用CSS -->
     <link
         rel="stylesheet"
-        href="../css/pages/home.css?v=20260818-6"
+        href="../css/pages/home.css"
     >
+    <link rel="stylesheet" href="../css/shell.css">
 </head>
 
 <body>
@@ -87,10 +88,6 @@
                     コミュニティ
                 </a>
 
-                <a href="#mapSection" class="mobile-menu-link">
-                    <span>⌖</span>
-                    追加（ピン）
-                </a>
 
                 <a href="home/messages.html" class="mobile-menu-link">
                     <span>✉</span>
@@ -101,6 +98,10 @@
                     <span>◎</span>
                     マイアカウント
                 </a>
+                <button type="button" class="mobile-menu-link mobile-logout" data-logout>
+                    <span>⇥</span>
+                    ログアウト
+                </button>
             </nav>
         </aside>
     </div>
@@ -145,12 +146,6 @@
                     コミュニティ
                 </a>
 
-                <a
-                    href="#mapSection"
-                    class="header-link"
-                >
-                    追加（ピン）
-                </a>
 
                 <a
                     href="home/messages.html"
@@ -203,12 +198,6 @@
                     <span class="side-label">コミュニティ</span>
                 </a>
 
-                <a href="#mapSection" class="side-link">
-                    <span class="side-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M12 21s6-5.1 6-11a6 6 0 1 0-12 0c0 5.9 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg>
-                    </span>
-                    <span class="side-label">追加（ピン）</span>
-                </a>
 
                 <a href="home/messages.html" class="side-link">
                     <span class="side-icon" aria-hidden="true">
@@ -224,6 +213,13 @@
                     </span>
                     <span class="side-label">マイアカウント</span>
                 </a>
+
+                <button type="button" class="side-link side-logout" data-logout>
+                    <span class="side-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4"/><path d="m16 8 4 4-4 4"/><path d="M20 12H9"/></svg>
+                    </span>
+                    <span class="side-label">ログアウト</span>
+                </button>
             </nav>
         </aside>
 
@@ -281,8 +277,8 @@
 
                     <div class="post-media-row">
                         <label class="post-image-tool" for="postImageInput">📷 写真を追加</label>
-                        <input id="postImageInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
-                        <small>JPEG・PNG・WebP・GIF／最大5MB</small>
+                        <input id="postImageInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden>
+                        <small>JPEG・PNG・WebP・GIF／1枚5MBまで・最大4枚 <span id="postImageCounter">0 / 4枚</span></small>
                     </div>
 
                     <!-- 投稿ツール -->
@@ -360,10 +356,7 @@
 
                     </div>
 
-                    <div id="postImagePreviewArea" class="post-image-preview-area" hidden>
-                        <img id="postImagePreview" alt="投稿画像のプレビュー">
-                        <button type="button" id="removePostImageButton" aria-label="選択した画像を削除">✕</button>
-                    </div>
+                    <div id="postImagePreviewArea" class="post-image-preview-area" hidden></div>
 
                     <div
                         id="postLocationStatus"
@@ -565,6 +558,7 @@
                             住所
                         </label>
 
+                        <div class="place-address-row">
                         <input
                             type="text"
                             id="placeAddress"
@@ -572,9 +566,12 @@
                             autocomplete="street-address"
                             required
                         >
+                        <button type="button" id="searchPinAddressButton" class="location-tool-button">🔎 住所検索</button>
+                    </div>
+                    <div id="pinCandidates" class="pin-candidates" hidden></div>
 
                         <p class="address-note">
-                            市町村名や番地まで入力すると、
+                            市町村名や番地まで入力するか、地図をクリックしてもピンを置けます。
                             正確に表示されやすくなります。
                         </p>
 
@@ -605,12 +602,13 @@
 
                     </div>
 
+                    <p id="pinLocationStatus" class="pin-location-status" aria-live="polite" hidden></p>
                     <button
                         type="button"
                         id="useCurrentLocationForPinButton"
                         class="current-pin-button"
                     >
-                        📍 現在地を住所欄に使う
+                        📍 現在地をピンにする
                     </button>
 
                     <button
@@ -619,7 +617,7 @@
                         class="clear-pin-location-button"
                         hidden
                     >
-                        ✕ 現在地の選択を解除
+                        ✕ ピンの選択を取り消す
                     </button>
 
                     <button
@@ -653,8 +651,9 @@
         </section>
     </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script type="module" src="../js/pages/home.js?v=20260818-4"></script>
+    <script type="module" src="../js/pages/home.js"></script>
 
+  <script type="module" src="../js/page-shell.js"></script>
 </body>
 
 </html>

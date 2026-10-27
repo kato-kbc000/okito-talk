@@ -1,4 +1,4 @@
-import { getCurrentUser, getOtherProfiles, getProfile, getMessages, sendMessage, getUnreadMessageCount, markConversationRead, subscribeToIncomingMessages } from '../api.js?v=20260818-4';
+import { getCurrentUser, getOtherProfiles, getProfile, getMessages, sendMessage, getUnreadMessageCount, markConversationRead, subscribeToIncomingMessages } from '../api.js';
 const $=id=>document.getElementById(id);
 const state={user:null,profiles:[],selected:null};
 const esc=v=>{const d=document.createElement('div');d.textContent=String(v??'');return d.innerHTML};

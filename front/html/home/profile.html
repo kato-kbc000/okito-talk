@@ -28,6 +28,7 @@
         rel="stylesheet"
         href="../../css/pages/profile.css"
     >
+    <link rel="stylesheet" href="../../css/shell.css">
 </head>
 
 <body>
@@ -35,53 +36,7 @@
     <!-- ========================================
          共通ヘッダー
     ======================================== -->
-    <header class="site-header">
-
-        <div class="header-inner">
-
-            <a
-                href="../home.html"
-                class="site-logo"
-            >
-                おきとーーーーーーく
-            </a>
-
-            <nav class="header-nav">
-
-                <a
-                    href="../home.html"
-                    class="header-link"
-                >
-                    ホーム
-                </a>
-
-                <a
-                    href="messages.html"
-                    class="header-link"
-                >
-                    メッセージ
-                </a>
-
-                <a
-                    href="#"
-                    class="header-link"
-                >
-                    通知
-                </a>
-
-                <a
-                    href="profile.html"
-                    class="header-link"
-                    aria-current="page"
-                >
-                    プロフィール
-                </a>
-
-            </nav>
-
-        </div>
-
-    </header>
+    <header class="site-header"></header>
 
     <main class="profile-page">
 
@@ -590,7 +545,7 @@
                                 <input
                                     type="file"
                                     id="coverImageInput"
-                                    accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                                    accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                                 >
 
                             </label>
@@ -625,7 +580,7 @@
                                 <input
                                     type="file"
                                     id="iconImageInput"
-                                    accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                                    accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                                 >
 
                             </label>
@@ -1453,8 +1408,9 @@
     ></div>
 
     <!-- プロフィール専用JavaScript -->
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script type="module" src="../../js/common-header.js"></script>
+  <script type="module" src="../../js/common-header.js"></script>
     <script type="module" src="../../js/pages/profile.js"></script>
 
 </body>

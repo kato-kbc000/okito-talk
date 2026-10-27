@@ -9,7 +9,8 @@
 
     <link rel="stylesheet" href="../../css/header.css">
     <link rel="stylesheet" href="../../css/button.css">
-    <link rel="stylesheet" href="../../css/pages/search.css?v=20260818-5">
+    <link rel="stylesheet" href="../../css/pages/search.css">
+    <link rel="stylesheet" href="../../css/shell.css">
 </head>
 
 <body>
@@ -66,10 +67,6 @@
                     コミュニティ
                 </a>
 
-                <a href="../home.html#mapSection" class="mobile-menu-link">
-                    <span>⌖</span>
-                    追加（ピン）
-                </a>
 
                 <a href="messages.html" class="mobile-menu-link">
                     <span>✉</span>
@@ -80,6 +77,10 @@
                     <span>◎</span>
                     マイアカウント
                 </a>
+                <button type="button" class="mobile-menu-link mobile-logout" data-logout>
+                    <span>⇥</span>
+                    ログアウト
+                </button>
             </nav>
         </aside>
     </div>
@@ -103,9 +104,9 @@
             <nav class="header-nav">
                 <a href="search.html" class="header-link" aria-current="page">検索</a>
                 <a href="community.html" class="header-link">コミュニティ</a>
-                <a href="../home.html#mapSection" class="header-link">追加（ピン）</a>
                 <a href="messages.html" class="header-link">メッセージ</a>
                 <a href="profile.html" class="header-link">マイアカウント</a>
+                <button type="button" class="header-logout-button" data-logout>ログアウト</button>
             </nav>
         </div>
     </header>
@@ -141,19 +142,13 @@
                     <span class="side-label">コミュニティ</span>
                 </a>
 
-                <a href="../home.html#mapSection" class="side-link">
-                    <span class="side-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M12 21s6-5.1 6-11a6 6 0 1 0-12 0c0 5.9 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg>
-                    </span>
-                    <span class="side-label">追加（ピン）</span>
-                </a>
 
                 <a href="messages.html" class="side-link">
                     <span class="side-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>
                     </span>
                     <span class="side-label">メッセージ</span>
-                    <span class="side-notification" aria-label="未読3件">3</span>
+                    <span class="side-notification" data-unread-badge hidden>0</span>
                 </a>
 
                 <a href="profile.html" class="side-link">
@@ -162,6 +157,13 @@
                     </span>
                     <span class="side-label">マイアカウント</span>
                 </a>
+
+                <button type="button" class="side-link side-logout" data-logout>
+                    <span class="side-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4"/><path d="m16 8 4 4-4 4"/><path d="M20 12H9"/></svg>
+                    </span>
+                    <span class="side-label">ログアウト</span>
+                </button>
             </nav>
         </aside>
 
@@ -200,7 +202,8 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script type="module" src="../../js/pages/search.js?v=20260818-5"></script>
+    <script type="module" src="../../js/pages/search.js"></script>
+  <script type="module" src="../../js/page-shell.js"></script>
 </body>
 
 </html>

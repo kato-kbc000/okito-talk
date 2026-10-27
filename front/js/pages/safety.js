@@ -1,0 +1,10 @@
+import {supabase} from '../supabase.js';
+const $=id=>document.getElementById(id), notice=$('notice');
+const params=new URLSearchParams(location.search);
+if(params.get('user')){$('kind').value='user';$('target').value=params.get('user');$('blockTarget').value=params.get('user');}
+if(params.get('post')){$('kind').value='post';$('target').value=params.get('post');}
+async function me(){const {data,error}=await supabase.auth.getUser();if(error||!data.user)throw new Error('ログインしてください');return data.user.id;}
+async function blocked(){const uid=await me();const {data,error}=await supabase.from('blocks').select('blocked_id').eq('blocker_id',uid);if(error)throw error;const root=$('blocked');root.replaceChildren();for(const b of data){const row=document.createElement('div');row.textContent=b.blocked_id+' ';const btn=document.createElement('button');btn.textContent='解除';btn.addEventListener('click',async()=>{const {error}=await supabase.from('blocks').delete().eq('blocker_id',uid).eq('blocked_id',b.blocked_id);if(error)notice.textContent=error.message;else await blocked();});row.append(btn);root.append(row);}if(!data.length)root.textContent='ブロック中のユーザーはいません';}
+$('reportForm').addEventListener('submit',async e=>{e.preventDefault();try{const uid=await me(),id=$('target').value.trim(),reason=$('reason').value.trim();if(reason.length<5)throw Error('理由を5文字以上入力してください');const kind=$('kind').value;const payload={reporter_id:uid,reason,...(kind==='user'?{target_user_id:id}:{target_post_id:id})};const {error}=await supabase.from('reports').insert(payload);if(error)throw error;notice.textContent='通報を受け付けました';$('reason').value='';}catch(e){notice.textContent=e.message;}});
+$('blockForm').addEventListener('submit',async e=>{e.preventDefault();try{const uid=await me(),id=$('blockTarget').value.trim();if(uid===id)throw Error('自分はブロックできません');const {error}=await supabase.from('blocks').insert({blocker_id:uid,blocked_id:id});if(error)throw error;notice.textContent='ブロックしました';await blocked();}catch(e){notice.textContent=e.message;}});
+blocked().catch(e=>notice.textContent=e.message);
