@@ -1,6 +1,6 @@
 "use strict";
 
-import { getCurrentUser, createCommunityRecord, uploadCommunityImage } from "../../api.js";
+import { supabase } from "../../supabase.js";
 
 /* =========================================
    community_create.js
@@ -17,7 +17,7 @@ const SETTINGS = {
     maxDescriptionLength: 300,
     maxRuleCount: 5,
     maxRuleLength: 100,
-    maxImageSize: 2 * 1024 * 1024,
+    maxImageSize: 3 * 1024 * 1024,
     allowedImageTypes: [
         "image/jpeg",
         "image/png",
@@ -159,7 +159,6 @@ const communityCreateToast =
 ========================================= */
 
 let selectedCoverImage = "";
-let selectedCoverFile = null;
 
 let toastTimer = null;
 
@@ -449,7 +448,7 @@ function processCoverImage(file) {
     if (file.size > SETTINGS.maxImageSize) {
 
         showCoverImageError(
-            "画像サイズは2MB以下にしてください。"
+            "画像サイズは3MB以下にしてください。"
         );
 
         return;
@@ -471,7 +470,6 @@ function processCoverImage(file) {
         }
 
         selectedCoverImage = result;
-        selectedCoverFile = file;
 
         coverImagePreview.src = result;
         coverImagePreviewArea.hidden = false;
@@ -509,7 +507,6 @@ function processCoverImage(file) {
 function removeCoverImage() {
 
     selectedCoverImage = "";
-    selectedCoverFile = null;
 
     coverImageInput.value = "";
 
@@ -1521,26 +1518,66 @@ async function createCommunity() {
     creatingModal.hidden = false;
 
     try {
-        const user = await getCurrentUser();
+        const { data: authData, error: authError } =
+            await supabase.auth.getUser();
 
-        if (!user) {
+        const user = authData?.user;
+
+        if (authError || !user) {
             throw new Error("ログイン情報を確認できませんでした。もう一度ログインしてください。");
         }
 
-        const headerUrl = selectedCoverFile
-            ? await uploadCommunityImage(user.id, selectedCoverFile)
-            : null;
+        const categoryName = communityCategorySelect.value;
+        const { data: category, error: categoryError } = await supabase
+            .from("categories")
+            .select("id")
+            .eq("name", categoryName)
+            .maybeSingle();
 
-        const community = await createCommunityRecord({
-            ownerId: user.id,
+        if (categoryError) {
+            throw categoryError;
+        }
+
+        if (!category) {
+            throw new Error(`カテゴリー「${categoryName}」がデータベースにありません。先にカテゴリ初期データSQLを実行してください。`);
+        }
+
+        const visibility = getSelectedVisibility();
+        const communityData = {
+            owner_id: user.id,
             name: communityNameInput.value.trim(),
             description: communityDescriptionInput.value.trim(),
-            categoryName: communityCategorySelect.value,
-            visibility: getSelectedVisibility(),
-            rules: getRules(),
-            iconEmoji: selectedEmojiInput.value || "🌺",
-            headerUrl
-        });
+            category_id: category.id,
+            icon_url: null,
+            header_url: null,
+            is_private: visibility !== "public"
+        };
+
+        const { data: community, error: communityError } = await supabase
+            .from("communities")
+            .insert(communityData)
+            .select("id")
+            .single();
+
+        if (communityError) {
+            throw communityError;
+        }
+
+        const { error: memberError } = await supabase
+            .from("community_members")
+            .insert({
+                community_id: community.id,
+                user_id: user.id,
+                role: "owner"
+            });
+
+        if (memberError) {
+            await supabase
+                .from("communities")
+                .delete()
+                .eq("id", community.id);
+            throw memberError;
+        }
 
         creatingModal.hidden = true;
         document.body.style.overflow = "";
@@ -1568,8 +1605,122 @@ async function createCommunity() {
 }
 
 
+/**
+ * 保存用のコミュニティデータを作成します。
+ *
+ * @returns {Object}
+ */
+function buildCommunityData() {
+
+    const createdAt =
+        new Date().toISOString();
+
+    const id =
+        generateCommunityId();
+
+    const visibility =
+        getSelectedVisibility();
+
+    return {
+        id: id,
+        name: communityNameInput.value.trim(),
+        category: communityCategorySelect.value,
+        description:
+            communityDescriptionInput.value.trim(),
+
+        icon:
+            selectedEmojiInput.value || "🌺",
+
+        cover: selectedCoverImage,
+
+        coverClass:
+            getCoverClassByCategory(
+                communityCategorySelect.value
+            ),
+
+        visibility: visibility,
+
+        rules: getRules(),
+
+        memberCount: 1,
+        postCount: 0,
+
+        owner: "りゅうほ",
+        ownerId: "current-user",
+
+        members: [
+            {
+                id: "current-user",
+                name: "りゅうほ",
+                role: "owner"
+            }
+        ],
+
+        createdAt: createdAt,
+        updatedAt: createdAt,
+
+        isCustom: true,
+        isJoined: true
+    };
+
+}
 
 
+/**
+ * カテゴリーに対応するカバークラスを返します。
+ *
+ * @param {string} category
+ * @returns {string}
+ */
+function getCoverClassByCategory(category) {
+
+    const categoryCoverMap = {
+        "自然・海": "sea-community",
+        "グルメ": "gourmet-community",
+        "文化・伝統": "eisa-community",
+        "地域": "naha-community",
+        "スポーツ": "sports-community",
+        "旅行・観光": "travel-community",
+        "音楽": "music-community",
+        "趣味": "hobby-community",
+        "子育て": "family-community",
+        "学校・学習": "study-community",
+        "仕事": "work-community",
+        "イベント": "event-community",
+        "その他": "other-community"
+    };
+
+    return categoryCoverMap[category] ||
+        "other-community";
+
+}
+
+
+/**
+ * 一意のコミュニティIDを生成します。
+ *
+ * @returns {string}
+ */
+function generateCommunityId() {
+
+    if (
+        typeof crypto !== "undefined" &&
+        typeof crypto.randomUUID === "function"
+    ) {
+        return `community-${crypto.randomUUID()}`;
+    }
+
+    const timestamp =
+        Date.now().toString(36);
+
+    const randomText =
+        Math.random()
+            .toString(36)
+            .slice(2, 10);
+
+    return `community-${timestamp}-${randomText}`;
+
+}
 
 
 /* =========================================

@@ -6,24 +6,57 @@
   <meta name="description" content="おきとーく コミュニティ設定">
   <title>コミュニティ設定 | おきとーく</title>
 
-  <link rel="stylesheet" href="../../../css/header.css">
   <link rel="stylesheet" href="../../../css/pages/community/community_settings.css">
-    <link rel="stylesheet" href="../../../css/shell.css">
-    <link rel="stylesheet" href="../../../css/community-theme.css">
 </head>
 <body>
   <!-- ヘッダー -->
-  <header class="site-header"></header>
+  <header class="site-header">
+    <a class="site-logo" href="../home.html" aria-label="おきとーく ホームへ">
+      おきとーーーーーーく
+    </a>
+
+    <nav class="header-nav" aria-label="上部ナビゲーション">
+      <a href="../community_search.html">検索</a>
+      <a href="../community.html" class="is-active">コミュニティ</a>
+      <a href="../notification.html">通知</a>
+      <a href="../profile.html">プロフィール</a>
+    </nav>
+
+    <button class="mobile-menu-button" type="button" aria-label="メニューを開く" aria-expanded="false">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </header>
 
   <div class="page-layout">
     <!-- 左サイドバー -->
-    <aside class="side-menu" data-common-sidebar aria-label="メインメニュー"></aside>
+    <aside class="left-sidebar">
+      <a class="user-card" href="../profile.html">
+        <div class="avatar avatar-user" aria-hidden="true">沖</div>
+        <div>
+          <strong>沖縄 太郎</strong>
+          <span>@okinawa_taro</span>
+        </div>
+      </a>
+
+      <nav class="side-nav" aria-label="メインナビゲーション">
+        <a href="../../home.html">
+          <span class="nav-icon">🏠</span>
+          <span>ホーム</span>
+        </a>
+        <a href="community_home.html">
+          <span class="nav-icon">👥</span>
+          <span>コミュニティ一覧</span>
+        </a>
+      </nav>
+    </aside>
 
     <!-- メイン -->
     <main class="main-content">
       <section class="page-heading">
         <div>
-          <a class="back-link" id="backLink" href="community_home.html">← コミュニティに戻る</a>
+          <a class="back-link" href="community_home.html">← コミュニティに戻る</a>
           <h1>コミュニティ設定</h1>
           <p>コミュニティの基本情報や参加ルールを変更できます。</p>
         </div>
@@ -58,7 +91,7 @@
 
             <div class="image-setting">
               <div class="community-image-preview" id="imagePreview" aria-label="コミュニティ画像プレビュー">
-                <span id="imageFallback">🌺</span>
+                <span id="imageFallback">海</span>
                 <img id="previewImage" alt="選択したコミュニティ画像" hidden>
               </div>
 
@@ -91,13 +124,13 @@
                 name="communityName"
                 type="text"
                 maxlength="30"
-                value=""
+                value="沖縄の海が好き"
                 aria-describedby="communityNameCount communityNameError"
                 required
               >
               <div class="field-meta">
                 <span id="communityNameError" class="error-message" aria-live="polite"></span>
-                <span id="communityNameCount">0 / 30</span>
+                <span id="communityNameCount">8 / 30</span>
               </div>
             </div>
 
@@ -113,7 +146,7 @@
                 maxlength="300"
                 aria-describedby="communityDescriptionCount communityDescriptionError"
                 required
-              ></textarea>
+              >沖縄の海が好きな人のためのコミュニティです。おすすめのビーチ、海の写真、マリンスポーツなどの情報を共有しましょう！</textarea>
               <div class="field-meta">
                 <span id="communityDescriptionError" class="error-message" aria-live="polite"></span>
                 <span id="communityDescriptionCount">0 / 300</span>
@@ -123,7 +156,27 @@
             <div class="form-row">
               <div class="form-group">
                 <label for="communityCategory">カテゴリー</label>
-                <select id="communityCategory" name="communityCategory"></select>
+                <select id="communityCategory" name="communityCategory">
+                  <option value="地域">地域</option>
+                  <option value="グルメ">グルメ</option>
+                  <option value="イベント">イベント</option>
+                  <option value="趣味" selected>趣味</option>
+                  <option value="スポーツ">スポーツ</option>
+                  <option value="子育て">子育て</option>
+                  <option value="その他">その他</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="communityArea">対象地域</label>
+                <select id="communityArea" name="communityArea">
+                  <option value="沖縄県全域" selected>沖縄県全域</option>
+                  <option value="北部">北部</option>
+                  <option value="中部">中部</option>
+                  <option value="南部">南部</option>
+                  <option value="宮古">宮古</option>
+                  <option value="八重山">八重山</option>
+                </select>
               </div>
             </div>
           </article>
@@ -160,10 +213,28 @@
                 <span class="option-mark"></span>
                 <span>
                   <strong>非公開コミュニティ</strong>
-                  <small>検索や一覧に表示されません。リンクを知っている人が申請でき、承認されたユーザーだけが閲覧できます。</small>
+                  <small>招待されたユーザーだけが参加・閲覧できます。</small>
                 </span>
               </label>
             </div>
+
+            <label class="switch-setting">
+              <span>
+                <strong>メンバーによる投稿を許可する</strong>
+                <small>オフにすると管理者だけが投稿できます。</small>
+              </span>
+              <input id="memberPosting" type="checkbox" checked>
+              <span class="switch" aria-hidden="true"></span>
+            </label>
+
+            <label class="switch-setting">
+              <span>
+                <strong>新しい参加者を通知する</strong>
+                <small>ユーザーが参加したとき管理者へ通知します。</small>
+              </span>
+              <input id="joinNotification" type="checkbox" checked>
+              <span class="switch" aria-hidden="true"></span>
+            </label>
           </article>
 
           <article class="settings-card">
@@ -182,7 +253,9 @@
                 rows="6"
                 maxlength="500"
                 aria-describedby="communityRulesCount"
-              ></textarea>
+              >・相手を傷つける発言は控えてください。
+・個人情報を本人の許可なく投稿しないでください。
+・海や自然環境に配慮した情報交換を心がけましょう。</textarea>
               <div class="field-meta">
                 <span></span>
                 <span id="communityRulesCount">0 / 500</span>
@@ -211,15 +284,72 @@
             </label>
           </div>
 
-          <div class="member-list" id="memberList"></div><p id="memberEmpty" class="empty-message" hidden>該当するメンバーが見つかりません。</p>
+          <div class="member-list" id="memberList">
+            <div class="member-item" data-member="沖縄 太郎 @okinawa_taro">
+              <div class="avatar">沖</div>
+              <div class="member-info">
+                <strong>沖縄 太郎</strong>
+                <span>@okinawa_taro</span>
+              </div>
+              <span class="role-badge owner">オーナー</span>
+            </div>
+
+            <div class="member-item" data-member="海が好きな人 @okinawa_sea">
+              <div class="avatar">海</div>
+              <div class="member-info">
+                <strong>海が好きな人</strong>
+                <span>@okinawa_sea</span>
+              </div>
+              <select class="role-select" aria-label="海が好きな人の権限">
+                <option value="member">メンバー</option>
+                <option value="moderator" selected>管理者</option>
+              </select>
+              <button class="member-menu-button" type="button" aria-label="海が好きな人のメニュー">⋮</button>
+            </div>
+
+            <div class="member-item" data-member="那覇 はなこ @naha_hanako">
+              <div class="avatar">那</div>
+              <div class="member-info">
+                <strong>那覇 はなこ</strong>
+                <span>@naha_hanako</span>
+              </div>
+              <select class="role-select" aria-label="那覇 はなこの権限">
+                <option value="member" selected>メンバー</option>
+                <option value="moderator">管理者</option>
+              </select>
+              <button class="member-menu-button" type="button" aria-label="那覇 はなこのメニュー">⋮</button>
+            </div>
+          </div>
+
+          <p id="memberEmpty" class="empty-message" hidden>該当するメンバーが見つかりません。</p>
         </article>
 
-        <article class="settings-card"><div class="card-heading"><div><h2>参加リクエスト</h2><p>承認制・非公開コミュニティの参加申請が表示されます。</p></div></div><div id="requestList" class="member-list"></div><div id="requestEmpty" class="empty-state"><div class="empty-icon">✓</div><strong>未確認の参加リクエストはありません</strong><span>新しい申請が届くと、ここから承認できます。</span></div></article>
+        <article class="settings-card">
+          <div class="card-heading">
+            <div>
+              <h2>参加リクエスト</h2>
+              <p>承認制にした場合の参加申請が表示されます。</p>
+            </div>
+          </div>
+          <div class="empty-state">
+            <div class="empty-icon">✓</div>
+            <strong>未確認の参加リクエストはありません</strong>
+            <span>新しい申請が届くと、ここから承認できます。</span>
+          </div>
+        </article>
       </section>
 
       <!-- その他 -->
       <section id="panel-danger" class="settings-panel" role="tabpanel" hidden>
-        
+        <article class="settings-card">
+          <div class="card-heading">
+            <div>
+              <h2>管理者の引き継ぎ</h2>
+              <p>コミュニティのオーナー権限をほかの管理者へ移します。</p>
+            </div>
+          </div>
+          <button id="transferButton" class="button button-secondary" type="button">管理者を変更する</button>
+        </article>
 
         <article class="settings-card danger-card">
           <div class="card-heading">
@@ -239,7 +369,13 @@
     <aside class="right-sidebar">
       <section class="side-card">
         <h2>現在のコミュニティ</h2>
-        <div class="current-community"><div class="avatar avatar-large" id="sideAvatar">🌺</div><div><strong id="sideName">読み込み中…</strong><span id="sideMembers"></span></div></div>
+        <div class="current-community">
+          <div class="avatar avatar-large">海</div>
+          <div>
+            <strong>沖縄の海が好き</strong>
+            <span>1,248人のメンバー</span>
+          </div>
+        </div>
         <dl class="community-summary">
           <div>
             <dt>公開範囲</dt>
@@ -247,16 +383,20 @@
           </div>
           <div>
             <dt>カテゴリー</dt>
-            <dd id="summaryCategory">-</dd>
+            <dd id="summaryCategory">趣味</dd>
           </div>
           <div>
             <dt>作成日</dt>
-            <dd id="summaryCreated">-</dd>
+            <dd>2026年4月10日</dd>
           </div>
         </dl>
       </section>
 
-      
+      <section class="side-card help-card">
+        <h2>設定について</h2>
+        <p>変更した内容は「変更を保存」を押すまで反映されません。</p>
+        <a href="#" id="helpLink">コミュニティの使い方を見る →</a>
+      </section>
     </aside>
   </div>
 
@@ -271,7 +411,7 @@
       <h2 id="deleteModalTitle">コミュニティを削除しますか？</h2>
       <p>この操作は取り消せません。確認のため、コミュニティ名を入力してください。</p>
 
-      <label for="deleteConfirmName" id="deleteConfirmLabel">コミュニティ名を入力</label>
+      <label for="deleteConfirmName">「沖縄の海が好き」と入力</label>
       <input id="deleteConfirmName" type="text" autocomplete="off">
 
       <div class="modal-actions">
@@ -282,7 +422,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script type="module" src="../../../js/common-header.js"></script>
-<script type="module" src="../../../js/pages/community/community_settings.js"></script>
+  <script type="module" src="../../../js/pages/community/community_settings.js?v=20260818-7"></script>
 </body>
 </html>

@@ -34,8 +34,6 @@
         rel="stylesheet"
         href="../../../css/pages/community/community_create.css"
     >
-    <link rel="stylesheet" href="../../../css/shell.css">
-    <link rel="stylesheet" href="../../../css/community-theme.css">
 </head>
 
 <body>
@@ -43,19 +41,250 @@
     <!-- =====================================
          共通ヘッダー
     ====================================== -->
-    <header class="site-header"></header>
+    <header class="site-header">
+
+        <div class="header-inner">
+
+            <!-- ロゴ -->
+            <a
+                href="../home.html"
+                class="site-logo"
+                aria-label="おきとーーーーーーく ホーム"
+            >
+
+                <div class="pop-logo">
+
+                    <span class="c1">お</span>
+                    <span class="c2">き</span>
+                    <span class="c3">と</span>
+                    <span class="c4">ー</span>
+                    <span class="c4">ー</span>
+                    <span class="c4">ー</span>
+                    <span class="c4">ー</span>
+                    <span class="c5">く</span>
+
+                </div>
+
+            </a>
+
+
+            <!-- ヘッダーナビ -->
+            <nav
+                class="header-nav"
+                aria-label="メインメニュー"
+            >
+
+                <a
+                    href="../search.html"
+                    class="header-link"
+                >
+                    検索
+                </a>
+
+                <a
+                    href="../community.html"
+                    class="header-link active"
+                    aria-current="page"
+                >
+                    コミュニティ
+                </a>
+
+                <a
+                    href="../notification.html"
+                    class="header-link"
+                >
+                    通知
+                </a>
+
+                <a
+                    href="../profile.html"
+                    class="header-link"
+                >
+                    プロフィール
+                </a>
+
+            </nav>
+
+        </div>
+
+    </header>
 
 
     <!-- =====================================
          ページ全体
     ====================================== -->
-    <main class="community-create-layout layout-with-sidebar">
+    <main class="community-create-layout">
 
 
         <!-- =====================================
              左サイドバー
         ====================================== -->
-        <aside class="side-menu" data-common-sidebar aria-label="メインメニュー"></aside>
+        <aside class="create-sidebar">
+
+            <!-- サイドバータイトル -->
+            <section class="sidebar-heading">
+
+                <span class="sidebar-label">
+                    COMMUNITY
+                </span>
+
+                <h1>
+                    コミュニティ
+                </h1>
+
+                <p>
+                    沖縄のみんなと交流できる、新しいコミュニティを作成できます。
+                </p>
+
+            </section>
+
+
+            <!-- サイドバーメニュー -->
+            <nav
+                class="create-side-menu"
+                aria-label="コミュニティメニュー"
+            >
+
+                <!-- ホーム -->
+                <a
+                    href="../home.html"
+                    class="create-side-item"
+                >
+
+                    <span
+                        class="side-item-icon"
+                        aria-hidden="true"
+                    >
+                        🏠
+                    </span>
+
+                    <span class="side-item-content">
+
+                        <strong>
+                            ホーム
+                        </strong>
+
+                        <small>
+                            通常のホームへ戻る
+                        </small>
+
+                    </span>
+
+                </a>
+
+
+                <!-- コミュニティ一覧 -->
+                <a
+                    href="../community.html"
+                    class="create-side-item"
+                >
+
+                    <span
+                        class="side-item-icon"
+                        aria-hidden="true"
+                    >
+                        👥
+                    </span>
+
+                    <span class="side-item-content">
+
+                        <strong>
+                            コミュニティ一覧
+                        </strong>
+
+                        <small>
+                            参加中の一覧を見る
+                        </small>
+
+                    </span>
+
+                </a>
+
+
+                <!-- コミュニティ検索 -->
+                <a
+                    href="community_search.html"
+                    class="create-side-item"
+                >
+
+                    <span
+                        class="side-item-icon"
+                        aria-hidden="true"
+                    >
+                        🔍
+                    </span>
+
+                    <span class="side-item-content">
+
+                        <strong>
+                            コミュニティ検索
+                        </strong>
+
+                        <small>
+                            興味のある場所を探す
+                        </small>
+
+                    </span>
+
+                </a>
+
+
+                <!-- コミュニティ作成 -->
+                <a
+                    href="community_create.html"
+                    class="create-side-item active"
+                    aria-current="page"
+                >
+
+                    <span
+                        class="side-item-icon"
+                        aria-hidden="true"
+                    >
+                        ➕
+                    </span>
+
+                    <span class="side-item-content">
+
+                        <strong>
+                            コミュニティ作成
+                        </strong>
+
+                        <small>
+                            新しい交流の場を作る
+                        </small>
+
+                    </span>
+
+                </a>
+
+            </nav>
+
+
+            <!-- 作成時の注意 -->
+            <section class="sidebar-note">
+
+                <div
+                    class="sidebar-note-icon"
+                    aria-hidden="true"
+                >
+                    💡
+                </div>
+
+                <div>
+
+                    <h2>
+                        作成前に確認
+                    </h2>
+
+                    <p>
+                        同じ内容のコミュニティがないか、検索ページで確認してから作成しましょう。
+                    </p>
+
+                </div>
+
+            </section>
+
+        </aside>
 
 
         <!-- =====================================
@@ -118,8 +347,6 @@
 
                 </div>
 
-            
-                <p class="create-hint">💡 同じ内容のコミュニティがないか、<a href="../community.html">検索ページ</a>で確認してから作成しましょう。</p>
             </section>
 
 
@@ -1254,7 +1481,9 @@
                                     type="button"
                                     class="preview-joined-button"
                                     disabled
-                                >★ オーナー</button>
+                                >
+                                    ✓ 参加中
+                                </button>
 
                             </div>
 
@@ -1309,7 +1538,28 @@
 
 
                         <!-- データ保存案内 -->
-                        
+                        <section class="storage-information-card">
+
+                            <div
+                                class="storage-information-icon"
+                                aria-hidden="true"
+                            >
+                                💾
+                            </div>
+
+                            <div>
+
+                                <h2>
+                                    入力内容について
+                                </h2>
+
+                                <p>
+                                    作成したコミュニティは、このブラウザのLocalStorageに保存されます。
+                                </p>
+
+                            </div>
+
+                        </section>
 
                     </div>
 
@@ -1452,12 +1702,10 @@
     </div>
 
 
-    
-    <!-- コミュニティ作成専用JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script type="module" src="../../../js/pages/community/community_create.js"></script>
+    <!-- コミュニティ作成専用JavaScript -->
+    <script type="module" src="../../../js/pages/community/community_create.js"></script>
 
-  <script type="module" src="../../../js/common-header.js"></script>
 </body>
 
 </html>

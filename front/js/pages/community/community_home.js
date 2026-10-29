@@ -1,951 +1,2447 @@
 "use strict";
 
-import { supabase } from "../../supabase.js";
-import {
-    getCurrentUser, ensureCurrentProfile, getCommunity, getCommunityMembers,
-    getCommunityPosts, createPost, uploadPostImage, addComment, deletePost, getPostImages, MAX_POST_IMAGES,
-    setPostLiked, setPostSaved, joinCommunity, leaveCommunity,
-    upsertCommunityLocation, stopCommunityLocation, getCommunityLocations, deleteComment
-} from "../../api.js";
-import { loadGoogleMaps, isOkinawaCoordinate, searchPlaces } from "../../maps.js";
+import { supabase } from '../../supabase.js';
 
 /* =========================================
-   コミュニティホーム（DB連携版）
-   community_home.html?id=<communities.id>
+   コミュニティホーム
+   community_home.js
 ========================================= */
 
-const $ = (id) => document.getElementById(id);
-const COVER_CLASS = {
-    "自然・海": "sea-community", "グルメ": "gourmet-community", "文化・伝統": "eisa-community",
-    "地域": "naha-community", "スポーツ": "sports-community", "旅行・観光": "travel-community"
-};
-const DEFAULT_RULES = ["相手を尊重して交流しましょう。", "個人情報の投稿には注意してください。"];
-const ALLOWED_IMAGES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
-const state = {
-    user: null, profile: null, community: null, communityId: "",
-    membership: null,            // { role, status } | null
-    members: [], posts: [],
-    activeTab: "new", images: [], location: "", locationPoint: null, toastTimer: null,
-    // コミュニティマップ
-    map: null, mapReady: false, markers: [], previewMarker: null, infoWindow: null, fitted: false,
-    locations: [], pollTimer: null,
-    share: { watchId: null, active: false, current: null, lastSent: null, sending: false, label: "", message: false }
+/* =========================================
+   LocalStorageのキー
+========================================= */
+
+const STORAGE_KEYS = {
+    joinedCommunities: "okinawaJoinedCommunities",
+    selectedCommunity: "okinawaSelectedCommunity",
+    postPrefix: "okinawaCommunityPosts_"
 };
 
-const el = {
-    hero: $("communityHero"), cover: $("communityHeroCover"), icon: $("communityHeroIcon"),
-    category: $("communityCategory"), name: $("communityName"), description: $("communityDescription"),
-    memberCount: $("communityMemberCount"), postCount: $("communityPostCount"), createdDate: $("communityCreatedDate"),
-    statusButton: $("joinedStatusButton"),
-    sideDescription: $("sideCommunityDescription"), sideCategory: $("sideCommunityCategory"),
-    owner: $("communityOwner"), rules: $("communityRuleList"), memberList: $("communityMemberList"),
-    memberLink: $("memberPageLink"), allMemberLink: $("allMemberLink"), settingsLink: $("communitySettingsLink"),
-    userAvatar: $("currentUserAvatar"), userName: $("currentUserName"),
-    form: document.querySelector(".community-post-form"),
-    text: $("communityPostText"), count: $("characterCount"),
-    selectImage: $("selectImageButton"), imageInput: $("postImageInput"),
-    previewArea: $("imagePreviewArea"), preview: $("imagePreview"), removeImage: $("removeImageButton"),
-    selectLocation: $("selectLocationButton"), locationSelector: $("locationSelector"),
-    closeLocation: $("closeLocationSelector"), locationInput: $("locationInput"), addLocation: $("addLocationButton"),
-    locationPreview: $("locationPreview"), locationText: $("selectedLocationText"), removeLocation: $("removeLocationButton"),
-    submit: $("submitCommunityPost"), posts: $("communityPosts"), empty: $("emptyPostMessage"),
-    listTitle: $("postListTitle"), sort: $("postSortSelect"),
-    map: $("communityMap"), shareToggle: $("locationShareToggle"), shareStatus: $("locationShareStatus"),
-    shareMessage: $("locationShareMessage"), centerMe: $("mapCenterMeButton"), showAll: $("mapShowAllButton"),
-    locationCandidates: $("locationCandidates"),
-    leaveButton: $("leaveCommunityButton"), leaveModal: $("leaveCommunityModal"),
-    cancelLeave: $("cancelLeaveButton"), confirmLeave: $("confirmLeaveButton"), toast: $("communityHomeToast")
+
+/* =========================================
+   コミュニティデータ
+
+   community.jsと同じIDを使用します。
+========================================= */
+
+const communityData = [
+    {
+        id: "sea",
+        name: "沖縄の海好きコミュニティ",
+        category: "自然・海",
+        description:
+            "沖縄の海やビーチ、マリンスポーツについて情報交換するコミュニティです。",
+        icon: "🐠",
+        memberCount: 128,
+        createdDate: "2026年4月10日",
+        owner: "海好き太郎",
+        coverClass: "sea-community",
+        rules: [
+            "海や自然を大切にする情報交換を心がけましょう。",
+            "危険な場所や立入禁止区域への誘導は禁止です。",
+            "撮影場所を共有するときは安全面にも配慮しましょう。"
+        ]
+    },
+    {
+        id: "gourmet",
+        name: "沖縄グルメ情報交換",
+        category: "グルメ",
+        description:
+            "沖縄そば、タコライス、カフェなど、おすすめのお店を共有しましょう。",
+        icon: "🍜",
+        memberCount: 245,
+        createdDate: "2026年3月18日",
+        owner: "沖縄グルメ部",
+        coverClass: "gourmet-community",
+        rules: [
+            "お店や店員への誹謗中傷は禁止です。",
+            "写真を投稿するときは周囲の人に配慮しましょう。",
+            "閉店情報などは確認してから共有しましょう。"
+        ]
+    },
+    {
+        id: "eisa",
+        name: "エイサー好き集まれ",
+        category: "文化・伝統",
+        description:
+            "エイサーのイベント情報や練習風景、地域の青年会について語るコミュニティです。",
+        icon: "🥁",
+        memberCount: 96,
+        createdDate: "2026年5月2日",
+        owner: "島袋エイサー",
+        coverClass: "eisa-community",
+        rules: [
+            "地域や団体への敬意を持って交流しましょう。",
+            "練習場所や個人情報の無断掲載は禁止です。",
+            "イベント情報は日時と場所を確認して投稿しましょう。"
+        ]
+    },
+    {
+        id: "naha",
+        name: "那覇市コミュニティ",
+        category: "地域",
+        description:
+            "那覇市のイベント、お店、暮らしに関する情報を共有する地域コミュニティです。",
+        icon: "🏙️",
+        memberCount: 184,
+        createdDate: "2026年2月14日",
+        owner: "那覇まち情報",
+        coverClass: "naha-community",
+        rules: [
+            "個人を特定できる情報は投稿しないでください。",
+            "地域の迷惑になる行為を勧める投稿は禁止です。",
+            "イベント情報は公式情報も確認しましょう。"
+        ]
+    },
+    {
+        id: "sports",
+        name: "沖縄スポーツ交流会",
+        category: "スポーツ",
+        description:
+            "野球、サッカー、バスケットボールなど、沖縄のスポーツ情報を共有します。",
+        icon: "⚽",
+        memberCount: 77,
+        createdDate: "2026年6月1日",
+        owner: "うちなースポーツ",
+        coverClass: "sports-community",
+        rules: [
+            "選手やチームへの誹謗中傷は禁止です。",
+            "参加募集では日時や場所を明確にしましょう。",
+            "安全に配慮してスポーツを楽しみましょう。"
+        ]
+    },
+    {
+        id: "travel",
+        name: "沖縄おでかけ情報",
+        category: "旅行・観光",
+        description:
+            "休日のおでかけ先や観光スポット、ドライブコースを紹介し合いましょう。",
+        icon: "🚗",
+        memberCount: 153,
+        createdDate: "2026年4月25日",
+        owner: "沖縄ドライブ部",
+        coverClass: "travel-community",
+        rules: [
+            "立入禁止区域や危険な場所の紹介は禁止です。",
+            "交通ルールと地域のマナーを守りましょう。",
+            "施設情報は最新情報を確認して投稿しましょう。"
+        ]
+    }
+];
+
+
+/* =========================================
+   現在のユーザー
+========================================= */
+
+let currentUser = {
+    id: "",
+    name: "ユーザー",
+    account: "",
+    avatarText: "沖"
 };
 
-/* ---------- 共通ユーティリティ ---------- */
 
-function showToast(message) {
-    if (!el.toast) return;
-    clearTimeout(state.toastTimer);
-    el.toast.textContent = message;
-    el.toast.hidden = false;
-    el.toast.classList.add("show");
-    state.toastTimer = setTimeout(() => {
-        el.toast.classList.remove("show");
-        setTimeout(() => { el.toast.hidden = true; }, 200);
-    }, 2500);
-}
+/* =========================================
+   サンプルメンバー
+========================================= */
 
-function formatRelativeTime(value) {
-    const minutes = Math.floor((Date.now() - new Date(value).getTime()) / 60000);
-    if (minutes < 1) return "たった今";
-    if (minutes < 60) return `${minutes}分前`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}時間前`;
-    const days = Math.floor(hours / 24);
-    if (days < 7) return `${days}日前`;
-    return new Intl.DateTimeFormat("ja-JP", { year: "numeric", month: "short", day: "numeric" }).format(new Date(value));
-}
+const sampleMembers = [
+    {
+        id: "member-1",
+        name: "海好き太郎",
+        account: "@umi_taro",
+        avatarText: "海"
+    },
+    {
+        id: "member-2",
+        name: "うちなー花子",
+        account: "@uchina_hanako",
+        avatarText: "花"
+    },
+    {
+        id: "member-3",
+        name: "島人まさる",
+        account: "@shimanchu",
+        avatarText: "島"
+    },
+    {
+        id: "member-4",
+        name: "沖縄カフェ巡り",
+        account: "@okinawa_cafe",
+        avatarText: "カ"
+    }
+];
 
-function avatarDataUrl(text, color) {
-    const ch = String(text || "沖").slice(0, 1).replace(/[&<>"']/g, "");
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" rx="50" fill="${color}"/><text x="50" y="57" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-size="42" font-family="sans-serif" font-weight="bold">${ch}</text></svg>`;
-    return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
-}
 
-const AVATAR_COLORS = ["#2f8cff", "#22b8a7", "#ff9b40", "#ef5c73", "#7950f2"];
-const avatarColor = (i) => AVATAR_COLORS[i % AVATAR_COLORS.length];
-const displayName = (p) => p?.display_name || p?.username || "ユーザー";
-const isMember = () => state.membership?.status === "approved";
-const isManager = () => isMember() && ["owner", "admin"].includes(state.membership.role);
+/* =========================================
+   ページ状態
+========================================= */
 
-function make(tag, className, text) {
-    const node = document.createElement(tag);
-    if (className) node.className = className;
-    if (text !== undefined) node.textContent = text;
-    return node;
-}
+const pageState = {
+    community: null,
+    communityId: "",
+    members: [],
+    activeTab: "new",
+    selectedImage: "",
+    selectedLocation: "",
+    toastTimerId: null
+};
 
-/* ---------- 初期化 ---------- */
 
-document.addEventListener("DOMContentLoaded", init);
+/* =========================================
+   HTML要素
+========================================= */
 
-async function init() {
+const elements = {
+    communityHero:
+        document.getElementById("communityHero"),
+
+    communityHeroCover:
+        document.getElementById("communityHeroCover"),
+
+    communityHeroIcon:
+        document.getElementById("communityHeroIcon"),
+
+    communityCategory:
+        document.getElementById("communityCategory"),
+
+    communityName:
+        document.getElementById("communityName"),
+
+    communityDescription:
+        document.getElementById("communityDescription"),
+
+    communityMemberCount:
+        document.getElementById("communityMemberCount"),
+
+    communityPostCount:
+        document.getElementById("communityPostCount"),
+
+    communityCreatedDate:
+        document.getElementById("communityCreatedDate"),
+
+    joinedStatusButton:
+        document.getElementById("joinedStatusButton"),
+
+    sideCommunityDescription:
+        document.getElementById("sideCommunityDescription"),
+
+    sideCommunityCategory:
+        document.getElementById("sideCommunityCategory"),
+
+    communityOwner:
+        document.getElementById("communityOwner"),
+
+    communityRuleList:
+        document.getElementById("communityRuleList"),
+
+    communityMemberList:
+        document.getElementById("communityMemberList"),
+
+    memberPageLink:
+        document.getElementById("memberPageLink"),
+
+    allMemberLink:
+        document.getElementById("allMemberLink"),
+
+    communitySettingsLink:
+        document.getElementById("communitySettingsLink"),
+
+    currentUserAvatar:
+        document.getElementById("currentUserAvatar"),
+
+    currentUserName:
+        document.getElementById("currentUserName"),
+
+    communityPostText:
+        document.getElementById("communityPostText"),
+
+    characterCount:
+        document.getElementById("characterCount"),
+
+    selectImageButton:
+        document.getElementById("selectImageButton"),
+
+    postImageInput:
+        document.getElementById("postImageInput"),
+
+    imagePreviewArea:
+        document.getElementById("imagePreviewArea"),
+
+    imagePreview:
+        document.getElementById("imagePreview"),
+
+    removeImageButton:
+        document.getElementById("removeImageButton"),
+
+    selectLocationButton:
+        document.getElementById("selectLocationButton"),
+
+    locationSelector:
+        document.getElementById("locationSelector"),
+
+    closeLocationSelector:
+        document.getElementById("closeLocationSelector"),
+
+    locationInput:
+        document.getElementById("locationInput"),
+
+    addLocationButton:
+        document.getElementById("addLocationButton"),
+
+    locationPreview:
+        document.getElementById("locationPreview"),
+
+    selectedLocationText:
+        document.getElementById("selectedLocationText"),
+
+    removeLocationButton:
+        document.getElementById("removeLocationButton"),
+
+    submitCommunityPost:
+        document.getElementById("submitCommunityPost"),
+
+    communityPosts:
+        document.getElementById("communityPosts"),
+
+    emptyPostMessage:
+        document.getElementById("emptyPostMessage"),
+
+    postListTitle:
+        document.getElementById("postListTitle"),
+
+    postSortSelect:
+        document.getElementById("postSortSelect"),
+
+    leaveCommunityButton:
+        document.getElementById("leaveCommunityButton"),
+
+    leaveCommunityModal:
+        document.getElementById("leaveCommunityModal"),
+
+    cancelLeaveButton:
+        document.getElementById("cancelLeaveButton"),
+
+    confirmLeaveButton:
+        document.getElementById("confirmLeaveButton"),
+
+    communityHomeToast:
+        document.getElementById("communityHomeToast")
+};
+
+
+/* =========================================
+   初期化
+========================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    initializeCommunityHome
+);
+
+
+/**
+ * ページ全体を初期化します。
+ */
+async function initializeCommunityHome() {
     try {
-        state.communityId = new URLSearchParams(location.search).get("id") || "";
-        state.user = await getCurrentUser();
-        if (!state.user) { location.replace("../../login.html"); return; }
-        state.profile = await ensureCurrentProfile(state.user);
+        pageState.communityId = getCommunityIdFromUrl();
 
-        state.community = state.communityId ? await getCommunity(state.communityId) : null;
-        if (!state.community) { showNotFound(); return; }
+        pageState.community = await getDatabaseCommunity(pageState.communityId)
+            || getCommunityById(pageState.communityId);
 
-        await loadMembership();
-        await Promise.all([loadMembers(), loadPosts()]);
+        if (!pageState.community) {
+            handleCommunityNotFound();
+            return;
+        }
 
-        renderCommunity();
-        renderCurrentUser();
+        await loadCurrentUser();
+        migrateLegacyCurrentUserPosts();
+
+        ensureCommunityJoined();
+        initializeDefaultPosts();
+        setCurrentUserInformation();
+        setCommunityInformation();
+        renderCommunityRules();
         renderMembers();
-        renderPosts();
-        bindEvents();
+        registerEventListeners();
         updateCharacterCount();
-        initCommunityMap().catch((error) => console.warn("コミュニティマップの初期化に失敗しました。", error));
+        renderPosts();
     } catch (error) {
-        console.error("コミュニティホームの初期化に失敗しました。", error);
-        showToast("コミュニティの読み込みに失敗しました。");
+        console.error(
+            "コミュニティホームの初期化に失敗しました。",
+            error
+        );
+
+        showToast(
+            "コミュニティの読み込みに失敗しました。"
+        );
     }
 }
 
-function showNotFound() {
-    document.title = "コミュニティが見つかりません | おきとーーーーーーく";
-    el.name.textContent = "コミュニティが見つかりません";
-    el.description.textContent = "存在しないか、閲覧できないコミュニティです。";
-    el.statusButton.hidden = true;
-    el.form.hidden = true;
-    el.leaveButton.hidden = true;
-}
-
-async function loadMembership() {
-    const { data, error } = await supabase
-        .from("community_members").select("role, status")
-        .eq("community_id", state.communityId).eq("user_id", state.user.id).maybeSingle();
+async function loadCurrentUser() {
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData?.user) throw new Error('ログイン中のユーザーを確認できませんでした。');
+    const user = authData.user;
+    const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('id, username, display_name, avatar_url')
+        .eq('id', user.id)
+        .maybeSingle();
     if (error) throw error;
-    state.membership = data;
-}
-
-async function loadMembers() {
-    const rows = await getCommunityMembers(state.communityId);
-    state.members = rows.filter((row) => row.profile);
-}
-
-async function loadPosts() {
-    state.posts = await getCommunityPosts(state.communityId, state.user.id);
-}
-
-/* ---------- 画面表示 ---------- */
-
-function renderCommunity() {
-    const c = state.community;
-    document.title = `${c.name} | おきとーーーーーーく`;
-    el.icon.textContent = c.icon_url ? "" : (c.icon_emoji || "🌺");
-    if (c.icon_url) Object.assign(el.icon.style, { backgroundImage: `url("${c.icon_url}")`, backgroundSize: "cover", backgroundPosition: "center" });
-    el.category.textContent = c.categoryName;
-    el.name.textContent = c.name;
-    el.description.textContent = c.description || "説明はまだありません。";
-    el.sideDescription.textContent = c.description || "説明はまだありません。";
-    el.sideCategory.textContent = c.categoryName;
-    el.owner.textContent = c.ownerName;
-    el.memberCount.textContent = state.members.length.toLocaleString("ja-JP");
-    el.createdDate.textContent = new Date(c.created_at).toLocaleDateString("ja-JP");
-    el.cover.classList.add(COVER_CLASS[c.categoryName] || "cover-blue");
-    if (c.header_url) Object.assign(el.cover.style, { backgroundImage: `url("${c.header_url}")`, backgroundSize: "cover", backgroundPosition: "center" });
-
-    const visibilityLabel = { public: "公開", approval: "承認制", private: "非公開" }[c.visibility] || "公開";
-    const visibilityRow = document.querySelector(".community-details div:nth-child(2) dd");
-    if (visibilityRow) visibilityRow.textContent = visibilityLabel;
-
-    el.rules.replaceChildren(...(c.rules?.length ? c.rules : DEFAULT_RULES).map((rule) => make("li", "", rule)));
-
-    const id = encodeURIComponent(state.communityId);
-    el.memberLink.href = el.allMemberLink.href = `community_members.html?id=${id}`;
-    el.settingsLink.href = `community_settings.html?id=${id}`;
-    el.settingsLink.hidden = !isManager();
-
-    renderMembershipControls();
-    updatePendingBadge();
-}
-
-/** 管理者には、承認待ちの参加申請の数を「設定」タブに表示する */
-async function updatePendingBadge() {
-    if (!isManager()) return;
-    try {
-        const pending = await getCommunityMembers(state.communityId, "pending");
-        const old = el.settingsLink.querySelector(".subnav-badge");
-        old?.remove();
-        if (pending.length) {
-            const badge = make("span", "subnav-badge", String(pending.length));
-            badge.title = `${pending.length}件の参加申請が承認待ちです`;
-            el.settingsLink.append(badge);
-        }
-    } catch (error) { console.warn("参加申請の数を取得できませんでした。", error); }
-}
-
-function renderMembershipControls() {
-    const status = state.membership?.status;
-    const isOwner = state.membership?.role === "owner";
-    el.statusButton.hidden = false;
-    el.statusButton.disabled = false;
-    el.leaveButton.hidden = !(status === "approved" && !isOwner);
-
-    if (status === "approved") {
-        el.statusButton.textContent = isOwner ? "★ オーナー" : "✓ 参加中";
-        el.statusButton.disabled = isOwner;
-    } else if (status === "pending") {
-        el.statusButton.textContent = "承認待ち（申請取消）";
-    } else if (status === "rejected") {
-        el.statusButton.textContent = "参加できません";
-        el.statusButton.disabled = true;
-    } else {
-        el.statusButton.textContent = state.community.visibility === "public" ? "＋ 参加する" : "＋ 参加を申請する";
-    }
-    el.form.hidden = status !== "approved";
-}
-
-function renderCurrentUser() {
-    const name = displayName(state.profile);
-    el.userName.textContent = name;
-    el.userAvatar.src = state.profile.avatar_url || avatarDataUrl(name, "#2f8cff");
-}
-
-function renderMembers() {
-    el.memberCount.textContent = state.members.length.toLocaleString("ja-JP");
-    const items = state.members.slice(0, 6).map((member, index) => {
-        const p = member.profile;
-        const link = make("a", "member-item");
-        link.href = `../profile.html?userId=${encodeURIComponent(p.id)}`;
-        const img = make("img");
-        img.src = p.avatar_url || avatarDataUrl(displayName(p), avatarColor(index));
-        img.alt = `${displayName(p)}のプロフィール画像`;
-        const text = make("span");
-        text.append(make("strong", "", displayName(p)), make("small", "", p.username ? `@${p.username}` : ""));
-        link.append(img, text);
-        return link;
-    });
-    el.memberList.replaceChildren(...items);
-}
-
-/* ---------- 投稿一覧 ---------- */
-
-function visiblePosts() {
-    let posts = [...state.posts];
-    if (state.activeTab === "popular") posts = posts.filter((p) => p.likeCount >= 3 || p.comments.length > 0);
-    if (state.activeTab === "media") posts = posts.filter((p) => getPostImages(p).length);
-    const sort = el.sort.value;
-    const time = (p) => new Date(p.created_at).getTime();
-    if (sort === "old") posts.sort((a, b) => time(a) - time(b));
-    else if (sort === "likes") posts.sort((a, b) => b.likeCount - a.likeCount || time(b) - time(a));
-    else posts.sort((a, b) => time(b) - time(a));
-    return posts;
-}
-
-function renderPosts() {
-    const posts = visiblePosts();
-    el.postCount.textContent = state.posts.length.toLocaleString("ja-JP");
-    el.posts.replaceChildren(...posts.map(createPostElement));
-    el.empty.hidden = posts.length > 0;
-}
-
-function actionButton(action, className, icon, text) {
-    const button = make("button", className);
-    button.type = "button";
-    button.dataset.action = action;
-    button.append(make("span", action === "like" ? "like-icon" : "", icon), make("span", "", text));
-    return button;
-}
-
-function createPostElement(post) {
-    const article = make("article", "community-post");
-    article.dataset.postId = post.id;
-    const name = displayName(post.profiles);
-
-    const header = make("div", "community-post-header");
-    const author = make("a", "post-author");
-    author.href = `../profile.html?userId=${encodeURIComponent(post.user_id)}`;
-    const authorImg = make("img");
-    authorImg.src = post.profiles?.avatar_url || avatarDataUrl(name, "#2f8cff");
-    authorImg.alt = `${name}のプロフィール画像`;
-    const info = make("span");
-    info.append(make("strong", "", name),
-        make("small", "", `${post.profiles?.username ? "@" + post.profiles.username : ""}・${formatRelativeTime(post.created_at)}`));
-    author.append(authorImg, info);
-    header.append(author);
-    if (post.user_id === state.user.id || isManager()) {
-        const menu = actionButton("menu", "post-menu-button", "…", "");
-        menu.replaceChildren("…");
-        menu.setAttribute("aria-label", "投稿を削除");
-        header.append(menu);
-    }
-
-    const body = make("div", "community-post-body");
-    if (post.content) body.append(make("p", "", post.content));
-    if (post.location_name || hasCoordinates(post)) {
-        const place = make("button", "post-location", `📍 ${post.location_name || "地図で選んだ場所"}`);
-        place.type = "button";
-        if (hasCoordinates(post)) {
-            place.dataset.action = "focus-map";
-            place.title = "コミュニティマップで見る";
-        } else place.disabled = true;
-        body.append(place);
-    }
-    getPostImages(post).forEach((url) => {
-        const img = make("img", "community-post-image");
-        img.src = url; img.alt = "投稿画像"; img.loading = "lazy";
-        body.append(img);
-    });
-
-    const actions = make("div", "community-post-actions");
-    actions.append(
-        actionButton("like", `post-action-button like-button${post.liked ? " liked" : ""}`, post.liked ? "♥" : "♡", String(post.likeCount)),
-        actionButton("comment", "post-action-button", "💬", String(post.comments.length)),
-        actionButton("share", "post-action-button", "↗", "共有"),
-        actionButton("bookmark", `post-action-button${post.saved ? " saved" : ""}`, "🔖", post.saved ? "保存済み" : "保存")
-    );
-
-    article.append(header, body, actions, createCommentSection(post));
-    return article;
-}
-
-function createCommentSection(post) {
-    const section = make("div", "comment-section");
-    const list = make("div", "comment-list");
-    post.comments.forEach((comment) => list.append(createCommentElement(comment)));
-    section.append(list);
-    if (!isMember()) return section;
-
-    const form = make("form", "comment-form");
-    form.dataset.postId = post.id;
-    const me = make("img");
-    me.src = state.profile.avatar_url || avatarDataUrl(displayName(state.profile), "#2f8cff");
-    me.alt = "自分のプロフィール画像";
-    const input = make("input");
-    Object.assign(input, { type: "text", name: "comment", maxLength: 150, placeholder: "コメントを入力" });
-    const file = make("input");
-    Object.assign(file, { type: "file", name: "commentImage", accept: ALLOWED_IMAGES.join(","), hidden: true });
-    const label = make("label", "comment-image-button", "📷");
-    label.title = "コメントに写真を追加";
-    label.append(file);
-    const send = make("button", "", "送信");
-    send.type = "submit";
-    form.append(me, input, label, send);
-    section.append(form);
-    return section;
-}
-
-function createCommentElement(comment) {
-    const item = make("div", "comment-item");
-    const name = displayName(comment.profiles);
-    const avatar = make("img");
-    avatar.src = comment.profiles?.avatar_url || avatarDataUrl(name, "#22b8a7");
-    avatar.alt = `${name}のプロフィール画像`;
-    const content = make("div", "comment-content");
-    const nameArea = make("div", "comment-name");
-    nameArea.append(make("strong", "", name), make("small", "", formatRelativeTime(comment.created_at)));
-    content.append(nameArea);
-    if (comment.content) content.append(make("p", "", comment.content));
-    if (comment.image_url) {
-        const img = make("img", "comment-image");
-        img.src = comment.image_url; img.alt = "コメント画像"; img.loading = "lazy";
-        content.append(img);
-    }
-    item.append(avatar, content);
-    if (comment.user_id === state.user.id || isManager()) {
-        const remove = make("button", "comment-delete", "✕");
-        remove.type = "button";
-        remove.dataset.action = "delete-comment";
-        remove.dataset.commentId = comment.id;
-        remove.setAttribute("aria-label", "コメントを削除");
-        item.append(remove);
-    }
-    return item;
-}
-
-/* ---------- 投稿フォーム ---------- */
-
-function updateCharacterCount() {
-    const length = el.text.value.length;
-    el.count.textContent = `${length} / 300`;
-    el.submit.disabled = !length && !state.images.length && !state.location;
-}
-
-function renderImagePreviews() {
-    el.previewArea.replaceChildren(...state.images.map((image, index) => {
-        const item = make("div", "community-image-thumb");
-        const img = make("img");
-        img.src = image.url; img.alt = `投稿画像${index + 1}のプレビュー`;
-        const remove = make("button", "remove-image-button", "×");
-        remove.type = "button";
-        remove.setAttribute("aria-label", `画像${index + 1}を削除`);
-        remove.addEventListener("click", () => {
-            URL.revokeObjectURL(image.url);
-            state.images.splice(index, 1);
-            renderImagePreviews();
-        });
-        item.append(img, remove);
-        return item;
-    }));
-    el.previewArea.hidden = state.images.length === 0;
-    updateCharacterCount();
-}
-
-function handleImageSelection(event) {
-    const files = [...(event.target.files || [])];
-    event.target.value = "";
-    const room = MAX_POST_IMAGES - state.images.length;
-    if (files.length > room) showToast(`画像は最大${MAX_POST_IMAGES}枚までです。`);
-    for (const file of files.slice(0, Math.max(room, 0))) {
-        if (!ALLOWED_IMAGES.includes(file.type)) { showToast("JPEG、PNG、WebP、GIFの画像を選択してください。"); continue; }
-        if (file.size > 3 * 1024 * 1024) { showToast("画像サイズは1枚3MB以下にしてください。"); continue; }
-        state.images.push({ file, url: URL.createObjectURL(file) });
-    }
-    renderImagePreviews();
-}
-
-function clearImages() {
-    state.images.forEach((image) => URL.revokeObjectURL(image.url));
-    state.images = [];
-    renderImagePreviews();
-}
-
-function setPostLocation(point) {
-    state.locationPoint = point;
-    state.location = point.name;
-    el.locationText.textContent = point.name;
-    el.locationPreview.hidden = false;
-    setPreviewMarker(point.latitude, point.longitude);
-    updateCharacterCount();
-}
-
-function renderLocationCandidates(list) {
-    el.locationCandidates.replaceChildren(...list.map((item) => {
-        const button = make("button", "location-candidate");
-        button.type = "button";
-        button.append(make("strong", "", item.name || item.address.split(/[ 、,]/)[0]), make("span", "", item.address));
-        button.addEventListener("click", () => {
-            setPostLocation({ name: item.name || item.address.split(/[ 、,]/)[0], latitude: item.latitude, longitude: item.longitude });
-            renderLocationCandidates([]);
-            closeLocation();
-            focusMap(item.latitude, item.longitude, 16);
-        });
-        return button;
-    }));
-    el.locationCandidates.hidden = list.length === 0;
-}
-
-async function addLocation() {
-    const value = el.locationInput.value.trim();
-    if (!value) { showToast("場所を入力してください。"); return; }
-    el.addLocation.disabled = true;
-    try {
-        const found = await searchPlaces(value);
-        if (!found.length) { showToast("沖縄県内の場所が見つかりませんでした。マップをクリックして選ぶこともできます。"); return; }
-        if (found.length === 1) {
-            const only = found[0];
-            setPostLocation({ name: only.name || value, latitude: only.latitude, longitude: only.longitude });
-            closeLocation();
-            focusMap(only.latitude, only.longitude, 16);
-        } else renderLocationCandidates(found);
-    } catch (error) {
-        showToast(`場所を検索できませんでした：${error.message}`);
-    } finally { el.addLocation.disabled = false; }
-}
-
-function closeLocation() {
-    el.locationSelector.hidden = true;
-    el.locationInput.value = "";
-    renderLocationCandidates([]);
-}
-
-function clearLocation() {
-    state.location = ""; state.locationPoint = null;
-    el.locationText.textContent = ""; el.locationPreview.hidden = true;
-    clearPreviewMarker();
-    updateCharacterCount();
-}
-
-async function submitPost() {
-    const content = el.text.value.trim();
-    if (!content && !state.images.length && !state.location) { showToast("投稿内容を入力してください。"); return; }
-    el.submit.disabled = true;
-    try {
-        const imageUrls = await Promise.all(state.images.map((image) => uploadPostImage(state.user.id, image.file)));
-        await createPost({
-            userId: state.user.id, content: content || state.location, imageUrls,
-            locationName: state.location || null,
-            latitude: state.locationPoint?.latitude ?? null, longitude: state.locationPoint?.longitude ?? null,
-            communityId: state.communityId, visibility: "public"
-        });
-        el.text.value = ""; clearImages(); clearLocation();
-        await loadPosts();
-        renderPosts();
-        renderMapMarkers();
-        showToast("コミュニティに投稿しました。");
-    } catch (error) {
-        console.error(error);
-        showToast(`投稿できませんでした：${error.message}`);
-    } finally {
-        updateCharacterCount();
-    }
-}
-
-/* ---------- 投稿アクション ---------- */
-
-const findPost = (id) => state.posts.find((post) => post.id === id);
-
-async function toggleLike(post) {
-    const next = !post.liked;
-    post.liked = next; post.likeCount = Math.max(0, post.likeCount + (next ? 1 : -1));
-    renderPosts();
-    try { await setPostLiked(state.user.id, post.id, next); }
-    catch (error) {
-        post.liked = !next; post.likeCount = Math.max(0, post.likeCount + (next ? -1 : 1));
-        renderPosts(); showToast(`いいねできませんでした：${error.message}`);
-    }
-}
-
-async function toggleBookmark(post) {
-    const next = !post.saved;
-    post.saved = next; renderPosts();
-    try { await setPostSaved(state.user.id, post.id, next); showToast(next ? "投稿を保存しました。" : "投稿の保存を解除しました。"); }
-    catch (error) { post.saved = !next; renderPosts(); showToast(`保存できませんでした：${error.message}`); }
-}
-
-async function sharePost(post) {
-    const url = `${location.href.split("#")[0]}#post-${post.id}`;
-    try {
-        if (navigator.share) { await navigator.share({ title: state.community.name, url }); return; }
-        await navigator.clipboard.writeText(url);
-        showToast("投稿URLをコピーしました。");
-    } catch (error) {
-        if (error?.name !== "AbortError") showToast("投稿URLをコピーできませんでした。");
-    }
-}
-
-async function removePost(post) {
-    if (!window.confirm("この投稿を削除しますか？")) return;
-    try {
-        if (post.user_id === state.user.id) await deletePost(post.id, state.user.id);
-        else {
-            const { error } = await supabase.from("posts").delete().eq("id", post.id);
-            if (error) throw error;
-        }
-        state.posts = state.posts.filter((item) => item.id !== post.id);
-        renderPosts();
-        showToast("投稿を削除しました。");
-    } catch (error) { showToast(`削除できませんでした：${error.message}`); }
-}
-
-function handlePostListClick(event) {
-    const button = event.target.closest("[data-action]");
-    const article = button?.closest(".community-post");
-    const post = article && findPost(article.dataset.postId);
-    if (!post) return;
-    switch (button.dataset.action) {
-        case "like": toggleLike(post); break;
-        case "comment": article.querySelector('.comment-form input[name="comment"]')?.focus(); break;
-        case "share": sharePost(post); break;
-        case "bookmark": toggleBookmark(post); break;
-        case "menu": removePost(post); break;
-        case "focus-map": focusPostOnMap(post); break;
-        case "delete-comment": removeComment(post, button.dataset.commentId); break;
-    }
-}
-
-async function removeComment(post, commentId) {
-    if (!window.confirm("このコメントを削除しますか？")) return;
-    try {
-        await deleteComment(commentId);
-        post.comments = post.comments.filter((comment) => comment.id !== commentId);
-        renderPosts();
-        showToast("コメントを削除しました。");
-    } catch (error) { showToast(`削除できませんでした：${error.message}`); }
-}
-
-async function handleCommentSubmit(event) {
-    const form = event.target.closest(".comment-form");
-    if (!form) return;
-    event.preventDefault();
-    const post = findPost(form.dataset.postId);
-    const text = form.querySelector('input[name="comment"]').value.trim();
-    const file = form.querySelector('input[name="commentImage"]')?.files?.[0];
-    if (!post || (!text && !file)) { showToast("コメントを入力してください。"); return; }
-    if (file && (!ALLOWED_IMAGES.includes(file.type) || file.size > 3 * 1024 * 1024)) {
-        showToast("コメント画像はJPEG/PNG/WebP/GIFの3MB以下にしてください。"); return;
-    }
-    const submit = form.querySelector('button[type="submit"]');
-    submit.disabled = true;
-    try {
-        const imageUrl = file ? await uploadPostImage(state.user.id, file) : null;
-        const comment = await addComment({ postId: post.id, userId: state.user.id, content: text, imageUrl });
-        post.comments.push(comment);
-        renderPosts();
-        showToast("コメントを投稿しました。");
-    } catch (error) {
-        submit.disabled = false;
-        showToast(`コメントできませんでした：${error.message}`);
-    }
-}
-
-/* ---------- 参加・退出 ---------- */
-
-async function handleStatusButton() {
-    const status = state.membership?.status;
-    try {
-        if (status === "approved") { openLeave(); return; }
-        if (status === "pending") {
-            await leaveCommunity(state.communityId, state.user.id);
-            state.membership = null;
-            showToast("参加申請を取り消しました。");
-        } else if (!status) {
-            const result = await joinCommunity(state.community, state.user.id);
-            state.membership = { role: "member", status: result };
-            showToast(result === "approved" ? "コミュニティに参加しました。" : "参加を申請しました。承認をお待ちください。");
-        }
-        await Promise.all([loadMembers(), loadPosts()]);
-        renderCommunity(); renderMembers(); renderPosts();
-    } catch (error) { showToast(`操作できませんでした：${error.message}`); }
-}
-
-function openLeave() { el.leaveModal.hidden = false; document.body.style.overflow = "hidden"; el.cancelLeave.focus(); }
-function closeLeave() { el.leaveModal.hidden = true; document.body.style.overflow = ""; }
-
-async function confirmLeave() {
-    el.confirmLeave.disabled = true;
-    try {
-        await leaveCommunity(state.communityId, state.user.id);
-        closeLeave();
-        showToast("コミュニティから退出しました。");
-        setTimeout(() => { location.href = "../community.html"; }, 700);
-    } catch (error) {
-        el.confirmLeave.disabled = false;
-        showToast(`退出できませんでした：${error.message}`);
-    }
-}
-
-/* ---------- イベント ---------- */
-
-function bindEvents() {
-    el.text.addEventListener("input", updateCharacterCount);
-    el.selectImage.addEventListener("click", () => el.imageInput.click());
-    el.imageInput.addEventListener("change", handleImageSelection);
-    el.removeImage?.addEventListener("click", clearImages);
-    el.selectLocation.addEventListener("click", () => { el.locationSelector.hidden = false; el.locationInput.focus(); });
-    el.shareToggle?.addEventListener("click", toggleSharing);
-    el.centerMe?.addEventListener("click", () => {
-        const me = state.share.current;
-        if (me) focusMap(me.latitude, me.longitude, 17);
-    });
-    el.showAll?.addEventListener("click", () => fitMap());
-    document.addEventListener("visibilitychange", () => { if (!document.hidden) loadLocations(); });
-    window.addEventListener("pagehide", () => { if (state.pollTimer) clearInterval(state.pollTimer); });
-    el.closeLocation.addEventListener("click", closeLocation);
-    el.addLocation.addEventListener("click", addLocation);
-    el.locationInput.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); addLocation(); } });
-    el.removeLocation.addEventListener("click", clearLocation);
-    el.submit.addEventListener("click", submitPost);
-    el.sort.addEventListener("change", renderPosts);
-    document.querySelectorAll(".community-tab").forEach((tab) => tab.addEventListener("click", (event) => {
-        state.activeTab = event.currentTarget.dataset.tab;
-        document.querySelectorAll(".community-tab").forEach((t) => {
-            const active = t.dataset.tab === state.activeTab;
-            t.classList.toggle("active", active);
-            t.setAttribute("aria-selected", String(active));
-        });
-        el.listTitle.textContent = { new: "新着の投稿", popular: "人気の投稿", media: "画像付きの投稿" }[state.activeTab];
-        renderPosts();
-    }));
-    el.posts.addEventListener("click", handlePostListClick);
-    el.posts.addEventListener("submit", handleCommentSubmit);
-    el.statusButton.addEventListener("click", handleStatusButton);
-    el.leaveButton.addEventListener("click", openLeave);
-    el.cancelLeave.addEventListener("click", closeLeave);
-    el.confirmLeave.addEventListener("click", confirmLeave);
-    el.leaveModal.addEventListener("click", (e) => { if (e.target === el.leaveModal) closeLeave(); });
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !el.leaveModal.hidden) closeLeave(); });
-}
-
-
-/* =========================================
-   コミュニティマップ（投稿の場所 + メンバーの現在地）
-========================================= */
-
-const MAP_COLORS = { me: "#16a34a", member: "#2f8cff", post: "#ef4444" };
-const hasCoordinates = (row) => Number.isFinite(Number(row.latitude)) && Number.isFinite(Number(row.longitude))
-    && row.latitude !== null && row.longitude !== null;
-
-function circleIcon(color) {
-    return {
-        path: window.google.maps.SymbolPath.CIRCLE, scale: 13, fillColor: color, fillOpacity: 1,
-        strokeColor: "#ffffff", strokeWeight: 3
+    const name = profile?.display_name || profile?.username || user.email?.split('@')[0] || 'ユーザー';
+    currentUser = {
+        id: user.id,
+        name,
+        account: profile?.username ? `@${profile.username}` : '',
+        avatarText: [...name][0] || '沖',
+        avatarUrl: profile?.avatar_url || ''
     };
 }
 
-async function initCommunityMap() {
-    if (!el.map) return;
-    updateShareUi();
-    try {
-        const maps = await loadGoogleMaps();
-        state.map = new maps.Map(el.map, {
-            center: { lat: 26.2124, lng: 127.6809 }, zoom: 9, mapTypeControl: false, streetViewControl: false
+function migrateLegacyCurrentUserPosts() {
+    const posts = getCommunityPosts();
+    let changed = false;
+    posts.forEach(post => {
+        if (post.authorId === 'current-user') {
+            post.authorId = currentUser.id;
+            post.authorName = currentUser.name;
+            post.authorAccount = currentUser.account;
+            post.authorAvatarText = currentUser.avatarText;
+            post.authorAvatarUrl = currentUser.avatarUrl;
+            changed = true;
+        }
+        (post.comments || []).forEach(comment => {
+            if (comment.authorName === 'りゅうほ') {
+                comment.authorName = currentUser.name;
+                comment.authorAvatarText = currentUser.avatarText;
+                changed = true;
+            }
         });
-        state.infoWindow = new maps.InfoWindow();
-        state.map.addListener("click", onMapClick);
-        state.mapReady = true;
-    } catch (error) {
-        console.warn("コミュニティマップを読み込めませんでした。", error);
-        el.map.textContent = `地図を読み込めませんでした：${error.message}`;
-        el.map.classList.add("map-error");
-    }
-    await loadLocations();
-    state.pollTimer = setInterval(() => { if (!document.hidden) loadLocations(); }, 20000);
-    // 前回の共有が有効期限内に残っていれば、そのまま追跡を再開する
-    if (isMember() && state.locations.some((row) => row.user_id === state.user.id)) startSharing({ resume: true });
+    });
+    if (changed) saveCommunityPosts(posts);
 }
 
-async function loadLocations() {
+async function getDatabaseCommunity(communityId) {
+    if (!communityId) return null;
+    const { data, error } = await supabase
+        .from('communities')
+        .select('*, category:category_id(name), owner:owner_id(display_name,username), community_members(count)')
+        .eq('id', communityId)
+        .maybeSingle();
+    if (error) {
+        console.warn('DBコミュニティの取得に失敗しました。', error);
+        return null;
+    }
+    if (!data) return null;
+    const { data: memberRows, error: memberError } = await supabase
+        .from('community_members')
+        .select('role, joined_at, profile:user_id(id,username,display_name,avatar_url)')
+        .eq('community_id', communityId)
+        .order('joined_at', { ascending: true });
+    if (memberError) console.warn('メンバー取得に失敗しました。', memberError);
+    pageState.members = (memberRows || []).map(row => ({
+        id: row.profile?.id,
+        name: row.profile?.display_name || row.profile?.username || 'ユーザー',
+        account: row.profile?.username ? `@${row.profile.username}` : '',
+        avatarText: [...(row.profile?.display_name || row.profile?.username || '沖')][0],
+        avatarUrl: row.profile?.avatar_url || '',
+        role: row.role
+    })).filter(member => member.id);
+    return {
+        id: data.id,
+        name: data.name || '名称未設定',
+        category: data.category?.name || 'その他',
+        description: data.description || '説明はまだありません。',
+        icon: '🌺',
+        iconUrl: data.icon_url && !data.icon_url.includes('images.example.com') ? data.icon_url : '',
+        headerUrl: data.header_url && !data.header_url.includes('images.example.com') ? data.header_url : '',
+        owner: data.owner?.display_name || data.owner?.username || '管理者',
+        memberCount: pageState.members.length,
+        createdDate: new Date(data.created_at).toLocaleDateString('ja-JP'),
+        coverClass: 'cover-blue',
+        rules: ['相手を尊重して交流しましょう。', '個人情報の投稿には注意してください。']
+    };
+}
+
+
+/* =========================================
+   URLからコミュニティID取得
+========================================= */
+
+/**
+ * URLのidパラメータを取得します。
+ *
+ * 例：
+ * community_home.html?id=sea
+ *
+ * @returns {string}
+ */
+function getCommunityIdFromUrl() {
+    const searchParams = new URLSearchParams(
+        window.location.search
+    );
+
+    const communityId = searchParams.get("id");
+
+    if (communityId) {
+        return communityId;
+    }
+
+    const storedCommunity = getSelectedCommunity();
+
+    if (storedCommunity?.id) {
+        return storedCommunity.id;
+    }
+
+    return "sea";
+}
+
+
+/* =========================================
+   コミュニティ情報取得
+========================================= */
+
+/**
+ * IDからコミュニティを取得します。
+ *
+ * @param {string} communityId
+ * @returns {Object|null}
+ */
+function getCommunityById(communityId) {
+    return communityData.find(
+        (community) =>
+            community.id === communityId
+    ) ?? null;
+}
+
+
+/**
+ * 最後に選択したコミュニティを取得します。
+ *
+ * @returns {Object|null}
+ */
+function getSelectedCommunity() {
+    const storedValue = localStorage.getItem(
+        STORAGE_KEYS.selectedCommunity
+    );
+
+    if (!storedValue) {
+        return null;
+    }
+
     try {
-        state.locations = await getCommunityLocations(state.communityId);
+        return JSON.parse(storedValue);
     } catch (error) {
-        console.warn("共有位置を取得できませんでした。", error);
-        state.locations = [];
+        console.warn(
+            "選択コミュニティを読み込めませんでした。",
+            error
+        );
+
+        return null;
     }
-    renderMapMarkers();
-    updateShareUi();
 }
 
-function clearMarkers() {
-    state.markers.forEach((marker) => marker.setMap(null));
-    state.markers = [];
+
+/* =========================================
+   コミュニティが存在しない場合
+========================================= */
+
+function handleCommunityNotFound() {
+    document.title =
+        "コミュニティが見つかりません | おきとーーーーーーく";
+
+    elements.communityName.textContent =
+        "コミュニティが見つかりません";
+
+    elements.communityDescription.textContent =
+        "指定されたコミュニティは存在しないか、削除された可能性があります。";
+
+    elements.joinedStatusButton.hidden = true;
+
+    showToast(
+        "コミュニティ情報が見つかりませんでした。"
+    );
 }
 
-function addMarker(options, html) {
-    const marker = new window.google.maps.Marker({ map: state.map, ...options });
-    marker.addListener("click", () => {
-        state.infoWindow.setContent(html);
-        state.infoWindow.open({ map: state.map, anchor: marker });
-    });
-    state.markers.push(marker);
-    return marker;
-}
 
-const escapeHtml = (value = "") => String(value).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+/* =========================================
+   参加状態確認
+========================================= */
 
-function renderMapMarkers() {
-    if (!state.mapReady) return;
-    clearMarkers();
-    const bounds = new window.google.maps.LatLngBounds();
-    let count = 0;
+/**
+ * URLから直接アクセスした場合も、
+ * 参加中として保存します。
+ */
+function ensureCommunityJoined() {
+    const joinedIds = getJoinedCommunityIds();
 
-    state.posts.filter(hasCoordinates).forEach((post) => {
-        const position = { lat: Number(post.latitude), lng: Number(post.longitude) };
-        addMarker({ position, title: post.location_name || "投稿の場所" },
-            `<strong>${escapeHtml(displayName(post.profiles))}</strong><br>${escapeHtml(post.content.slice(0, 60))}${post.location_name ? `<br>📍 ${escapeHtml(post.location_name)}` : ""}`);
-        bounds.extend(position); count += 1;
-    });
-
-    state.locations.forEach((row) => {
-        const mine = row.user_id === state.user.id;
-        // 自分は端末の最新位置を優先（サーバー反映を待たず滑らかに動く）
-        const live = mine && state.share.current ? state.share.current : row;
-        const position = { lat: Number(live.latitude), lng: Number(live.longitude) };
-        const name = displayName(row.profile);
-        addMarker({
-            position, zIndex: mine ? 1000 : 500, title: `${name}の現在地`,
-            icon: circleIcon(mine ? MAP_COLORS.me : MAP_COLORS.member),
-            label: { text: name.charAt(0), color: "#ffffff", fontWeight: "700", fontSize: "12px" }
-        }, `<strong>${escapeHtml(name)}${mine ? "（自分）" : ""}</strong><br>📍 ${escapeHtml(row.label || "現在地")}<br><small>${formatRelativeTime(row.updated_at)}に更新</small>`);
-        bounds.extend(position); count += 1;
-    });
-
-    // 共有していなくても、端末の現在地が取れていれば自分を表示（共有開始直後など）
-    if (state.share.current && !state.locations.some((row) => row.user_id === state.user.id)) {
-        const position = { lat: state.share.current.latitude, lng: state.share.current.longitude };
-        addMarker({ position, zIndex: 1000, title: "自分の現在地", icon: circleIcon(MAP_COLORS.me),
-            label: { text: displayName(state.profile).charAt(0), color: "#ffffff", fontWeight: "700", fontSize: "12px" } }, "<strong>自分</strong>");
-        bounds.extend(position); count += 1;
+    if (joinedIds.includes(pageState.communityId)) {
+        return;
     }
 
-    state.boundsCount = count;
-    state.bounds = bounds;
-    if (count && !state.fitted) fitMap();
+    joinedIds.push(pageState.communityId);
+    saveJoinedCommunityIds(joinedIds);
 }
 
-function fitMap() {
-    if (!state.mapReady || !state.boundsCount) return;
-    state.fitted = true;
-    state.map.fitBounds(state.bounds, 40);
-    window.google.maps.event.addListenerOnce(state.map, "idle", () => {
-        if (state.map.getZoom() > 16) state.map.setZoom(16);
-    });
-}
 
-function focusMap(latitude, longitude, zoom = 16) {
-    if (!state.mapReady) return;
-    state.map.setCenter({ lat: latitude, lng: longitude });
-    state.map.setZoom(zoom);
-}
+/**
+ * 参加中コミュニティIDを取得します。
+ *
+ * @returns {Array<string>}
+ */
+function getJoinedCommunityIds() {
+    const storedValue = localStorage.getItem(
+        STORAGE_KEYS.joinedCommunities
+    );
 
-function focusPostOnMap(post) {
-    focusMap(Number(post.latitude), Number(post.longitude), 17);
-    $("communityMapSection")?.scrollIntoView({ behavior: "smooth", block: "center" });
-}
+    if (!storedValue) {
+        return [];
+    }
 
-function setPreviewMarker(latitude, longitude) {
-    if (!state.mapReady) return;
-    const position = { lat: latitude, lng: longitude };
-    if (!state.previewMarker) {
-        state.previewMarker = new window.google.maps.Marker({
-            map: state.map, position, draggable: true, title: "投稿に付ける場所（ドラッグで移動）",
-            animation: window.google.maps.Animation.DROP
-        });
-        state.previewMarker.addListener("dragend", (event) => onMapClick(event, true));
-    } else state.previewMarker.setPosition(position);
-}
-
-function clearPreviewMarker() {
-    state.previewMarker?.setMap(null);
-    state.previewMarker = null;
-}
-
-/** 「場所」を開いているときだけ、マップのクリックで投稿の場所を決める */
-function onMapClick(event, fromDrag = false) {
-    if (el.locationSelector.hidden && !fromDrag) return;
-    const latitude = event.latLng.lat();
-    const longitude = event.latLng.lng();
-    if (!isOkinawaCoordinate(latitude, longitude)) { showToast("沖縄県内の場所を選んでください。"); return; }
-    setPostLocation({ name: state.location && fromDrag ? state.location : "地図で選んだ場所", latitude, longitude });
-    if (!fromDrag) closeLocation();
-}
-
-/* ---------- 現在地の共有（自動追跡） ---------- */
-
-function distanceMeters(a, b) {
-    const rad = Math.PI / 180;
-    const dLat = (b.latitude - a.latitude) * rad;
-    const dLng = (b.longitude - a.longitude) * rad;
-    const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.latitude * rad) * Math.cos(b.latitude * rad) * Math.sin(dLng / 2) ** 2;
-    return 2 * 6371000 * Math.asin(Math.sqrt(h));
-}
-
-async function reverseLabel(latitude, longitude) {
     try {
-        const maps = await loadGoogleMaps();
-        const { results } = await new maps.Geocoder().geocode({ location: { lat: latitude, lng: longitude }, language: "ja" });
-        const parts = results?.[0]?.address_components || [];
-        const pick = (type) => parts.find((part) => part.types.includes(type))?.long_name;
-        const label = [pick("locality") || pick("administrative_area_level_2"), pick("sublocality_level_1")].filter(Boolean).join(" ");
-        return label.slice(0, 60) || "現在地";
-    } catch {
-        return "現在地";
-    }
-}
+        const parsedValue = JSON.parse(storedValue);
 
-function setShareMessage(text, type = "") {
-    if (!el.shareMessage) return;
-    el.shareMessage.textContent = text;
-    el.shareMessage.classList.toggle("error", type === "error");
-}
+        if (!Array.isArray(parsedValue)) {
+            return [];
+        }
 
-function updateShareUi() {
-    if (!el.shareToggle) return;
-    const active = state.share.active;
-    const others = state.locations.filter((row) => row.user_id !== state.user.id).length;
-    el.shareStatus.textContent = active ? "共有中" : "共有停止中";
-    el.shareStatus.classList.toggle("on", active);
-    el.shareStatus.classList.toggle("off", !active);
-    el.shareToggle.textContent = active ? "■ 共有を停止する" : "📍 現在地を共有して追跡する";
-    el.shareToggle.classList.toggle("stop", active);
-    el.shareToggle.disabled = !isMember();
-    el.centerMe.hidden = !state.share.current;
-    if (!active && others) el.shareStatus.textContent = `共有停止中（${others}人が共有中）`;
-    if (!isMember()) setShareMessage("コミュニティに参加すると、現在地を共有してメンバーの位置を見られます。");
-}
-
-function toggleSharing() {
-    if (state.share.active) stopSharing(); else startSharing();
-}
-
-function startSharing({ resume = false } = {}) {
-    if (!isMember() || state.share.watchId !== null) return;
-    if (!navigator.geolocation) { setShareMessage("このブラウザでは現在地を取得できません。", "error"); return; }
-    state.share.active = true;
-    state.share.message = true;
-    setShareMessage(resume ? "前回の共有を再開しています…" : "現在地を取得しています…（許可を求められたら「許可」を選んでください）");
-    updateShareUi();
-    state.share.watchId = navigator.geolocation.watchPosition(onPosition, onPositionError, {
-        enableHighAccuracy: true, maximumAge: 5000, timeout: 30000
-    });
-}
-
-async function onPosition(position) {
-    const { latitude, longitude, accuracy } = position.coords;
-    const now = Date.now();
-    state.share.current = { latitude, longitude, accuracy };
-    renderMapMarkers();
-    updateShareUi();
-
-    const last = state.share.lastSent;
-    // 15m以上動いたとき、または30秒ごとに送信（有効期限を延ばす役割も兼ねる）
-    if (last && distanceMeters(last, state.share.current) < 15 && now - last.time < 30000) return;
-    if (state.share.sending) return;
-    state.share.sending = true;
-    try {
-        if (!state.share.label) state.share.label = await reverseLabel(latitude, longitude);
-        await upsertCommunityLocation({ communityId: state.communityId, userId: state.user.id, label: state.share.label, latitude, longitude });
-        state.share.lastSent = { latitude, longitude, time: now };
-        const time = new Date(now).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
-        setShareMessage(`共有中：${state.share.label}（${time}に更新・精度 約${Math.round(accuracy)}m）。ページを開いている間、自動で更新されます。`);
-        if (!state.locations.some((row) => row.user_id === state.user.id)) await loadLocations();
+        return parsedValue.filter(
+            (id) => typeof id === "string"
+        );
     } catch (error) {
-        console.error(error);
-        setShareMessage(`位置を送信できませんでした：${error.message}`, "error");
-    } finally { state.share.sending = false; }
+        console.warn(
+            "参加中コミュニティを読み込めませんでした。",
+            error
+        );
+
+        return [];
+    }
 }
 
-function onPositionError(error) {
-    if (error.code === 1) {
-        stopSharing({ keepMessage: true });
-        setShareMessage("位置情報の利用が許可されていません。ブラウザのアドレスバー付近の設定で「位置情報」を許可してください。", "error");
+
+/**
+ * 参加中コミュニティIDを保存します。
+ *
+ * @param {Array<string>} joinedIds
+ */
+function saveJoinedCommunityIds(joinedIds) {
+    const normalizedIds = [
+        ...new Set(joinedIds)
+    ];
+
+    localStorage.setItem(
+        STORAGE_KEYS.joinedCommunities,
+        JSON.stringify(normalizedIds)
+    );
+}
+
+
+/* =========================================
+   コミュニティ情報表示
+========================================= */
+
+function setCommunityInformation() {
+    const community = pageState.community;
+
+    document.title =
+        `${community.name} | おきとーーーーーーく`;
+
+    elements.communityHeroIcon.textContent =
+        community.iconUrl ? "" : community.icon;
+    elements.communityHeroIcon.style.backgroundImage = community.iconUrl ? `url("${community.iconUrl}")` : "";
+    elements.communityHeroIcon.style.backgroundSize = "cover";
+    elements.communityHeroIcon.style.backgroundPosition = "center";
+
+    elements.communityCategory.textContent =
+        community.category;
+
+    elements.communityName.textContent =
+        community.name;
+
+    elements.communityDescription.textContent =
+        community.description;
+
+    elements.sideCommunityDescription.textContent =
+        community.description;
+
+    elements.sideCommunityCategory.textContent =
+        community.category;
+
+    elements.communityOwner.textContent =
+        community.owner;
+
+    elements.communityMemberCount.textContent =
+        community.memberCount.toLocaleString("ja-JP");
+
+    elements.communityCreatedDate.textContent =
+        community.createdDate;
+
+    elements.communityHeroCover.classList.add(
+        community.coverClass
+    );
+    if (community.headerUrl) {
+        elements.communityHeroCover.style.backgroundImage = `url("${community.headerUrl}")`;
+        elements.communityHeroCover.style.backgroundSize = "cover";
+        elements.communityHeroCover.style.backgroundPosition = "center";
+    }
+
+    const posts = getCommunityPosts();
+
+    elements.communityPostCount.textContent =
+        posts.length.toLocaleString("ja-JP");
+
+    const encodedId = encodeURIComponent(
+        pageState.communityId
+    );
+
+    elements.memberPageLink.href =
+        `community_members.html?id=${encodedId}`;
+
+    elements.allMemberLink.href =
+        `community_members.html?id=${encodedId}`;
+
+    elements.communitySettingsLink.href =
+        `community_settings.html?id=${encodedId}`;
+}
+
+
+/* =========================================
+   現在のユーザー情報
+========================================= */
+
+function setCurrentUserInformation() {
+    elements.currentUserName.textContent =
+        currentUser.name;
+
+    elements.currentUserAvatar.src =
+        currentUser.avatarUrl || createAvatarDataUrl(
+            currentUser.avatarText,
+            "#2f8cff"
+        );
+}
+
+
+/* =========================================
+   コミュニティルール表示
+========================================= */
+
+function renderCommunityRules() {
+    elements.communityRuleList.replaceChildren();
+
+    const fragment = document.createDocumentFragment();
+
+    pageState.community.rules.forEach((rule) => {
+        const listItem =
+            document.createElement("li");
+
+        listItem.textContent = rule;
+        fragment.appendChild(listItem);
+    });
+
+    elements.communityRuleList.appendChild(fragment);
+}
+
+
+/* =========================================
+   メンバー表示
+========================================= */
+
+function renderMembers() {
+    elements.communityMemberList.replaceChildren();
+
+    const fragment = document.createDocumentFragment();
+
+    const members = pageState.members.length ? pageState.members : sampleMembers.slice(0, pageState.community?.memberCount || 0);
+    members.forEach((member, index) => {
+        const memberItem =
+            document.createElement("a");
+
+        memberItem.href = member.id ? `../profile.html?userId=${encodeURIComponent(member.id)}` : "#";
+        memberItem.className = "member-item";
+
+        const memberImage =
+            document.createElement("img");
+
+        memberImage.src = member.avatarUrl || createAvatarDataUrl(
+            member.avatarText,
+            getAvatarColor(index)
+        );
+
+        memberImage.alt =
+            `${member.name}のプロフィール画像`;
+
+        const memberText =
+            document.createElement("span");
+
+        const memberName =
+            document.createElement("strong");
+
+        memberName.textContent = member.name;
+
+        const memberAccount =
+            document.createElement("small");
+
+        memberAccount.textContent = member.account;
+
+        memberText.append(
+            memberName,
+            memberAccount
+        );
+
+        memberItem.append(
+            memberImage,
+            memberText
+        );
+
+        fragment.appendChild(memberItem);
+    });
+
+    elements.communityMemberList.appendChild(fragment);
+}
+
+
+/* =========================================
+   イベント登録
+========================================= */
+
+function registerEventListeners() {
+    elements.communityPostText.addEventListener(
+        "input",
+        updateCharacterCount
+    );
+
+    elements.selectImageButton.addEventListener(
+        "click",
+        () => elements.postImageInput.click()
+    );
+
+    elements.postImageInput.addEventListener(
+        "change",
+        handleImageSelection
+    );
+
+    elements.removeImageButton.addEventListener(
+        "click",
+        removeSelectedImage
+    );
+
+    elements.selectLocationButton.addEventListener(
+        "click",
+        openLocationSelector
+    );
+
+    elements.closeLocationSelector.addEventListener(
+        "click",
+        closeLocationSelector
+    );
+
+    elements.addLocationButton.addEventListener(
+        "click",
+        addSelectedLocation
+    );
+
+    elements.locationInput.addEventListener(
+        "keydown",
+        handleLocationInputKeydown
+    );
+
+    elements.removeLocationButton.addEventListener(
+        "click",
+        removeSelectedLocation
+    );
+
+    elements.submitCommunityPost.addEventListener(
+        "click",
+        submitPost
+    );
+
+    elements.postSortSelect.addEventListener(
+        "change",
+        renderPosts
+    );
+
+    document.querySelectorAll(
+        ".community-tab"
+    ).forEach((tabButton) => {
+        tabButton.addEventListener(
+            "click",
+            handleTabChange
+        );
+    });
+
+    elements.communityPosts.addEventListener(
+        "click",
+        handlePostListClick
+    );
+
+    elements.communityPosts.addEventListener(
+        "submit",
+        handleCommentSubmit
+    );
+
+    elements.leaveCommunityButton.addEventListener(
+        "click",
+        openLeaveModal
+    );
+
+    elements.joinedStatusButton.addEventListener(
+        "click",
+        openLeaveModal
+    );
+
+    elements.cancelLeaveButton.addEventListener(
+        "click",
+        closeLeaveModal
+    );
+
+    elements.confirmLeaveButton.addEventListener(
+        "click",
+        leaveCommunity
+    );
+
+    elements.leaveCommunityModal.addEventListener(
+        "click",
+        handleModalBackgroundClick
+    );
+
+    document.addEventListener(
+        "keydown",
+        handleEscapeKey
+    );
+}
+
+
+/* =========================================
+   文字数表示
+========================================= */
+
+function updateCharacterCount() {
+    const textLength =
+        elements.communityPostText.value.length;
+
+    elements.characterCount.textContent =
+        `${textLength} / 300`;
+
+    elements.submitCommunityPost.disabled =
+        textLength === 0 &&
+        !pageState.selectedImage &&
+        !pageState.selectedLocation;
+}
+
+
+/* =========================================
+   画像選択
+========================================= */
+
+function handleImageSelection(event) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+        return;
+    }
+
+    const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/gif"
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+        showToast(
+            "JPEG、PNG、WebP、GIFの画像を選択してください。"
+        );
+
+        event.target.value = "";
+        return;
+    }
+
+    const maxFileSize = 3 * 1024 * 1024;
+
+    if (file.size > maxFileSize) {
+        showToast(
+            "画像サイズは3MB以下にしてください。"
+        );
+
+        event.target.value = "";
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.addEventListener("load", () => {
+        pageState.selectedImage =
+            String(reader.result);
+
+        elements.imagePreview.src =
+            pageState.selectedImage;
+
+        elements.imagePreviewArea.hidden = false;
+
+        updateCharacterCount();
+    });
+
+    reader.addEventListener("error", () => {
+        showToast(
+            "画像を読み込めませんでした。"
+        );
+    });
+
+    reader.readAsDataURL(file);
+}
+
+
+function removeSelectedImage() {
+    pageState.selectedImage = "";
+
+    elements.postImageInput.value = "";
+    elements.imagePreview.src = "";
+    elements.imagePreviewArea.hidden = true;
+
+    updateCharacterCount();
+}
+
+
+/* =========================================
+   場所選択
+========================================= */
+
+function openLocationSelector() {
+    elements.locationSelector.hidden = false;
+    elements.locationInput.focus();
+}
+
+
+function closeLocationSelector() {
+    elements.locationSelector.hidden = true;
+    elements.locationInput.value = "";
+}
+
+
+function addSelectedLocation() {
+    const location =
+        elements.locationInput.value.trim();
+
+    if (!location) {
+        showToast(
+            "場所を入力してください。"
+        );
+
+        return;
+    }
+
+    pageState.selectedLocation = location;
+
+    elements.selectedLocationText.textContent =
+        location;
+
+    elements.locationPreview.hidden = false;
+
+    closeLocationSelector();
+    updateCharacterCount();
+}
+
+
+function handleLocationInputKeydown(event) {
+    if (event.key !== "Enter") {
+        return;
+    }
+
+    event.preventDefault();
+    addSelectedLocation();
+}
+
+
+function removeSelectedLocation() {
+    pageState.selectedLocation = "";
+
+    elements.selectedLocationText.textContent = "";
+    elements.locationPreview.hidden = true;
+
+    updateCharacterCount();
+}
+
+
+/* =========================================
+   投稿追加
+========================================= */
+
+function submitPost() {
+    const postText =
+        elements.communityPostText.value.trim();
+
+    if (
+        !postText &&
+        !pageState.selectedImage &&
+        !pageState.selectedLocation
+    ) {
+        showToast(
+            "投稿内容を入力してください。"
+        );
+
+        return;
+    }
+
+    const posts = getCommunityPosts();
+
+    const newPost = {
+        id: createUniqueId("post"),
+        authorId: currentUser.id,
+        authorName: currentUser.name,
+        authorAccount: currentUser.account,
+        authorAvatarText: currentUser.avatarText,
+        authorAvatarUrl: currentUser.avatarUrl,
+        text: postText,
+        image: pageState.selectedImage,
+        location: pageState.selectedLocation,
+        createdAt: new Date().toISOString(),
+        likes: 0,
+        liked: false,
+        comments: []
+    };
+
+    posts.unshift(newPost);
+
+    try {
+        saveCommunityPosts(posts);
+    } catch (error) {
+        console.error(
+            "投稿の保存に失敗しました。",
+            error
+        );
+
+        showToast(
+            "画像が大きすぎるため保存できない可能性があります。"
+        );
+
+        return;
+    }
+
+    resetPostForm();
+    renderPosts();
+
+    showToast(
+        "コミュニティに投稿しました。"
+    );
+}
+
+
+function resetPostForm() {
+    elements.communityPostText.value = "";
+
+    removeSelectedImage();
+    removeSelectedLocation();
+
+    updateCharacterCount();
+}
+
+
+/* =========================================
+   投稿データ
+========================================= */
+
+function getPostStorageKey() {
+    return (
+        STORAGE_KEYS.postPrefix +
+        pageState.communityId
+    );
+}
+
+
+/**
+ * コミュニティの投稿を取得します。
+ *
+ * @returns {Array<Object>}
+ */
+function getCommunityPosts() {
+    const storedValue = localStorage.getItem(
+        getPostStorageKey()
+    );
+
+    if (!storedValue) {
+        return [];
+    }
+
+    try {
+        const parsedValue = JSON.parse(storedValue);
+
+        return Array.isArray(parsedValue)
+            ? parsedValue
+            : [];
+    } catch (error) {
+        console.warn(
+            "投稿データを読み込めませんでした。",
+            error
+        );
+
+        return [];
+    }
+}
+
+
+/**
+ * コミュニティの投稿を保存します。
+ *
+ * @param {Array<Object>} posts
+ */
+function saveCommunityPosts(posts) {
+    localStorage.setItem(
+        getPostStorageKey(),
+        JSON.stringify(posts)
+    );
+}
+
+
+/* =========================================
+   サンプル投稿
+========================================= */
+
+function initializeDefaultPosts() {
+    const storageKey = getPostStorageKey();
+
+    if (localStorage.getItem(storageKey) !== null) {
+        return;
+    }
+
+    const defaultPosts =
+        createDefaultPostsForCommunity(
+            pageState.communityId
+        );
+
+    saveCommunityPosts(defaultPosts);
+}
+
+
+function createDefaultPostsForCommunity(communityId) {
+    const commonPosts = [
+        {
+            id: createUniqueId("sample"),
+            authorId: "member-1",
+            authorName: "海好き太郎",
+            authorAccount: "@umi_taro",
+            authorAvatarText: "海",
+            text:
+                getSamplePostText(communityId, 0),
+            image: "",
+            location:
+                getSampleLocation(communityId, 0),
+            createdAt:
+                createPastDate(40),
+            likes: 14,
+            liked: false,
+            comments: [
+                {
+                    id: createUniqueId("comment"),
+                    authorName: "うちなー花子",
+                    authorAvatarText: "花",
+                    text:
+                        "素敵な情報ありがとうございます！",
+                    createdAt:
+                        createPastDate(25)
+                }
+            ]
+        },
+        {
+            id: createUniqueId("sample"),
+            authorId: "member-2",
+            authorName: "うちなー花子",
+            authorAccount: "@uchina_hanako",
+            authorAvatarText: "花",
+            text:
+                getSamplePostText(communityId, 1),
+            image: "",
+            location:
+                getSampleLocation(communityId, 1),
+            createdAt:
+                createPastDate(180),
+            likes: 8,
+            liked: false,
+            comments: []
+        }
+    ];
+
+    return commonPosts;
+}
+
+
+function getSamplePostText(communityId, index) {
+    const postTexts = {
+        sea: [
+            "今日の海はとても透明度が高くてきれいでした！海に行く方は日差しが強いので、日焼け対策を忘れずに。",
+            "週末にビーチクリーンを行う予定です。参加できる方がいれば、ぜひ一緒に沖縄の海をきれいにしましょう！"
+        ],
+        gourmet: [
+            "新しく見つけた沖縄そばのお店に行ってきました。あっさりしたスープで、とてもおいしかったです！",
+            "国際通り周辺でおすすめのカフェを探しています。落ち着いて過ごせるお店があれば教えてください。"
+        ],
+        eisa: [
+            "今週末にエイサーイベントがあります。迫力のある演舞が楽しみです！",
+            "練習に参加してきました。太鼓の音を合わせるのは難しいですが、とても楽しかったです。"
+        ],
+        naha: [
+            "国際通りで地域イベントが開催されていました。たくさんの人でにぎわっていました！",
+            "那覇市内で静かに勉強できる場所を探しています。おすすめがあれば教えてください。"
+        ],
+        sports: [
+            "今週の試合も盛り上がりました！沖縄のスポーツをみんなで応援しましょう。",
+            "週末に参加できるスポーツ交流会を探しています。初心者でも参加できるイベントはありますか？"
+        ],
+        travel: [
+            "天気が良かったのでドライブに行ってきました。海沿いの景色が最高でした！",
+            "次の休日に北部へ出かける予定です。おすすめの立ち寄りスポットを教えてください。"
+        ]
+    };
+
+    return postTexts[communityId]?.[index]
+        ?? "コミュニティのみなさん、よろしくお願いします！";
+}
+
+
+function getSampleLocation(communityId, index) {
+    const locations = {
+        sea: [
+            "豊崎美らSUNビーチ",
+            "瀬長島"
+        ],
+        gourmet: [
+            "那覇市",
+            "国際通り"
+        ],
+        eisa: [
+            "沖縄市",
+            "那覇市"
+        ],
+        naha: [
+            "国際通り",
+            "那覇市"
+        ],
+        sports: [
+            "沖縄県総合運動公園",
+            "那覇市"
+        ],
+        travel: [
+            "海中道路",
+            "沖縄県北部"
+        ]
+    };
+
+    return locations[communityId]?.[index] ?? "";
+}
+
+
+/* =========================================
+   投稿一覧表示
+========================================= */
+
+function renderPosts() {
+    let posts = getCommunityPosts();
+
+    posts = filterPostsByTab(
+        posts,
+        pageState.activeTab
+    );
+
+    posts = sortPosts(
+        posts,
+        elements.postSortSelect.value
+    );
+
+    elements.communityPosts.replaceChildren();
+
+    elements.communityPostCount.textContent =
+        getCommunityPosts()
+            .length
+            .toLocaleString("ja-JP");
+
+    if (posts.length === 0) {
+        elements.emptyPostMessage.hidden = false;
+        return;
+    }
+
+    elements.emptyPostMessage.hidden = true;
+
+    const fragment = document.createDocumentFragment();
+
+    posts.forEach((post) => {
+        fragment.appendChild(
+            createPostElement(post)
+        );
+    });
+
+    elements.communityPosts.appendChild(fragment);
+}
+
+
+/**
+ * タブに合わせて投稿を絞り込みます。
+ *
+ * @param {Array<Object>} posts
+ * @param {string} tabName
+ * @returns {Array<Object>}
+ */
+function filterPostsByTab(posts, tabName) {
+    if (tabName === "popular") {
+        return posts.filter(
+            (post) =>
+                Number(post.likes) >= 5 ||
+                post.comments.length > 0
+        );
+    }
+
+    if (tabName === "media") {
+        return posts.filter(
+            (post) => Boolean(post.image)
+        );
+    }
+
+    return posts;
+}
+
+
+/**
+ * 投稿を並べ替えます。
+ *
+ * @param {Array<Object>} posts
+ * @param {string} sortType
+ * @returns {Array<Object>}
+ */
+function sortPosts(posts, sortType) {
+    const copiedPosts = [...posts];
+
+    if (sortType === "old") {
+        return copiedPosts.sort(
+            (a, b) =>
+                new Date(a.createdAt) -
+                new Date(b.createdAt)
+        );
+    }
+
+    if (sortType === "likes") {
+        return copiedPosts.sort(
+            (a, b) =>
+                Number(b.likes) -
+                Number(a.likes)
+        );
+    }
+
+    return copiedPosts.sort(
+        (a, b) =>
+            new Date(b.createdAt) -
+            new Date(a.createdAt)
+    );
+}
+
+
+/* =========================================
+   投稿カード生成
+========================================= */
+
+function createPostElement(post) {
+    const article =
+        document.createElement("article");
+
+    article.className = "community-post";
+    article.dataset.postId = post.id;
+
+
+    /* 投稿ヘッダー */
+    const header =
+        document.createElement("div");
+
+    header.className = "community-post-header";
+
+
+    const author =
+        document.createElement("a");
+
+    author.href = post.authorId ? `../profile.html?userId=${encodeURIComponent(post.authorId)}` : "#";
+    author.className = "post-author";
+
+
+    const authorImage =
+        document.createElement("img");
+
+    authorImage.src = post.authorAvatarUrl || createAvatarDataUrl(
+        post.authorAvatarText || "沖",
+        "#2f8cff"
+    );
+
+    authorImage.alt =
+        `${post.authorName}のプロフィール画像`;
+
+
+    const authorInformation =
+        document.createElement("span");
+
+
+    const authorName =
+        document.createElement("strong");
+
+    authorName.textContent =
+        post.authorName;
+
+
+    const postDate =
+        document.createElement("small");
+
+    postDate.textContent =
+        `${post.authorAccount || ""}・${formatRelativeTime(
+            post.createdAt
+        )}`;
+
+
+    authorInformation.append(
+        authorName,
+        postDate
+    );
+
+    author.append(
+        authorImage,
+        authorInformation
+    );
+
+
+    const menuButton =
+        document.createElement("button");
+
+    menuButton.type = "button";
+    menuButton.className = "post-menu-button";
+    menuButton.dataset.action = "menu";
+    menuButton.setAttribute(
+        "aria-label",
+        "投稿メニュー"
+    );
+
+    menuButton.textContent = "…";
+
+
+    header.append(
+        author,
+        menuButton
+    );
+
+
+    /* 投稿本文 */
+    const body =
+        document.createElement("div");
+
+    body.className = "community-post-body";
+
+
+    if (post.text) {
+        const postText =
+            document.createElement("p");
+
+        postText.textContent = post.text;
+        body.appendChild(postText);
+    }
+
+
+    if (post.location) {
+        const location =
+            document.createElement("div");
+
+        location.className = "post-location";
+        location.textContent =
+            `📍 ${post.location}`;
+
+        body.appendChild(location);
+    }
+
+
+    if (post.image) {
+        const postImage =
+            document.createElement("img");
+
+        postImage.className =
+            "community-post-image";
+
+        postImage.src = post.image;
+        postImage.alt = "投稿画像";
+
+        body.appendChild(postImage);
+    }
+
+
+    /* アクション */
+    const actions =
+        document.createElement("div");
+
+    actions.className =
+        "community-post-actions";
+
+
+    const likeButton = createActionButton({
+        action: "like",
+        className:
+            `post-action-button like-button${
+                post.liked ? " liked" : ""
+            }`,
+        icon: post.liked ? "♥" : "♡",
+        text: String(post.likes || 0)
+    });
+
+
+    const commentButton = createActionButton({
+        action: "comment",
+        className: "post-action-button",
+        icon: "💬",
+        text: String(post.comments?.length || 0)
+    });
+
+
+    const shareButton = createActionButton({
+        action: "share",
+        className: "post-action-button",
+        icon: "↗",
+        text: "共有"
+    });
+
+
+    const bookmarkButton = createActionButton({
+        action: "bookmark",
+        className: "post-action-button",
+        icon: "🔖",
+        text: "保存"
+    });
+
+
+    actions.append(
+        likeButton,
+        commentButton,
+        shareButton,
+        bookmarkButton
+    );
+
+
+    /* コメント欄 */
+    const commentSection =
+        createCommentSection(post);
+
+
+    article.append(
+        header,
+        body,
+        actions,
+        commentSection
+    );
+
+    return article;
+}
+
+
+/**
+ * 投稿アクションボタンを生成します。
+ */
+function createActionButton({
+    action,
+    className,
+    icon,
+    text
+}) {
+    const button =
+        document.createElement("button");
+
+    button.type = "button";
+    button.className = className;
+    button.dataset.action = action;
+
+    const iconSpan =
+        document.createElement("span");
+
+    iconSpan.textContent = icon;
+
+    if (action === "like") {
+        iconSpan.className = "like-icon";
+    }
+
+    const textSpan =
+        document.createElement("span");
+
+    textSpan.textContent = text;
+
+    button.append(
+        iconSpan,
+        textSpan
+    );
+
+    return button;
+}
+
+
+/* =========================================
+   コメント欄生成
+========================================= */
+
+function createCommentSection(post) {
+    const section =
+        document.createElement("div");
+
+    section.className = "comment-section";
+
+
+    const commentList =
+        document.createElement("div");
+
+    commentList.className = "comment-list";
+
+
+    const comments = Array.isArray(post.comments)
+        ? post.comments
+        : [];
+
+
+    comments.forEach((comment) => {
+        commentList.appendChild(
+            createCommentElement(comment)
+        );
+    });
+
+
+    const form =
+        document.createElement("form");
+
+    form.className = "comment-form";
+    form.dataset.postId = post.id;
+
+
+    const currentUserImage =
+        document.createElement("img");
+
+    currentUserImage.src =
+        createAvatarDataUrl(
+            currentUser.avatarText,
+            "#2f8cff"
+        );
+
+    currentUserImage.alt =
+        "自分のプロフィール画像";
+
+
+    const commentInput =
+        document.createElement("input");
+
+    commentInput.type = "text";
+    commentInput.name = "comment";
+    commentInput.maxLength = 150;
+    commentInput.placeholder =
+        "コメントを入力";
+
+    const imageInput = document.createElement("input");
+    imageInput.type = "file";
+    imageInput.name = "commentImage";
+    imageInput.accept = "image/jpeg,image/png,image/webp,image/gif";
+    imageInput.hidden = true;
+
+    const imageLabel = document.createElement("label");
+    imageLabel.className = "comment-image-button";
+    imageLabel.textContent = "📷";
+    imageLabel.title = "コメントに写真を追加";
+    imageLabel.appendChild(imageInput);
+
+
+    const submitButton =
+        document.createElement("button");
+
+    submitButton.type = "submit";
+    submitButton.textContent = "送信";
+
+
+    form.append(
+        currentUserImage,
+        commentInput,
+        imageLabel,
+        submitButton
+    );
+
+
+    section.append(
+        commentList,
+        form
+    );
+
+    return section;
+}
+
+
+function createCommentElement(comment) {
+    const item =
+        document.createElement("div");
+
+    item.className = "comment-item";
+
+
+    const avatar =
+        document.createElement("img");
+
+    avatar.src = createAvatarDataUrl(
+        comment.authorAvatarText || "沖",
+        "#22b8a7"
+    );
+
+    avatar.alt =
+        `${comment.authorName}のプロフィール画像`;
+
+
+    const content =
+        document.createElement("div");
+
+    content.className = "comment-content";
+
+
+    const nameArea =
+        document.createElement("div");
+
+    nameArea.className = "comment-name";
+
+
+    const name =
+        document.createElement("strong");
+
+    name.textContent =
+        comment.authorName;
+
+
+    const date =
+        document.createElement("small");
+
+    date.textContent =
+        formatRelativeTime(
+            comment.createdAt
+        );
+
+
+    const text =
+        document.createElement("p");
+
+    text.textContent = comment.text;
+
+    const image = comment.image ? document.createElement("img") : null;
+    if (image) {
+        image.className = "comment-image";
+        image.src = comment.image;
+        image.alt = "コメント画像";
+        image.loading = "lazy";
+    }
+
+
+    nameArea.append(
+        name,
+        date
+    );
+
+    content.append(
+        nameArea,
+        text,
+        ...(image ? [image] : [])
+    );
+
+    item.append(
+        avatar,
+        content
+    );
+
+    return item;
+}
+
+
+/* =========================================
+   タブ変更
+========================================= */
+
+function handleTabChange(event) {
+    const selectedTab =
+        event.currentTarget.dataset.tab;
+
+    pageState.activeTab = selectedTab;
+
+    document.querySelectorAll(
+        ".community-tab"
+    ).forEach((tabButton) => {
+        const isActive =
+            tabButton.dataset.tab === selectedTab;
+
+        tabButton.classList.toggle(
+            "active",
+            isActive
+        );
+
+        tabButton.setAttribute(
+            "aria-selected",
+            String(isActive)
+        );
+    });
+
+    const titles = {
+        new: "新着の投稿",
+        popular: "人気の投稿",
+        media: "画像付きの投稿"
+    };
+
+    elements.postListTitle.textContent =
+        titles[selectedTab] || "投稿";
+
+    renderPosts();
+}
+
+
+/* =========================================
+   投稿アクション
+========================================= */
+
+function handlePostListClick(event) {
+    const actionButton =
+        event.target.closest("[data-action]");
+
+    if (!actionButton) {
+        return;
+    }
+
+    const postElement =
+        actionButton.closest(".community-post");
+
+    if (!postElement) {
+        return;
+    }
+
+    const postId =
+        postElement.dataset.postId;
+
+    const action =
+        actionButton.dataset.action;
+
+    switch (action) {
+        case "like":
+            toggleLike(postId);
+            break;
+
+        case "comment":
+            focusCommentInput(postElement);
+            break;
+
+        case "share":
+            sharePost(postId);
+            break;
+
+        case "bookmark":
+            toggleBookmark(actionButton);
+            break;
+
+        case "menu":
+            handlePostMenu(postId);
+            break;
+
+        default:
+            break;
+    }
+}
+
+
+/* =========================================
+   いいね
+========================================= */
+
+function toggleLike(postId) {
+    const posts = getCommunityPosts();
+
+    const targetPost = posts.find(
+        (post) => post.id === postId
+    );
+
+    if (!targetPost) {
+        return;
+    }
+
+    targetPost.liked = !targetPost.liked;
+
+    if (targetPost.liked) {
+        targetPost.likes =
+            Number(targetPost.likes || 0) + 1;
     } else {
-        setShareMessage("現在地を取得できません。電波やGPSの状態を確認してください（取得でき次第、自動で再開します）。", "error");
+        targetPost.likes = Math.max(
+            0,
+            Number(targetPost.likes || 0) - 1
+        );
+    }
+
+    saveCommunityPosts(posts);
+    renderPosts();
+}
+
+
+/* =========================================
+   コメント
+========================================= */
+
+function focusCommentInput(postElement) {
+    const commentInput =
+        postElement.querySelector(
+            '.comment-form input[name="comment"]'
+        );
+
+    commentInput?.focus();
+}
+
+
+async function handleCommentSubmit(event) {
+    const form =
+        event.target.closest(".comment-form");
+
+    if (!form) {
+        return;
+    }
+
+    event.preventDefault();
+
+    const postId = form.dataset.postId;
+
+    const input =
+        form.querySelector(
+            'input[name="comment"]'
+        );
+
+    const commentText =
+        input.value.trim();
+
+    const imageFile = form.querySelector('input[name="commentImage"]')?.files?.[0];
+
+    if (!commentText && !imageFile) {
+        showToast(
+            "コメントを入力してください。"
+        );
+
+        return;
+    }
+
+    if (imageFile && imageFile.size > 3 * 1024 * 1024) {
+        showToast("コメント画像は3MB以下にしてください。");
+        return;
+    }
+
+    const imageData = imageFile ? await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(new Error("画像を読み込めませんでした。"));
+        reader.readAsDataURL(imageFile);
+    }) : "";
+
+    const posts = getCommunityPosts();
+
+    const targetPost = posts.find(
+        (post) => post.id === postId
+    );
+
+    if (!targetPost) {
+        return;
+    }
+
+    if (!Array.isArray(targetPost.comments)) {
+        targetPost.comments = [];
+    }
+
+    targetPost.comments.push({
+        id: createUniqueId("comment"),
+        authorName: currentUser.name,
+        authorAvatarText: currentUser.avatarText,
+        text: commentText,
+        image: imageData,
+        createdAt: new Date().toISOString()
+    });
+
+    saveCommunityPosts(posts);
+    renderPosts();
+
+    showToast(
+        "コメントを投稿しました。"
+    );
+}
+
+
+/* =========================================
+   投稿共有
+========================================= */
+
+async function sharePost(postId) {
+    const shareUrl =
+        `${window.location.href.split("#")[0]}#post-${postId}`;
+
+    try {
+        if (navigator.share) {
+            await navigator.share({
+                title: pageState.community.name,
+                text:
+                    `${pageState.community.name}の投稿`,
+                url: shareUrl
+            });
+
+            return;
+        }
+
+        await navigator.clipboard.writeText(
+            shareUrl
+        );
+
+        showToast(
+            "投稿URLをコピーしました。"
+        );
+    } catch (error) {
+        if (error?.name === "AbortError") {
+            return;
+        }
+
+        console.warn(
+            "共有処理に失敗しました。",
+            error
+        );
+
+        showToast(
+            "投稿URLをコピーできませんでした。"
+        );
     }
 }
 
-async function stopSharing({ keepMessage = false } = {}) {
-    if (state.share.watchId !== null) navigator.geolocation.clearWatch(state.share.watchId);
-    state.share.watchId = null;
-    state.share.active = false;
-    state.share.current = null;
-    state.share.lastSent = null;
-    state.share.label = "";
-    state.share.message = keepMessage;
-    try { await stopCommunityLocation(state.communityId, state.user.id); }
-    catch (error) { console.warn("共有位置を削除できませんでした。", error); }
-    if (!keepMessage) setShareMessage("共有を停止しました。あなたの現在地は、他のメンバーに表示されなくなりました。");
-    await loadLocations();
+
+/* =========================================
+   ブックマーク
+========================================= */
+
+function toggleBookmark(button) {
+    const isSaved =
+        button.classList.toggle("saved");
+
+    const textElement =
+        button.querySelector(
+            "span:last-child"
+        );
+
+    if (textElement) {
+        textElement.textContent =
+            isSaved ? "保存済み" : "保存";
+    }
+
+    showToast(
+        isSaved
+            ? "投稿を保存しました。"
+            : "投稿の保存を解除しました。"
+    );
+}
+
+
+/* =========================================
+   投稿メニュー
+========================================= */
+
+function handlePostMenu(postId) {
+    const posts = getCommunityPosts();
+
+    const post = posts.find(
+        (item) => item.id === postId
+    );
+
+    if (!post) {
+        return;
+    }
+
+    if (post.authorId !== currentUser.id) {
+        showToast(
+            "この投稿は自分の投稿ではありません。"
+        );
+
+        return;
+    }
+
+    const shouldDelete = window.confirm(
+        "この投稿を削除しますか？"
+    );
+
+    if (!shouldDelete) {
+        return;
+    }
+
+    const updatedPosts = posts.filter(
+        (item) => item.id !== postId
+    );
+
+    saveCommunityPosts(updatedPosts);
+    renderPosts();
+
+    showToast(
+        "投稿を削除しました。"
+    );
+}
+
+
+/* =========================================
+   退出モーダル
+========================================= */
+
+function openLeaveModal() {
+    elements.leaveCommunityModal.hidden = false;
+
+    document.body.style.overflow = "hidden";
+
+    elements.cancelLeaveButton.focus();
+}
+
+
+function closeLeaveModal() {
+    elements.leaveCommunityModal.hidden = true;
+
+    document.body.style.overflow = "";
+}
+
+
+function handleModalBackgroundClick(event) {
+    if (
+        event.target ===
+        elements.leaveCommunityModal
+    ) {
+        closeLeaveModal();
+    }
+}
+
+
+function handleEscapeKey(event) {
+    if (
+        event.key === "Escape" &&
+        !elements.leaveCommunityModal.hidden
+    ) {
+        closeLeaveModal();
+    }
+}
+
+
+/* =========================================
+   コミュニティ退出
+========================================= */
+
+function leaveCommunity() {
+    const joinedIds =
+        getJoinedCommunityIds();
+
+    const updatedJoinedIds =
+        joinedIds.filter(
+            (id) =>
+                id !== pageState.communityId
+        );
+
+    saveJoinedCommunityIds(
+        updatedJoinedIds
+    );
+
+    localStorage.removeItem(
+        STORAGE_KEYS.selectedCommunity
+    );
+
+    closeLeaveModal();
+
+    showToast(
+        "コミュニティから退出しました。"
+    );
+
+    window.setTimeout(() => {
+        window.location.href =
+            "../community.html";
+    }, 700);
+}
+
+
+/* =========================================
+   トースト
+========================================= */
+
+function showToast(message) {
+    if (!elements.communityHomeToast) {
+        return;
+    }
+
+    if (pageState.toastTimerId !== null) {
+        window.clearTimeout(
+            pageState.toastTimerId
+        );
+    }
+
+    elements.communityHomeToast.textContent =
+        message;
+
+    elements.communityHomeToast.hidden = false;
+
+    elements.communityHomeToast.classList.add(
+        "show"
+    );
+
+    pageState.toastTimerId =
+        window.setTimeout(() => {
+            elements.communityHomeToast.classList.remove(
+                "show"
+            );
+
+            window.setTimeout(() => {
+                elements.communityHomeToast.hidden = true;
+            }, 200);
+        }, 2500);
+}
+
+
+/* =========================================
+   時刻表示
+========================================= */
+
+function formatRelativeTime(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+
+    const difference =
+        now.getTime() - date.getTime();
+
+    const minutes =
+        Math.floor(difference / 60000);
+
+    if (minutes < 1) {
+        return "たった今";
+    }
+
+    if (minutes < 60) {
+        return `${minutes}分前`;
+    }
+
+    const hours =
+        Math.floor(minutes / 60);
+
+    if (hours < 24) {
+        return `${hours}時間前`;
+    }
+
+    const days =
+        Math.floor(hours / 24);
+
+    if (days < 7) {
+        return `${days}日前`;
+    }
+
+    return new Intl.DateTimeFormat(
+        "ja-JP",
+        {
+            year: "numeric",
+            month: "short",
+            day: "numeric"
+        }
+    ).format(date);
+}
+
+
+/* =========================================
+   ID生成
+========================================= */
+
+function createUniqueId(prefix) {
+    if (
+        typeof crypto !== "undefined" &&
+        typeof crypto.randomUUID === "function"
+    ) {
+        return `${prefix}-${crypto.randomUUID()}`;
+    }
+
+    return (
+        `${prefix}-${Date.now()}-` +
+        Math.random()
+            .toString(16)
+            .slice(2)
+    );
+}
+
+
+/* =========================================
+   過去時刻生成
+========================================= */
+
+function createPastDate(minutesAgo) {
+    const date = new Date();
+
+    date.setMinutes(
+        date.getMinutes() - minutesAgo
+    );
+
+    return date.toISOString();
+}
+
+
+/* =========================================
+   アイコン画像生成
+========================================= */
+
+/**
+ * 文字入りの丸いプロフィール画像を生成します。
+ *
+ * @param {string} text
+ * @param {string} backgroundColor
+ * @returns {string}
+ */
+function createAvatarDataUrl(
+    text,
+    backgroundColor
+) {
+    const safeText =
+        escapeSvgText(
+            String(text).slice(0, 1)
+        );
+
+    const svg = `
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="100"
+            height="100"
+            viewBox="0 0 100 100"
+        >
+            <rect
+                width="100"
+                height="100"
+                rx="50"
+                fill="${backgroundColor}"
+            />
+            <text
+                x="50"
+                y="57"
+                text-anchor="middle"
+                dominant-baseline="middle"
+                fill="#ffffff"
+                font-size="42"
+                font-family="sans-serif"
+                font-weight="bold"
+            >
+                ${safeText}
+            </text>
+        </svg>
+    `;
+
+    return (
+        "data:image/svg+xml;charset=UTF-8," +
+        encodeURIComponent(svg)
+    );
+}
+
+
+function escapeSvgText(text) {
+    return text
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&apos;");
+}
+
+
+function getAvatarColor(index) {
+    const colors = [
+        "#2f8cff",
+        "#22b8a7",
+        "#ff9b40",
+        "#ef5c73",
+        "#7950f2"
+    ];
+
+    return colors[index % colors.length];
 }

@@ -115,7 +115,7 @@ a {
 
     margin-bottom: 7px;
 
-    color: #2973ab;
+    color: #2ca8a0;
 
     font-size: 11px;
     font-weight: 800;
@@ -176,16 +176,16 @@ a {
 }
 
 .create-side-item:hover {
-    color: #205f90;
-    background: #f1f7fb;
+    color: #238d87;
+    background: #f1fbfa;
 
-    border-color: #d3e4f0;
+    border-color: #d4efec;
 
     transform: translateX(2px);
 }
 
 .create-side-item.active {
-    color: #135182;
+    color: #167f79;
     background:
         linear-gradient(
             135deg,
@@ -197,7 +197,7 @@ a {
 
     box-shadow:
         0 8px 22px
-        rgba(37, 107, 160, 0.09);
+        rgba(40, 157, 149, 0.09);
 }
 
 .side-item-icon {
@@ -325,7 +325,7 @@ a {
 
     margin-bottom: 7px;
 
-    color: #2973ab;
+    color: #2ca8a0;
 
     font-size: 11px;
     font-weight: 800;
@@ -382,7 +382,7 @@ a {
 }
 
 .progress-information strong {
-    color: #1e6092;
+    color: #218f88;
 
     font-size: 15px;
 }
@@ -405,7 +405,7 @@ a {
     background:
         linear-gradient(
             90deg,
-            #3082bf,
+            #33bcb2,
             #58cf9f
         );
 
@@ -475,7 +475,7 @@ a {
     background:
         linear-gradient(
             135deg,
-            #fbfcfd,
+            #fbfdfd,
             #f5faf9
         );
 
@@ -494,8 +494,8 @@ a {
     background:
         linear-gradient(
             135deg,
-            #3380bb,
-            #266fa7
+            #36b8b0,
+            #29a49c
         );
 
     border-radius: 12px;
@@ -505,7 +505,7 @@ a {
 
     box-shadow:
         0 7px 18px
-        rgba(39, 113, 169, 0.2);
+        rgba(42, 166, 157, 0.2);
 }
 
 .form-section-header h2 {
@@ -662,11 +662,11 @@ a {
 .form-select:focus,
 .form-textarea:focus,
 .rule-input:focus {
-    border-color: #367cb2;
+    border-color: #39afa7;
 
     box-shadow:
         0 0 0 4px
-        rgba(52, 123, 178, 0.12);
+        rgba(55, 175, 167, 0.12);
 }
 
 .form-input.invalid,
@@ -754,11 +754,11 @@ a {
     background:
         linear-gradient(
             135deg,
-            #f5f8fb,
+            #f5fbfb,
             #f8fafc
         );
 
-    border: 2px dashed #bdccd8;
+    border: 2px dashed #bed7d6;
     border-radius: 16px;
     outline: none;
 
@@ -773,19 +773,19 @@ a {
 
 .image-upload-area:hover,
 .image-upload-area:focus-visible {
-    background: #eff5fa;
+    background: #effaf9;
 
-    border-color: #4083b7;
+    border-color: #43b4ad;
 
     box-shadow:
         0 0 0 4px
-        rgba(59, 128, 181, 0.1);
+        rgba(62, 178, 170, 0.1);
 }
 
 .image-upload-area.drag-over {
-    background: #e8f2f9;
+    background: #e8f9f7;
 
-    border-color: #2973ab;
+    border-color: #2ca8a0;
 
     transform: scale(1.008);
 }
@@ -807,7 +807,7 @@ a {
 
     margin: 0 auto 13px;
 
-    background: #deebf5;
+    background: #dff4f2;
 
     border-radius: 17px;
 
@@ -953,7 +953,7 @@ a {
 .emoji-option:hover {
     background: #edf9f7;
 
-    border-color: #9cc1dd;
+    border-color: #9edbd6;
 
     transform: translateY(-2px);
 }
@@ -962,22 +962,22 @@ a {
     background:
         linear-gradient(
             135deg,
-            #dfeef8,
+            #e0f7f4,
             #edfffc
         );
 
-    border-color: #367cb2;
+    border-color: #39afa7;
 
     box-shadow:
         0 0 0 3px
-        rgba(54, 124, 178, 0.13);
+        rgba(57, 175, 167, 0.13);
 
     transform: translateY(-2px);
 }
 
 .emoji-option:focus-visible {
     outline: 3px solid
-        rgba(54, 124, 178, 0.24);
+        rgba(57, 175, 167, 0.24);
     outline-offset: 2px;
 }
 
@@ -1032,7 +1032,7 @@ a {
 .visibility-option:hover {
     background: #f7fcfb;
 
-    border-color: #abc8dd;
+    border-color: #acdcd8;
 
     transform: translateY(-1px);
 }
@@ -1042,14 +1042,14 @@ a {
         linear-gradient(
             135deg,
             #ecfaf8,
-            #f7fcff
+            #f7fffe
         );
 
-    border-color: #498bbd;
+    border-color: #4cbab3;
 
     box-shadow:
         0 7px 20px
-        rgba(51, 122, 176, 0.09);
+        rgba(54, 173, 165, 0.09);
 }
 
 .visibility-option input {
@@ -1086,7 +1086,7 @@ a {
     width: 9px;
     height: 9px;
 
-    background: #2f76ad;
+    background: #32aaa2;
 
     border-radius: 50%;
 
@@ -1105,11 +1105,11 @@ a {
 
 .visibility-option input:checked +
 .visibility-radio {
-    border-color: #2f76ad;
+    border-color: #32aaa2;
 
     box-shadow:
         0 0 0 3px
-        rgba(47, 118, 173, 0.12);
+        rgba(50, 170, 162, 0.12);
 }
 
 .visibility-option input:checked +
@@ -1189,8 +1189,8 @@ a {
     width: 30px;
     height: 30px;
 
-    color: #266291;
-    background: #e7f1f7;
+    color: #298e88;
+    background: #e7f7f5;
 
     border-radius: 9px;
 
@@ -1247,10 +1247,10 @@ a {
     margin-top: 2px;
     padding: 0 14px;
 
-    color: #226192;
-    background: #eaf3f9;
+    color: #258f88;
+    background: #eaf9f7;
 
-    border: 1px solid #c3daea;
+    border: 1px solid #c4e9e5;
     border-radius: 10px;
 
     cursor: pointer;
@@ -1267,9 +1267,9 @@ a {
 
 .add-rule-button:hover {
     color: #ffffff;
-    background: #2f76ad;
+    background: #32aaa2;
 
-    border-color: #2f76ad;
+    border-color: #32aaa2;
 
     transform: translateY(-1px);
 }
@@ -1384,21 +1384,21 @@ a {
     background:
         linear-gradient(
             135deg,
-            #3580b9,
-            #236aa1
+            #38b6ae,
+            #269e97
         );
 
     cursor: pointer;
 
     box-shadow:
         0 9px 22px
-        rgba(36, 107, 162, 0.24);
+        rgba(39, 159, 151, 0.24);
 }
 
 .create-community-button:hover {
     box-shadow:
         0 12px 26px
-        rgba(36, 107, 162, 0.32);
+        rgba(39, 159, 151, 0.32);
 
     transform: translateY(-2px);
 }
@@ -1481,7 +1481,7 @@ a {
 
     overflow: hidden;
 
-    background: #deecf6;
+    background: #dff5f3;
 }
 
 .preview-cover-image {
@@ -1522,8 +1522,8 @@ a {
         ),
         linear-gradient(
             135deg,
-            #5ca4d9,
-            #2b75ac
+            #5fd6cc,
+            #2ea9a0
         );
 }
 
@@ -1605,10 +1605,10 @@ a {
 }
 
 .preview-category {
-    color: #205f90;
-    background: #e6f0f7;
+    color: #238d87;
+    background: #e6f7f5;
 
-    border: 1px solid #c8deed;
+    border: 1px solid #c9ece8;
 }
 
 .preview-visibility {
@@ -1676,15 +1676,15 @@ a {
     width: 100%;
     min-height: 43px;
 
-    color: #1d5e90;
+    color: #208d86;
     background:
         linear-gradient(
             135deg,
-            #e6f1f8,
+            #e6f8f6,
             #f2fffd
         );
 
-    border: 1px solid #c4daea;
+    border: 1px solid #c5e9e5;
     border-radius: 11px;
 
     font-size: 12px;
@@ -1765,7 +1765,7 @@ a {
 }
 
 .rule-preview-card li::marker {
-    color: #2870a8;
+    color: #2ba59d;
 
     font-weight: 800;
 }
@@ -1907,7 +1907,7 @@ a {
 
     margin-bottom: 6px;
 
-    color: #2973ab;
+    color: #2ca8a0;
 
     font-size: 10px;
     font-weight: 800;
@@ -2037,19 +2037,19 @@ a {
     background:
         linear-gradient(
             135deg,
-            #347fb8,
-            #22689f
+            #37b5ad,
+            #259c95
         );
 
     box-shadow:
         0 9px 20px
-        rgba(34, 104, 159, 0.24);
+        rgba(37, 156, 149, 0.24);
 }
 
 .modal-confirm-button:hover {
     box-shadow:
         0 12px 26px
-        rgba(34, 104, 159, 0.31);
+        rgba(37, 156, 149, 0.31);
 
     transform: translateY(-1px);
 }
@@ -2100,7 +2100,7 @@ a {
     margin: 0 auto;
 
     border: 5px solid #dcefeb;
-    border-top-color: #2872aa;
+    border-top-color: #2ba79f;
     border-radius: 50%;
 
     animation:
@@ -2184,7 +2184,7 @@ a {
 .modal-cancel-button:focus-visible,
 .modal-confirm-button:focus-visible {
     outline: 3px solid
-        rgba(43, 117, 172, 0.24);
+        rgba(46, 169, 160, 0.24);
 
     outline-offset: 3px;
 }
@@ -2620,15 +2620,3 @@ a {
     }
 
 }
-/* ============================
-   作成ボタンが縦に潰れる問題の対策（追記）
-============================ */
-.create-submit-section { flex-wrap: wrap; }
-.create-submit-message { flex: 1 1 220px; min-width: 0; }
-.create-form-actions { flex: 0 0 auto; flex-wrap: wrap; }
-.cancel-create-button,
-.create-community-button { white-space: nowrap; flex-shrink: 0; }
-.community-create-layout > * { min-width: 0; }
-
-.create-hint { margin: 12px 0 0; padding: 10px 14px; border-radius: 14px; background: #fff8e1; border: 1px solid #f3e2a8; color: #7a5b00; font-size: 13px; }
-.create-hint a { color: inherit; font-weight: 800; }

@@ -1,5 +1,5 @@
 import { supabase } from "../../supabase.js";
-import { getCurrentUser } from "../../api.js";
+import { getCurrentUser } from "../api.js";
 
 const $ = (id) => document.getElementById(id);
 const communityId = new URLSearchParams(location.search).get("communityId") || new URLSearchParams(location.search).get("id");
@@ -12,10 +12,6 @@ let locationRows = new Map();
 
 function setMessage(text, type = "") {
     const element = $("locationMessage");
-    if (!element) {
-        if (text && type === "error") console.warn(text);
-        return;
-    }
     element.textContent = text;
     element.className = `form-message ${type}`.trim();
 }
@@ -37,8 +33,6 @@ async function loadCommunity() {
     community = data;
 
     $("communityName").textContent = data.name;
-    const back = document.querySelector(".back-link");
-    if (back) back.href = `community_home.html?id=${encodeURIComponent(communityId)}`;
     $("communityDescription").textContent = data.description || "説明はまだありません。";
 
     if (data.icon_url) {
@@ -64,7 +58,6 @@ async function loadMembers() {
             )
         `)
         .eq("community_id", communityId)
-        .eq("status", "approved")
         .order("joined_at", { ascending: true });
 
     if (error) throw error;
@@ -101,6 +94,12 @@ async function loadLocations() {
     locationRows = new Map((data || []).map((row) => [row.user_id, row]));
     $("onlineCount").textContent = `位置共有 ${locationRows.size}人`;
 
+    const mine = locationRows.get(currentUser.id);
+    $("locationStatus").textContent = mine ? "共有中" : "共有停止中";
+    $("locationStatus").className = `status-badge ${mine ? "on" : "off"}`;
+    $("shareLocationButton").disabled = Boolean(mine);
+    $("stopLocationButton").disabled = !mine;
+    if (mine?.label) $("locationLabel").value = mine.label;
 }
 
 function matchesFilter(member, keyword, filter) {
@@ -159,12 +158,11 @@ function renderMembers() {
         if (locationData) {
             locationArea.hidden = false;
             locationLink.textContent = locationData.label || "位置情報を表示";
-            locationLink.href = `community_home.html?id=${encodeURIComponent(communityId)}#communityMapSection`;
-            locationLink.removeAttribute("target");
+            locationLink.href = `https://www.openstreetmap.org/?mlat=${locationData.latitude}&mlon=${locationData.longitude}#map=15/${locationData.latitude}/${locationData.longitude}`;
         }
 
-        profileButton.href = `../profile.html?userId=${encodeURIComponent(member.user_id)}`;
-        messageButton.href = `../messages.html?userId=${encodeURIComponent(member.user_id)}`;
+        profileButton.href = `profile.html?userId=${encodeURIComponent(member.user_id)}`;
+        messageButton.href = `messages.html?userId=${encodeURIComponent(member.user_id)}`;
 
         if (member.user_id === currentUser.id) {
             followButton.hidden = true;
@@ -211,11 +209,89 @@ async function toggleFollow(targetUserId, button) {
     }
 }
 
+function getBrowserLocation() {
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            reject(new Error("このブラウザは位置情報に対応していません。"));
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: false,
+            timeout: 12000,
+            maximumAge: 60000
+        });
+    });
+}
+
+async function shareLocation() {
+    const label = $("locationLabel").value.trim();
+    if (!label) {
+        setMessage("表示する場所名を入力してください。", "error");
+        $("locationLabel").focus();
+        return;
+    }
+
+    const button = $("shareLocationButton");
+    button.disabled = true;
+    button.textContent = "位置を取得中...";
+    setMessage("ブラウザの位置情報利用を許可してください。");
+
+    try {
+        const position = await getBrowserLocation();
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+        const payload = {
+            community_id: communityId,
+            user_id: currentUser.id,
+            label,
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            expires_at: expiresAt,
+            updated_at: new Date().toISOString()
+        };
+
+        const { error } = await supabase
+            .from("community_location_shares")
+            .upsert(payload, { onConflict: "community_id,user_id" });
+        if (error) throw error;
+
+        setMessage("位置情報を共有しました。24時間後に自動で期限切れになります。", "success");
+        await loadLocations();
+        renderMembers();
+    } catch (error) {
+        const message = error.code === 1
+            ? "位置情報の利用が許可されませんでした。ブラウザ設定を確認してください。"
+            : error.message;
+        setMessage(message, "error");
+    } finally {
+        button.textContent = "現在地を共有";
+        button.disabled = locationRows.has(currentUser.id);
+    }
+}
+
+async function stopLocation() {
+    const button = $("stopLocationButton");
+    button.disabled = true;
+    try {
+        const { error } = await supabase
+            .from("community_location_shares")
+            .delete()
+            .eq("community_id", communityId)
+            .eq("user_id", currentUser.id);
+        if (error) throw error;
+        setMessage("位置情報の共有を停止しました。", "success");
+        await loadLocations();
+        renderMembers();
+    } catch (error) {
+        setMessage(`共有を停止できませんでした：${error.message}`, "error");
+        button.disabled = false;
+    }
+}
+
 async function initialize() {
     try {
         currentUser = await getCurrentUser();
         if (!currentUser) {
-            location.replace("../../login.html");
+            location.replace("../login.html");
             return;
         }
 
@@ -230,4 +306,6 @@ async function initialize() {
 
 $("memberSearch").addEventListener("input", renderMembers);
 $("memberFilter").addEventListener("change", renderMembers);
+$("shareLocationButton").addEventListener("click", shareLocation);
+$("stopLocationButton").addEventListener("click", stopLocation);
 document.addEventListener("DOMContentLoaded", initialize);

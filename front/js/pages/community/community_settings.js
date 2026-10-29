@@ -1,272 +1,297 @@
-import {
-  getCurrentUser, ensureCurrentProfile, getCommunity, getCategories, getCommunityMembers,
-  updateCommunityRecord, deleteCommunityRecord, uploadCommunityImage,
-  setMemberStatus, setMemberRole, leaveCommunity
-} from "../../api.js";
-
-/* =========================================
-   コミュニティ設定（DB連携版）
-   community_settings.html?id=<communities.id>
-   オーナー / 管理者のみ利用できます。
-========================================= */
+import { supabase } from '../../supabase.js';
 
 (() => {
   "use strict";
 
-  const $ = (id) => document.getElementById(id);
-  const communityId = new URLSearchParams(location.search).get("id");
+  const STORAGE_KEY = "okitalk-community-settings";
+  const communityId = new URLSearchParams(location.search).get('id');
+  const DELETE_CONFIRM_TEXT = "沖縄の海が好き";
 
-  const form = $("communitySettingsForm");
-  const nameInput = $("communityName");
-  const descriptionInput = $("communityDescription");
-  const rulesInput = $("communityRules");
-  const categorySelect = $("communityCategory");
-  const nameCount = $("communityNameCount");
-  const descriptionCount = $("communityDescriptionCount");
-  const rulesCount = $("communityRulesCount");
-  const nameError = $("communityNameError");
-  const descriptionError = $("communityDescriptionError");
-  const imageInput = $("communityImage");
-  const previewImage = $("previewImage");
-  const imageFallback = $("imageFallback");
-  const removeImageButton = $("removeImageButton");
-  const toast = $("toast");
-  const memberSearch = $("memberSearch");
-  const memberList = $("memberList");
-  const memberEmpty = $("memberEmpty");
-  const requestList = $("requestList");
-  const requestEmpty = $("requestEmpty");
-  const modal = $("deleteModal");
-  const openDeleteModalButton = $("openDeleteModal");
-  const deleteConfirmName = $("deleteConfirmName");
-  const confirmDeleteButton = $("confirmDeleteButton");
+  const form = document.getElementById("communitySettingsForm");
+  const nameInput = document.getElementById("communityName");
+  const descriptionInput = document.getElementById("communityDescription");
+  const rulesInput = document.getElementById("communityRules");
+  const categorySelect = document.getElementById("communityCategory");
+
+  const nameCount = document.getElementById("communityNameCount");
+  const descriptionCount = document.getElementById("communityDescriptionCount");
+  const rulesCount = document.getElementById("communityRulesCount");
+
+  const nameError = document.getElementById("communityNameError");
+  const descriptionError = document.getElementById("communityDescriptionError");
+
+  const imageInput = document.getElementById("communityImage");
+  const previewImage = document.getElementById("previewImage");
+  const imageFallback = document.getElementById("imageFallback");
+  const removeImageButton = document.getElementById("removeImageButton");
+
+  const summaryVisibility = document.getElementById("summaryVisibility");
+  const summaryCategory = document.getElementById("summaryCategory");
+  const toast = document.getElementById("toast");
+
+  const resetButton = document.getElementById("resetButton");
+  const memberSearch = document.getElementById("memberSearch");
+  const memberItems = [...document.querySelectorAll(".member-item")];
+  const memberEmpty = document.getElementById("memberEmpty");
+
+  const modal = document.getElementById("deleteModal");
+  const openDeleteModalButton = document.getElementById("openDeleteModal");
+  const closeDeleteModalButton = document.getElementById("closeDeleteModal");
+  const cancelDeleteButton = document.getElementById("cancelDeleteButton");
+  const deleteConfirmName = document.getElementById("deleteConfirmName");
+  const confirmDeleteButton = document.getElementById("confirmDeleteButton");
+
   const mobileMenuButton = document.querySelector(".mobile-menu-button");
   const headerNav = document.querySelector(".header-nav");
 
-  const ctx = { user: null, community: null, role: null, members: [], imageUrl: "", imageFile: null, imagePreview: "", initial: null, toastTimer: null };
+  let initialState = null;
+  let toastTimer = null;
+  let imageDataUrl = "";
 
-  const VISIBILITY_LABEL = { public: "公開", approval: "承認制", private: "非公開" };
-  const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
-  const displayName = (p) => p?.display_name || p?.username || "ユーザー";
-
-  function make(tag, className, text) {
-    const node = document.createElement(tag);
-    if (className) node.className = className;
-    if (text !== undefined) node.textContent = text;
-    return node;
+  function updateCharacterCount(input, output) {
+    output.textContent = `${input.value.length} / ${input.maxLength}`;
   }
 
-  function showToast(message, type = "success") {
-    clearTimeout(ctx.toastTimer);
-    toast.textContent = message;
-    toast.classList.toggle("is-error", type === "error");
-    toast.classList.add("is-visible");
-    ctx.toastTimer = setTimeout(() => toast.classList.remove("is-visible"), 3000);
+  function updateAllCharacterCounts() {
+    updateCharacterCount(nameInput, nameCount);
+    updateCharacterCount(descriptionInput, descriptionCount);
+    updateCharacterCount(rulesInput, rulesCount);
   }
 
-  /* ---------- フォーム ---------- */
-
-  const visibilityValue = () => form.querySelector('input[name="visibility"]:checked')?.value || "public";
-  const rulesFromText = (text) => text.split("\n").map((line) => line.replace(/^[・\-\s]+/, "").trim()).filter(Boolean).slice(0, 10);
+  function visibilityLabel(value) {
+    const labels = {
+      public: "公開",
+      approval: "承認制",
+      private: "非公開"
+    };
+    return labels[value] || "公開";
+  }
 
   function getState() {
+    const visibility = form.querySelector('input[name="visibility"]:checked')?.value || "public";
+
     return {
-      name: nameInput.value.trim(), description: descriptionInput.value.trim(),
-      rules: rulesFromText(rulesInput.value), categoryName: categorySelect.value,
-      visibility: visibilityValue(), imageUrl: ctx.imagePreview || ctx.imageUrl
+      communityName: nameInput.value.trim(),
+      communityDescription: descriptionInput.value.trim(),
+      communityRules: rulesInput.value.trim(),
+      communityCategory: categorySelect.value,
+      communityArea: document.getElementById("communityArea").value,
+      visibility,
+      memberPosting: document.getElementById("memberPosting").checked,
+      joinNotification: document.getElementById("joinNotification").checked,
+      imageDataUrl
     };
   }
 
-  function updateCounts() {
-    nameCount.textContent = `${nameInput.value.length} / ${nameInput.maxLength}`;
-    descriptionCount.textContent = `${descriptionInput.value.length} / ${descriptionInput.maxLength}`;
-    rulesCount.textContent = `${rulesInput.value.length} / ${rulesInput.maxLength}`;
+  function applyState(state) {
+    if (!state) return;
+
+    nameInput.value = state.communityName ?? nameInput.value;
+    descriptionInput.value = state.communityDescription ?? descriptionInput.value;
+    rulesInput.value = state.communityRules ?? rulesInput.value;
+    categorySelect.value = state.communityCategory ?? categorySelect.value;
+    document.getElementById("communityArea").value =
+      state.communityArea ?? document.getElementById("communityArea").value;
+
+    const visibilityRadio = form.querySelector(
+      `input[name="visibility"][value="${state.visibility || "public"}"]`
+    );
+    if (visibilityRadio) visibilityRadio.checked = true;
+
+    document.getElementById("memberPosting").checked =
+      state.memberPosting ?? true;
+    document.getElementById("joinNotification").checked =
+      state.joinNotification ?? true;
+
+    imageDataUrl = state.imageDataUrl || "";
+    renderImagePreview();
+    updateSummary();
+    updateAllCharacterCounts();
+  }
+
+  function renderImagePreview() {
+    if (imageDataUrl) {
+      previewImage.src = imageDataUrl;
+      previewImage.hidden = false;
+      imageFallback.hidden = true;
+    } else {
+      previewImage.removeAttribute("src");
+      previewImage.hidden = true;
+      imageFallback.hidden = false;
+    }
   }
 
   function updateSummary() {
-    $("summaryVisibility").textContent = VISIBILITY_LABEL[visibilityValue()];
-    $("summaryCategory").textContent = categorySelect.value;
+    const visibility = form.querySelector('input[name="visibility"]:checked')?.value;
+    summaryVisibility.textContent = visibilityLabel(visibility);
+    summaryCategory.textContent = categorySelect.value;
   }
 
-  function renderImage() {
-    const src = ctx.imagePreview || ctx.imageUrl;
-    previewImage.hidden = !src;
-    imageFallback.hidden = Boolean(src);
-    if (src) previewImage.src = src; else previewImage.removeAttribute("src");
-  }
-
-  function applyCommunity(c) {
-    nameInput.value = c.name;
-    descriptionInput.value = c.description || "";
-    rulesInput.value = (c.rules || []).map((rule) => `・${rule}`).join("\n");
-    if (![...categorySelect.options].some((o) => o.value === c.categoryName)) categorySelect.add(new Option(c.categoryName, c.categoryName));
-    categorySelect.value = c.categoryName;
-    const radio = form.querySelector(`input[name="visibility"][value="${c.visibility}"]`);
-    if (radio) radio.checked = true;
-    ctx.imageUrl = c.header_url || "";
-    ctx.imageFile = null; ctx.imagePreview = "";
-    imageFallback.textContent = c.icon_emoji || "🌺";
-    renderImage(); updateCounts(); updateSummary();
-
-    $("sideAvatar").textContent = c.icon_emoji || "🌺";
-    $("sideName").textContent = c.name;
-    $("summaryCreated").textContent = new Date(c.created_at).toLocaleDateString("ja-JP");
-    deleteConfirmName.value = "";
-    $("deleteConfirmLabel").textContent = `「${c.name}」と入力`;
-    ctx.initial = getState();
-  }
-
-  function validate() {
-    nameError.textContent = descriptionError.textContent = "";
-    nameInput.classList.remove("is-error"); descriptionInput.classList.remove("is-error");
+  function validateForm() {
     let valid = true;
-    if (!nameInput.value.trim()) { nameError.textContent = "コミュニティ名を入力してください。"; nameInput.classList.add("is-error"); valid = false; }
-    if (!descriptionInput.value.trim()) { descriptionError.textContent = "コミュニティの説明を入力してください。"; descriptionInput.classList.add("is-error"); valid = false; }
-    if (!valid) form.querySelector(".is-error")?.focus();
+
+    nameError.textContent = "";
+    descriptionError.textContent = "";
+    nameInput.classList.remove("is-error");
+    descriptionInput.classList.remove("is-error");
+
+    if (!nameInput.value.trim()) {
+      nameError.textContent = "コミュニティ名を入力してください。";
+      nameInput.classList.add("is-error");
+      valid = false;
+    }
+
+    if (!descriptionInput.value.trim()) {
+      descriptionError.textContent = "コミュニティの説明を入力してください。";
+      descriptionInput.classList.add("is-error");
+      valid = false;
+    }
+
+    if (!valid) {
+      const firstError = form.querySelector(".is-error");
+      firstError?.focus();
+    }
+
     return valid;
+  }
+
+  function showToast(message, type = "success") {
+    clearTimeout(toastTimer);
+    toast.textContent = message;
+    toast.classList.toggle("is-error", type === "error");
+    toast.classList.add("is-visible");
+
+    toastTimer = window.setTimeout(() => {
+      toast.classList.remove("is-visible");
+    }, 3000);
+  }
+
+  async function loadSavedSettings() {
+    try {
+      if (communityId) {
+        const { data, error } = await supabase
+          .from('communities')
+          .select('name,description,is_private,header_url')
+          .eq('id', communityId)
+          .maybeSingle();
+        if (error) throw error;
+        if (data) {
+          applyState({
+            communityName: data.name,
+            communityDescription: data.description || '',
+            visibility: data.is_private ? 'private' : 'public',
+            imageDataUrl: data.header_url || ''
+          });
+        }
+      }
+      const saved = localStorage.getItem(STORAGE_KEY);
+
+      if (saved && !communityId) {
+        const parsed = JSON.parse(saved);
+        applyState(parsed);
+      }
+
+      initialState = getState();
+    } catch (error) {
+      console.error("設定の読み込みに失敗しました。", error);
+      initialState = getState();
+    }
   }
 
   async function saveSettings(event) {
     event.preventDefault();
-    if (!validate()) { showToast("入力内容を確認してください。", "error"); return; }
-    const submit = form.querySelector('[type="submit"]');
-    submit.disabled = true;
+
+    if (!validateForm()) {
+      showToast("入力内容を確認してください。", "error");
+      return;
+    }
+
+    const state = getState();
+
     try {
-      const state = getState();
-      let headerUrl = ctx.imageUrl || null;
-      if (ctx.imageFile) headerUrl = await uploadCommunityImage(ctx.user.id, ctx.imageFile);
-      await updateCommunityRecord(communityId, {
-        name: state.name, description: state.description, rules: state.rules,
-        categoryName: state.categoryName, visibility: state.visibility, headerUrl
-      });
-      ctx.community = await getCommunity(communityId);
-      applyCommunity(ctx.community);
+      if (communityId) {
+        const { error } = await supabase
+          .from('communities')
+          .update({
+            name: state.communityName,
+            description: state.communityDescription,
+            is_private: state.visibility === 'private',
+            header_url: state.imageDataUrl || null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', communityId);
+        if (error) throw error;
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      initialState = state;
+      updateSummary();
       showToast("コミュニティ設定を保存しました。");
     } catch (error) {
-      console.error(error);
-      showToast(`保存に失敗しました：${error.message}`, "error");
-    } finally { submit.disabled = false; }
+      console.error("設定の保存に失敗しました。", error);
+      showToast("保存に失敗しました。画像サイズを小さくして再度お試しください。", "error");
+    }
+  }
+
+  function resetSettings() {
+    const accepted = window.confirm("保存前の変更を元に戻しますか？");
+    if (!accepted) return;
+
+    applyState(initialState);
+    clearValidationErrors();
+    showToast("変更を元に戻しました。");
+  }
+
+  function clearValidationErrors() {
+    nameError.textContent = "";
+    descriptionError.textContent = "";
+    nameInput.classList.remove("is-error");
+    descriptionInput.classList.remove("is-error");
   }
 
   function handleImageChange(event) {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (!IMAGE_TYPES.includes(file.type)) { showToast("PNG・JPG・WebP形式の画像を選択してください。", "error"); imageInput.value = ""; return; }
-    if (file.size > 2 * 1024 * 1024) { showToast("画像サイズは2MB以内にしてください。", "error"); imageInput.value = ""; return; }
-    if (ctx.imagePreview) URL.revokeObjectURL(ctx.imagePreview);
-    ctx.imageFile = file; ctx.imagePreview = URL.createObjectURL(file);
-    renderImage();
-    showToast("画像を変更しました。保存ボタンを押してください。");
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    const maxSize = 5 * 1024 * 1024;
+
+    if (!allowedTypes.includes(file.type)) {
+      showToast("PNG・JPG・WebP形式の画像を選択してください。", "error");
+      imageInput.value = "";
+      return;
+    }
+
+    if (file.size > maxSize) {
+      showToast("画像サイズは5MB以内にしてください。", "error");
+      imageInput.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.addEventListener("load", () => {
+      imageDataUrl = String(reader.result);
+      renderImagePreview();
+      showToast("画像を変更しました。保存ボタンを押してください。");
+    });
+
+    reader.addEventListener("error", () => {
+      showToast("画像の読み込みに失敗しました。", "error");
+    });
+
+    reader.readAsDataURL(file);
   }
 
   function removeImage() {
-    if (!ctx.imagePreview && !ctx.imageUrl) { showToast("削除できる画像がありません。", "error"); return; }
-    if (ctx.imagePreview) URL.revokeObjectURL(ctx.imagePreview);
-    ctx.imagePreview = ""; ctx.imageFile = null; ctx.imageUrl = ""; imageInput.value = "";
-    renderImage();
-    showToast("画像を削除しました。保存ボタンを押してください。");
-  }
-
-  /* ---------- メンバー管理 ---------- */
-
-  function memberRow(member) {
-    const p = member.profile;
-    const item = make("div", "member-item");
-    item.dataset.member = `${displayName(p)} @${p.username || ""}`;
-    const avatar = make("div", "avatar");
-    if (p.avatar_url) { const img = make("img"); img.src = p.avatar_url; img.alt = ""; img.style.cssText = "width:100%;height:100%;object-fit:cover;border-radius:inherit"; avatar.append(img); }
-    else avatar.textContent = displayName(p).charAt(0);
-    const info = make("div", "member-info");
-    info.append(make("strong", "", displayName(p)), make("span", "", p.username ? `@${p.username}` : ""));
-    item.append(avatar, info);
-    return item;
-  }
-
-  function renderMembers() {
-    const rows = ctx.members.map((member) => {
-      const item = memberRow(member);
-      const isOwnerRow = member.role === "owner";
-      if (isOwnerRow) {
-        item.append(make("span", "role-badge owner", "オーナー"));
-      } else {
-        const select = make("select", "role-select");
-        select.setAttribute("aria-label", `${displayName(member.profile)}の権限`);
-        select.add(new Option("メンバー", "member")); select.add(new Option("管理者", "admin"));
-        select.value = member.role;
-        select.disabled = ctx.role !== "owner";
-        select.addEventListener("change", async () => {
-          try { await setMemberRole(communityId, member.user_id, select.value); member.role = select.value; showToast("権限を変更しました。"); }
-          catch (error) { select.value = member.role; showToast(`変更できませんでした：${error.message}`, "error"); }
-        });
-        const menu = make("button", "member-menu-button", "✕");
-        menu.type = "button";
-        menu.setAttribute("aria-label", `${displayName(member.profile)}を退会させる`);
-        menu.addEventListener("click", async () => {
-          if (!window.confirm(`${displayName(member.profile)}さんをコミュニティから削除しますか？`)) return;
-          try { await leaveCommunity(communityId, member.user_id); ctx.members = ctx.members.filter((m) => m !== member); renderMembers(); showToast("メンバーを削除しました。"); }
-          catch (error) { showToast(`削除できませんでした：${error.message}`, "error"); }
-        });
-        item.append(select, menu);
-      }
-      return item;
-    });
-    memberList.replaceChildren(...rows);
-    filterMembers();
-  }
-
-  function filterMembers() {
-    const keyword = memberSearch.value.trim().toLowerCase();
-    let visible = 0;
-    memberList.querySelectorAll(".member-item").forEach((item) => {
-      const show = item.dataset.member.toLowerCase().includes(keyword);
-      item.hidden = !show;
-      if (show) visible += 1;
-    });
-    memberEmpty.hidden = visible !== 0;
-    $("sideMembers").textContent = `${ctx.members.length}人のメンバー`;
-  }
-
-  function renderRequests(pending) {
-    requestEmpty.hidden = pending.length > 0;
-    requestList.replaceChildren(...pending.map((member) => {
-      const item = memberRow(member);
-      const approve = make("button", "button button-primary", "承認");
-      const reject = make("button", "button button-secondary", "拒否");
-      approve.type = reject.type = "button";
-      const act = async (status) => {
-        approve.disabled = reject.disabled = true;
-        try {
-          await setMemberStatus(communityId, member.user_id, status);
-          if (status === "approved") { member.status = "approved"; ctx.members.push(member); renderMembers(); }
-          item.remove();
-          if (!requestList.children.length) requestEmpty.hidden = false;
-          showToast(status === "approved" ? "参加を承認しました。" : "参加を拒否しました。");
-        } catch (error) { approve.disabled = reject.disabled = false; showToast(`操作できませんでした：${error.message}`, "error"); }
-      };
-      approve.addEventListener("click", () => act("approved"));
-      reject.addEventListener("click", () => act("rejected"));
-      item.append(approve, reject);
-      return item;
-    }));
-  }
-
-  /* ---------- 削除 ---------- */
-
-  function openDeleteModal() { modal.hidden = false; document.body.style.overflow = "hidden"; deleteConfirmName.value = ""; confirmDeleteButton.disabled = true; setTimeout(() => deleteConfirmName.focus(), 0); }
-  function closeDeleteModal() { modal.hidden = true; document.body.style.overflow = ""; }
-
-  async function deleteCommunity() {
-    if (deleteConfirmName.value !== ctx.community.name) return;
-    confirmDeleteButton.disabled = true;
-    try {
-      await deleteCommunityRecord(communityId);
-      closeDeleteModal();
-      showToast("コミュニティを削除しました。");
-      setTimeout(() => { location.href = "../community.html"; }, 800);
-    } catch (error) {
-      confirmDeleteButton.disabled = false;
-      showToast(`削除できませんでした：${error.message}`, "error");
+    if (!imageDataUrl) {
+      showToast("削除できる画像がありません。", "error");
+      return;
     }
+
+    imageDataUrl = "";
+    imageInput.value = "";
+    renderImagePreview();
+    showToast("画像を削除しました。保存ボタンを押してください。");
   }
 
   function switchTab(tabName) {
@@ -275,6 +300,7 @@ import {
       button.classList.toggle("is-active", active);
       button.setAttribute("aria-selected", String(active));
     });
+
     document.querySelectorAll(".settings-panel").forEach((panel) => {
       const active = panel.id === `panel-${tabName}`;
       panel.classList.toggle("is-active", active);
@@ -282,67 +308,132 @@ import {
     });
   }
 
-  /* ---------- 初期化 ---------- */
+  function filterMembers() {
+    const keyword = memberSearch.value.trim().toLowerCase();
+    let visibleCount = 0;
 
-  function denyAccess(message) {
-    document.querySelector(".main-content").innerHTML = `<section class="page-heading"><div><a class="back-link" href="../community.html">← コミュニティ一覧へ</a><h1>コミュニティ設定</h1><p>${message}</p></div></section>`;
+    memberItems.forEach((item) => {
+      const memberText = item.dataset.member.toLowerCase();
+      const isVisible = memberText.includes(keyword);
+      item.hidden = !isVisible;
+      if (isVisible) visibleCount += 1;
+    });
+
+    memberEmpty.hidden = visibleCount !== 0;
   }
 
-  async function init() {
-    try {
-      ctx.user = await getCurrentUser();
-      if (!ctx.user) { location.replace("../../login.html"); return; }
-      await ensureCurrentProfile(ctx.user);
+  function openDeleteModal() {
+    modal.hidden = false;
+    document.body.style.overflow = "hidden";
+    deleteConfirmName.value = "";
+    confirmDeleteButton.disabled = true;
+    window.setTimeout(() => deleteConfirmName.focus(), 0);
+  }
 
-      ctx.community = communityId ? await getCommunity(communityId) : null;
-      if (!ctx.community) { denyAccess("コミュニティが見つかりません。"); return; }
-      $("backLink").href = `community_home.html?id=${encodeURIComponent(communityId)}`;
+  function closeDeleteModal() {
+    modal.hidden = true;
+    document.body.style.overflow = "";
+    openDeleteModalButton.focus();
+  }
 
-      const [categories, members, pending] = await Promise.all([
-        getCategories(), getCommunityMembers(communityId), getCommunityMembers(communityId, "pending")
-      ]);
-      ctx.members = members.filter((m) => m.profile);
-      const me = ctx.members.find((m) => m.user_id === ctx.user.id);
-      ctx.role = me?.role || (ctx.community.owner_id === ctx.user.id ? "owner" : null);
-      if (!["owner", "admin"].includes(ctx.role)) { denyAccess("このページはオーナーと管理者だけが利用できます。"); return; }
+  function updateDeleteButton() {
+    confirmDeleteButton.disabled = deleteConfirmName.value !== DELETE_CONFIRM_TEXT;
+  }
 
-      categories.forEach((c) => categorySelect.add(new Option(c.name, c.name)));
-      applyCommunity(ctx.community);
-      renderMembers();
-      renderRequests(pending.filter((m) => m.profile));
-      openDeleteModalButton.disabled = ctx.role !== "owner";
-      if (ctx.role !== "owner") openDeleteModalButton.title = "オーナーのみ削除できます";
-    } catch (error) {
-      console.error(error);
-      denyAccess(`読み込みに失敗しました：${error.message}`);
+  function deleteCommunity() {
+    if (deleteConfirmName.value !== DELETE_CONFIRM_TEXT) return;
+
+    localStorage.removeItem(STORAGE_KEY);
+    closeDeleteModal();
+    showToast("デモ：コミュニティを削除しました。");
+
+    // バックエンド実装後は、ここで削除APIを呼び出してから
+    // コミュニティ一覧へ遷移させてください。
+    // location.href = "community_home.html";
+  }
+
+  function setupUnsavedChangesWarning() {
+    window.addEventListener("beforeunload", (event) => {
+      if (!initialState) return;
+
+      const changed = JSON.stringify(getState()) !== JSON.stringify(initialState);
+      if (!changed) return;
+
+      event.preventDefault();
+      event.returnValue = "";
+    });
+  }
+
+  document.querySelectorAll(".settings-tab").forEach((button) => {
+    button.addEventListener("click", () => switchTab(button.dataset.tab));
+  });
+
+  [nameInput, descriptionInput, rulesInput].forEach((input) => {
+    input.addEventListener("input", updateAllCharacterCounts);
+  });
+
+  nameInput.addEventListener("input", () => {
+    if (nameInput.value.trim()) {
+      nameError.textContent = "";
+      nameInput.classList.remove("is-error");
     }
-  }
+  });
 
-  /* ---------- イベント ---------- */
+  descriptionInput.addEventListener("input", () => {
+    if (descriptionInput.value.trim()) {
+      descriptionError.textContent = "";
+      descriptionInput.classList.remove("is-error");
+    }
+  });
 
-  document.querySelectorAll(".settings-tab").forEach((button) => button.addEventListener("click", () => switchTab(button.dataset.tab)));
-  [nameInput, descriptionInput, rulesInput].forEach((input) => input.addEventListener("input", updateCounts));
-  form.querySelectorAll('input[name="visibility"]').forEach((radio) => radio.addEventListener("change", updateSummary));
+  form.querySelectorAll('input[name="visibility"]').forEach((radio) => {
+    radio.addEventListener("change", updateSummary);
+  });
+
   categorySelect.addEventListener("change", updateSummary);
   form.addEventListener("submit", saveSettings);
-  $("resetButton").addEventListener("click", () => { if (ctx.community && window.confirm("保存前の変更を元に戻しますか？")) { applyCommunity(ctx.community); showToast("変更を元に戻しました。"); } });
+  resetButton.addEventListener("click", resetSettings);
   imageInput.addEventListener("change", handleImageChange);
   removeImageButton.addEventListener("click", removeImage);
   memberSearch.addEventListener("input", filterMembers);
+
   openDeleteModalButton.addEventListener("click", openDeleteModal);
-  $("closeDeleteModal").addEventListener("click", closeDeleteModal);
-  $("cancelDeleteButton").addEventListener("click", closeDeleteModal);
-  deleteConfirmName.addEventListener("input", () => { confirmDeleteButton.disabled = !ctx.community || deleteConfirmName.value !== ctx.community.name; });
+  closeDeleteModalButton.addEventListener("click", closeDeleteModal);
+  cancelDeleteButton.addEventListener("click", closeDeleteModal);
+  deleteConfirmName.addEventListener("input", updateDeleteButton);
   confirmDeleteButton.addEventListener("click", deleteCommunity);
-  modal.addEventListener("click", (e) => { if (e.target === modal) closeDeleteModal(); });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !modal.hidden) closeDeleteModal(); });
-  mobileMenuButton?.addEventListener("click", () => {
-    const open = headerNav.classList.toggle("is-open");
-    mobileMenuButton.setAttribute("aria-expanded", String(open));
-  });
-  window.addEventListener("beforeunload", (event) => {
-    if (ctx.initial && JSON.stringify(getState()) !== JSON.stringify(ctx.initial)) { event.preventDefault(); event.returnValue = ""; }
+
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) closeDeleteModal();
   });
 
-  init();
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !modal.hidden) closeDeleteModal();
+  });
+
+  document.getElementById("transferButton").addEventListener("click", () => {
+    showToast("管理者変更機能はバックエンド接続後に利用できます。");
+  });
+
+  document.getElementById("helpLink").addEventListener("click", (event) => {
+    event.preventDefault();
+    showToast("ヘルプページは現在準備中です。");
+  });
+
+  document.querySelectorAll(".member-menu-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      showToast("メンバー操作メニューはバックエンド接続後に利用できます。");
+    });
+  });
+
+  mobileMenuButton.addEventListener("click", () => {
+    const isOpen = headerNav.classList.toggle("is-open");
+    mobileMenuButton.setAttribute("aria-expanded", String(isOpen));
+    mobileMenuButton.setAttribute("aria-label", isOpen ? "メニューを閉じる" : "メニューを開く");
+  });
+
+  loadSavedSettings();
+  updateAllCharacterCounts();
+  updateSummary();
+  setupUnsavedChangesWarning();
 })();

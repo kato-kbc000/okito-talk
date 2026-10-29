@@ -2134,11 +2134,3 @@ a {
   .comment-form { grid-template-columns: 36px minmax(0,1fr) 38px !important; }
   .comment-form button[type="submit"] { grid-column: 2 / 4; justify-self: end; }
 }
-
-/* 複数画像プレビュー（追記） */
-.image-preview-area { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
-.image-preview-area[hidden] { display: none; }
-.community-image-thumb { position: relative; }
-.community-image-thumb img { display: block; width: 100%; height: 110px; object-fit: cover; border-radius: 12px; }
-.community-image-thumb .remove-image-button { position: absolute; top: 6px; right: 6px; }
-.community-post-body .community-post-image + .community-post-image { margin-top: 8px; }

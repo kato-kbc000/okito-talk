@@ -6,21 +6,42 @@
     <title>コミュニティメンバー | おきとーーーーーーく</title>
     <link rel="stylesheet" href="../../../css/header.css">
     <link rel="stylesheet" href="../../../css/button.css">
-    <link rel="stylesheet" href="../../../css/pages/community/community_member.css">
-    <link rel="stylesheet" href="../../../css/shell.css">
-    <link rel="stylesheet" href="../../../css/community-theme.css">
+    <link rel="stylesheet" href="../../../css/pages/community/community_member.css?v=20260818-7">
 </head>
 <body>
-    <header class="site-header"></header>
+    <header class="site-header">
+        <div class="header-inner">
+            <a href="../home.html" class="site-logo" aria-label="ホームへ戻る">
+                <div class="pop-logo">
+                    <span class="c1">お</span><span class="c2">き</span><span class="c3">と</span>
+                    <span class="c4">ー</span><span class="c4">ー</span><span class="c4">ー</span><span class="c4">ー</span><span class="c5">く</span>
+                </div>
+            </a>
+            <nav class="header-nav" aria-label="ヘッダーメニュー">
+                <a href="../search.html" class="header-link">検索</a>
+                <a href="../community.html" class="header-link active">コミュニティ</a>
+                <a href="../messages.html" class="header-link">メッセージ</a>
+                <a href="../profile.html" class="header-link">プロフィール</a>
+            </nav>
+        </div>
+    </header>
 
     <main class="member-layout">
-        <aside class="side-menu" data-common-sidebar aria-label="メインメニュー"></aside>
+        <aside class="side-menu" aria-label="コミュニティメニュー">
+            <nav class="side-navigation">
+                <a href="../home.html" class="side-link"><span class="side-icon">⌂</span><span>ホーム</span></a>
+                <a href="../community.html" class="side-link"><span class="side-icon">👥</span><span>コミュニティ一覧</span></a>
+                <a href="#memberSection" class="side-link active"><span class="side-icon">◎</span><span>メンバー</span></a>
+                <a href="#locationSection" class="side-link"><span class="side-icon">⌖</span><span>位置情報共有</span></a>
+                <a href="messages.html" class="side-link"><span class="side-icon">✉</span><span>メッセージ</span></a>
+            </nav>
+        </aside>
 
         <section class="member-main">
             <article class="community-summary-card">
                 <div id="communityIcon" class="community-icon">🌺</div>
                 <div class="community-summary-text">
-                    <a href="../community.html" class="back-link">← コミュニティに戻る</a>
+                    <a href="community.html" class="back-link">← コミュニティ一覧</a>
                     <p class="eyebrow">OKINAWA COMMUNITY</p>
                     <h1 id="communityName">コミュニティを読み込み中...</h1>
                     <p id="communityDescription">少々お待ちください。</p>
@@ -31,7 +52,28 @@
                 </div>
             </article>
 
-            
+            <article id="locationSection" class="location-share-card">
+                <div class="location-card-heading">
+                    <div>
+                        <p class="eyebrow">LOCATION SHARE</p>
+                        <h2>コミュニティ内で位置情報を共有</h2>
+                        <p>共有はいつでも停止できます。位置情報はこのコミュニティの参加者だけに表示されます。</p>
+                    </div>
+                    <span id="locationStatus" class="status-badge off">共有停止中</span>
+                </div>
+
+                <div class="location-controls">
+                    <label class="location-label">
+                        表示する場所名
+                        <input id="locationLabel" type="text" maxlength="60" placeholder="例：那覇市・国際通り付近">
+                    </label>
+                    <div class="location-buttons">
+                        <button id="shareLocationButton" type="button" class="primary-action">現在地を共有</button>
+                        <button id="stopLocationButton" type="button" class="secondary-action" disabled>共有を停止</button>
+                    </div>
+                </div>
+                <p id="locationMessage" class="form-message" aria-live="polite"></p>
+            </article>
 
             <section id="memberSection" class="member-section">
                 <div class="member-section-header">
@@ -72,8 +114,8 @@
 
             <article class="info-card safety-card">
                 <h2>位置情報の安全ルール</h2>
-                <p>自宅など知られたくない場所では共有を停止しましょう。共有中の位置は、このコミュニティの参加者だけに表示されます。</p>
-                <p>共有は、ページを閉じるなどで更新が止まると最大30分で自動的に消えます。いつでもコミュニティホームのマップから停止できます。</p>
+                <p>自宅など正確な場所名は避け、「那覇市付近」のように少しぼかして共有するのがおすすめです。</p>
+                <p>共有データは24時間後に自動で期限切れになります。</p>
             </article>
         </aside>
     </main>
@@ -101,9 +143,7 @@
         </article>
     </template>
 
-    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script type="module" src="../../../js/pages/community/community_member.js"></script>
-  <script type="module" src="../../../js/common-header.js"></script>
+    <script type="module" src="../../../js/pages/community/community_member.js?v=20260818-7"></script>
 </body>
 </html>

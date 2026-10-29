@@ -34,7 +34,6 @@
         rel="stylesheet"
         href="../../../css/pages/community/community_search.css"
     >
-    <link rel="stylesheet" href="../../../css/shell.css">
 </head>
 
 <body>
@@ -42,19 +41,221 @@
     <!-- =====================================
          共通ヘッダー
     ====================================== -->
-    <header class="site-header"></header>
+    <header class="site-header">
+
+        <div class="header-inner">
+
+            <a
+                href="../home.html"
+                class="site-logo"
+                aria-label="おきとーーーーーーく ホーム"
+            >
+                <div class="pop-logo">
+                    <span class="c1">お</span>
+                    <span class="c2">き</span>
+                    <span class="c3">と</span>
+                    <span class="c4">ー</span>
+                    <span class="c4">ー</span>
+                    <span class="c4">ー</span>
+                    <span class="c4">ー</span>
+                    <span class="c5">く</span>
+                </div>
+            </a>
+
+            <nav
+                class="header-nav"
+                aria-label="メインメニュー"
+            >
+                <a
+                    href="../search.html"
+                    class="header-link"
+                >
+                    検索
+                </a>
+
+                <a
+                    href="../community.html"
+                    class="header-link active"
+                    aria-current="page"
+                >
+                    コミュニティ
+                </a>
+
+                <a
+                    href="../notification.html"
+                    class="header-link"
+                >
+                    通知
+                </a>
+
+                <a
+                    href="../profile.html"
+                    class="header-link"
+                >
+                    プロフィール
+                </a>
+            </nav>
+
+        </div>
+
+    </header>
 
 
     <!-- =====================================
          ページ全体
     ====================================== -->
-    <main class="community-search-layout layout-with-sidebar">
+    <main class="community-search-layout">
 
 
         <!-- =====================================
              左サイドバー
         ====================================== -->
-        <aside class="side-menu" data-common-sidebar aria-label="メインメニュー"></aside>
+        <aside class="search-sidebar">
+
+            <section class="sidebar-heading">
+
+                <span class="sidebar-label">
+                    COMMUNITY
+                </span>
+
+                <h1>
+                    コミュニティ
+                </h1>
+
+                <p>
+                    興味のあるコミュニティを探して、沖縄のみんなと交流しましょう。
+                </p>
+
+            </section>
+
+
+            <nav
+                class="search-side-menu"
+                aria-label="コミュニティメニュー"
+            >
+
+                <a
+                    href="../home.html"
+                    class="search-side-item"
+                >
+                    <span
+                        class="side-item-icon"
+                        aria-hidden="true"
+                    >
+                        🏠
+                    </span>
+
+                    <span class="side-item-content">
+                        <strong>
+                            ホーム
+                        </strong>
+
+                        <small>
+                            通常のホームへ戻る
+                        </small>
+                    </span>
+                </a>
+
+
+                <a
+                    href="../community.html"
+                    class="search-side-item"
+                >
+                    <span
+                        class="side-item-icon"
+                        aria-hidden="true"
+                    >
+                        👥
+                    </span>
+
+                    <span class="side-item-content">
+                        <strong>
+                            コミュニティ一覧
+                        </strong>
+
+                        <small>
+                            参加中の一覧を見る
+                        </small>
+                    </span>
+                </a>
+
+
+                <a
+                    href="community_search.html"
+                    class="search-side-item active"
+                    aria-current="page"
+                >
+                    <span
+                        class="side-item-icon"
+                        aria-hidden="true"
+                    >
+                        🔍
+                    </span>
+
+                    <span class="side-item-content">
+                        <strong>
+                            コミュニティ検索
+                        </strong>
+
+                        <small>
+                            興味のある場所を探す
+                        </small>
+                    </span>
+                </a>
+
+
+                <a
+                    href="community_create.html"
+                    class="search-side-item"
+                >
+                    <span
+                        class="side-item-icon"
+                        aria-hidden="true"
+                    >
+                        ➕
+                    </span>
+
+                    <span class="side-item-content">
+                        <strong>
+                            コミュニティ作成
+                        </strong>
+
+                        <small>
+                            新しい交流の場を作る
+                        </small>
+                    </span>
+                </a>
+
+            </nav>
+
+
+            <section class="sidebar-recommend-card">
+
+                <span
+                    class="recommend-icon"
+                    aria-hidden="true"
+                >
+                    🌺
+                </span>
+
+                <h2>
+                    見つからないときは
+                </h2>
+
+                <p>
+                    探しているコミュニティがない場合は、新しく作成できます。
+                </p>
+
+                <a
+                    href="community_create.html"
+                    class="sidebar-create-button"
+                >
+                    ＋ コミュニティを作る
+                </a>
+
+            </section>
+
+        </aside>
 
 
         <!-- =====================================
@@ -609,11 +810,8 @@
     </div>
 
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script type="module" src="../../../js/pages/community/community_search.js"></script>
+    <script src="../../../js/pages/community/community_search.js"></script>
 
-  
-  <script type="module" src="../../../js/common-header.js"></script>
 </body>
 
 </html>

@@ -3,622 +3,274 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <title>コミュニティ | おきとーーーーーーく</title>
 
-    <meta
-        name="description"
-        content="沖縄県民向けコミュニティSNSのコミュニティ検索ページです。"
-    >
-
-    <title>
-        コミュニティ検索 | おきとーーーーーーく
-    </title>
-
-    <!-- 共通CSS -->
-    <link
-        rel="stylesheet"
-        href="../../css/header.css"
-    >
-
-    <link
-        rel="stylesheet"
-        href="../../css/button.css"
-    >
-
-    <!-- コミュニティ検索専用CSS -->
-    <link
-        rel="stylesheet"
-        href="../../css/pages/community.css"
-    >
-    <link rel="stylesheet" href="../../css/shell.css">
-    <link rel="stylesheet" href="../../css/community-theme.css">
+    <link rel="stylesheet" href="../../css/header.css">
+    <link rel="stylesheet" href="../../css/button.css">
+    <link rel="stylesheet" href="../../css/pages/community.css">
 </head>
 
 <body>
 
-    <!-- =====================================
-         共通ヘッダー
-    ====================================== -->
-    <header class="site-header"></header>
 
-
-    <!-- =====================================
-         ページ全体
-    ====================================== -->
-    <main class="community-search-layout layout-with-sidebar">
-
-
-        <!-- =====================================
-             左サイドバー
-        ====================================== -->
-        <aside class="side-menu" data-common-sidebar aria-label="メインメニュー"></aside>
-
-
-        <!-- =====================================
-             メインコンテンツ
-        ====================================== -->
-        <div class="search-page-content">
-
-
-            <!-- =====================================
-                 ページヘッダー
-            ====================================== -->
-            <section class="search-page-header">
-
-                <div>
-
-                    <span class="page-label">
-                        COMMUNITY
-                    </span>
-
-                    <h1>
-                        コミュニティ
-                    </h1>
-
-                    <p>
-                        参加中のコミュニティを開いたり、キーワードやカテゴリーから新しいコミュニティを探したりできます。
-                    </p>
-
-                </div>
-
-                <a
-                    href="community/community_create.html"
-                    class="header-create-button"
-                >
-                    <span aria-hidden="true">
-                        ＋
-                    </span>
-
-                    コミュニティを作成
-                </a>
-
-            </section>
-
-            <div class="community-scope-tabs" role="tablist" aria-label="表示するコミュニティ">
-                <button type="button" class="scope-tab active" role="tab" aria-selected="true" data-scope="all">すべて</button>
-                <button type="button" class="scope-tab" role="tab" aria-selected="false" data-scope="mine">参加中 <span id="mineCount" class="scope-count">0</span></button>
-            </div>
-
-            <!-- =====================================
-                 検索エリア
-            ====================================== -->
-            <section class="community-search-panel">
-
-                <form
-                    id="communitySearchForm"
-                    class="community-search-form"
-                    role="search"
-                >
-
-                    <div class="search-input-wrapper">
-
-                        <span
-                            class="search-input-icon"
-                            aria-hidden="true"
-                        >
-                            🔍
-                        </span>
-
-                        <input
-                            type="search"
-                            id="communitySearchInput"
-                            class="community-search-input"
-                            placeholder="コミュニティ名や説明から検索"
-                            autocomplete="off"
-                            aria-label="コミュニティを検索"
-                        >
-
-                        <button
-                            type="button"
-                            id="clearSearchButton"
-                            class="clear-search-button"
-                            aria-label="検索キーワードを削除"
-                            hidden
-                        >
-                            ×
-                        </button>
-
-                    </div>
-
-                    <button
-                        type="submit"
-                        class="search-submit-button"
-                    >
-                        検索
-                    </button>
-
-                </form>
-
-
-                <div class="search-suggestion-row">
-
-                    <span>
-                        おすすめ：
-                    </span>
-
-                    <button
-                        type="button"
-                        class="search-suggestion-button"
-                        data-search-word="海"
-                    >
-                        海
-                    </button>
-
-                    <button
-                        type="button"
-                        class="search-suggestion-button"
-                        data-search-word="カフェ"
-                    >
-                        カフェ
-                    </button>
-
-                    <button
-                        type="button"
-                        class="search-suggestion-button"
-                        data-search-word="エイサー"
-                    >
-                        エイサー
-                    </button>
-
-                    <button
-                        type="button"
-                        class="search-suggestion-button"
-                        data-search-word="那覇"
-                    >
-                        那覇
-                    </button>
-
-                    <button
-                        type="button"
-                        class="search-suggestion-button"
-                        data-search-word="スポーツ"
-                    >
-                        スポーツ
-                    </button>
-
-                </div>
-
-            </section>
-
-
-            <!-- =====================================
-                 カテゴリー
-            ====================================== -->
-            <section
-                class="category-filter-section"
-                aria-labelledby="categoryFilterTitle"
-            >
-
-                <div class="section-title-row">
-
-                    <div>
-                        <span class="small-section-label">
-                            CATEGORY
-                        </span>
-
-                        <h2 id="categoryFilterTitle">
-                            カテゴリーから探す
-                        </h2>
-                    </div>
-
-                    <button
-                        type="button"
-                        id="resetFilterButton"
-                        class="reset-filter-button"
-                    >
-                        条件をリセット
-                    </button>
-
-                </div>
-
-
-                <div
-                    id="categoryFilterList"
-                    class="category-filter-list"
-                >
-
-                    <button
-                        type="button"
-                        class="category-filter-button active"
-                        data-category="すべて"
-                        aria-pressed="true"
-                    >
-                        <span aria-hidden="true">
-                            ✨
-                        </span>
-
-                        すべて
-                    </button>
-
-                    <button
-                        type="button"
-                        class="category-filter-button"
-                        data-category="地域"
-                        aria-pressed="false"
-                    >
-                        <span aria-hidden="true">
-                            📍
-                        </span>
-
-                        地域
-                    </button>
-
-                    <button
-                        type="button"
-                        class="category-filter-button"
-                        data-category="自然・海"
-                        aria-pressed="false"
-                    >
-                        <span aria-hidden="true">
-                            🌊
-                        </span>
-
-                        自然・海
-                    </button>
-
-                    <button
-                        type="button"
-                        class="category-filter-button"
-                        data-category="グルメ"
-                        aria-pressed="false"
-                    >
-                        <span aria-hidden="true">
-                            🍜
-                        </span>
-
-                        グルメ
-                    </button>
-
-                    <button
-                        type="button"
-                        class="category-filter-button"
-                        data-category="文化・伝統"
-                        aria-pressed="false"
-                    >
-                        <span aria-hidden="true">
-                            🥁
-                        </span>
-
-                        文化・伝統
-                    </button>
-
-                    <button
-                        type="button"
-                        class="category-filter-button"
-                        data-category="スポーツ"
-                        aria-pressed="false"
-                    >
-                        <span aria-hidden="true">
-                            ⚽
-                        </span>
-
-                        スポーツ
-                    </button>
-
-                    <button
-                        type="button"
-                        class="category-filter-button"
-                        data-category="旅行・観光"
-                        aria-pressed="false"
-                    >
-                        <span aria-hidden="true">
-                            🏝️
-                        </span>
-
-                        旅行・観光
-                    </button>
-
-                    <button
-                        type="button"
-                        class="category-filter-button"
-                        data-category="趣味"
-                        aria-pressed="false"
-                    >
-                        <span aria-hidden="true">
-                            🎮
-                        </span>
-
-                        趣味
-                    </button>
-
-                    <button
-                        type="button"
-                        class="category-filter-button"
-                        data-category="イベント"
-                        aria-pressed="false"
-                    >
-                        <span aria-hidden="true">
-                            🎉
-                        </span>
-
-                        イベント
-                    </button>
-
-                    <button
-                        type="button"
-                        class="category-filter-button"
-                        data-category="その他"
-                        aria-pressed="false"
-                    >
-                        <span aria-hidden="true">
-                            💬
-                        </span>
-
-                        その他
-                    </button>
-
-                </div>
-
-            </section>
-
-
-            <!-- =====================================
-                 検索結果上部
-            ====================================== -->
-            <section class="search-result-section">
-
-                <div class="result-toolbar">
-
-                    <div class="result-information">
-
-                        <span
-                            class="small-section-label"
-                        >
-                            SEARCH RESULT
-                        </span>
-
-                        <h2>
-                            検索結果
-                        </h2>
-
-                        <p id="searchResultText">
-                            0件のコミュニティが見つかりました
-                        </p>
-
-                    </div>
-
-
-                    <div class="result-controls">
-
-                        <label
-                            for="communitySortSelect"
-                            class="sort-label"
-                        >
-                            並び順
-                        </label>
-
-                        <div class="sort-select-wrapper">
-
-                            <select
-                                id="communitySortSelect"
-                                class="community-sort-select"
-                            >
-                                <option value="recommended">
-                                    おすすめ順
-                                </option>
-
-                                <option value="members-desc">
-                                    メンバーが多い順
-                                </option>
-
-                                <option value="members-asc">
-                                    メンバーが少ない順
-                                </option>
-
-                                <option value="newest">
-                                    新しい順
-                                </option>
-
-                                <option value="name">
-                                    名前順
-                                </option>
-                            </select>
-
-                        </div>
-
-
-                        <div
-                            class="display-mode-buttons"
-                            aria-label="表示形式"
-                        >
-                            <button
-                                type="button"
-                                id="gridViewButton"
-                                class="display-mode-button active"
-                                aria-label="グリッド表示"
-                                aria-pressed="true"
-                            >
-                                ▦
-                            </button>
-
-                            <button
-                                type="button"
-                                id="listViewButton"
-                                class="display-mode-button"
-                                aria-label="リスト表示"
-                                aria-pressed="false"
-                            >
-                                ☰
-                            </button>
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <!-- コミュニティ一覧 -->
-                <div
-                    id="communitySearchResult"
-                    class="community-result-grid"
-                    aria-live="polite"
-                ></div>
-
-
-                <!-- 検索結果なし -->
-                <div
-                    id="emptySearchResult"
-                    class="empty-search-result"
-                    hidden
-                >
-
-                    <div
-                        class="empty-result-icon"
-                        aria-hidden="true"
-                    >
-                        🔍
-                    </div>
-
-                    <h2>
-                        コミュニティが見つかりませんでした
-                    </h2>
-
-                    <p>
-                        検索キーワードやカテゴリーを変更して、もう一度お試しください。
-                    </p>
-
-                    <div class="empty-result-actions">
-
-                        <button
-                            type="button"
-                            id="emptyResetButton"
-                            class="empty-reset-button"
-                        >
-                            検索条件をリセット
-                        </button>
-
-                        <a
-                            href="community/community_create.html"
-                            class="empty-create-button"
-                        >
-                            新しく作成する
-                        </a>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-        </div>
-
-    </main>
-
-
-    <!-- =====================================
-         参加確認モーダル
-    ====================================== -->
-    <div
-        id="joinConfirmModal"
-        class="modal-overlay"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="joinConfirmTitle"
-        hidden
+    <!-- スマホ用メニューボタン -->
+    <button
+        type="button"
+        id="mobileMenuButton"
+        class="mobile-menu-button"
+        aria-label="メニューを開く"
+        aria-controls="mobileMenuDrawer"
+        aria-expanded="false"
     >
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
 
-        <div class="join-confirm-modal">
+    <!-- スマホ用メニュー -->
+    <div
+        id="mobileMenuDrawer"
+        class="mobile-menu-drawer"
+        aria-hidden="true"
+    >
+        <div id="mobileMenuBackdrop" class="mobile-menu-backdrop"></div>
 
-            <div
-                id="joinModalIcon"
-                class="join-modal-icon"
-                aria-hidden="true"
-            >
-                🌺
-            </div>
-
-            <span class="modal-label">
-                JOIN COMMUNITY
-            </span>
-
-            <h2 id="joinConfirmTitle">
-                コミュニティに参加しますか？
-            </h2>
-
-            <p>
-                参加すると、コミュニティ内の投稿や交流に参加できます。
-            </p>
-
-            <div class="join-community-summary">
-
-                <strong id="joinModalCommunityName">
-                    コミュニティ名
-                </strong>
-
-                <small id="joinModalCommunityCategory">
-                    カテゴリー
-                </small>
-
-            </div>
-
-            <div class="join-modal-actions">
+        <aside class="mobile-menu-panel">
+            <div class="mobile-menu-header">
+                <strong>メニュー</strong>
 
                 <button
                     type="button"
-                    id="cancelJoinButton"
-                    class="modal-cancel-button"
+                    id="mobileMenuCloseButton"
+                    class="mobile-menu-close-button"
+                    aria-label="メニューを閉じる"
+                >
+                    ×
+                </button>
+            </div>
+
+            <nav class="mobile-menu-navigation">
+                <a href="../home.html" class="mobile-menu-link">
+                    <span>⌂</span>
+                    ホーム
+                </a>
+
+                <a href="search.html" class="mobile-menu-link">
+                    <span>⌕</span>
+                    検索
+                </a>
+
+                <a href="community.html" class="mobile-menu-link active">
+                    <span>👥</span>
+                    コミュニティ
+                </a>
+
+                <a href="../home.html#mapSection" class="mobile-menu-link">
+                    <span>⌖</span>
+                    追加（ピン）
+                </a>
+
+                <a href="messages.html" class="mobile-menu-link">
+                    <span>✉</span>
+                    メッセージ
+                </a>
+
+                <a href="profile.html" class="mobile-menu-link">
+                    <span>◎</span>
+                    マイアカウント
+                </a>
+            </nav>
+        </aside>
+    </div>
+
+    <!-- 共通ヘッダー -->
+    <header class="site-header">
+
+        <div class="header-inner">
+
+            <!-- ロゴ -->
+            <a href="../home.html" class="site-logo">
+                <div class="pop-logo">
+                    <span class="c1">お</span>
+                    <span class="c2">き</span>
+                    <span class="c3">と</span>
+                    <span class="c4">ー</span>
+                    <span class="c4">ー</span>
+                    <span class="c4">ー</span>
+                    <span class="c4">ー</span>
+                    <span class="c5">く</span>
+                </div>
+            </a>
+
+            <!-- メニュー -->
+            <nav class="header-nav">
+
+                <a href="search.html" class="header-link">
+                    検索
+                </a>
+
+                <a href="community.html" class="header-link" aria-current="page">
+                    コミュニティ
+                </a>
+
+                <a href="../home.html#mapSection" class="header-link">
+                    追加（ピン）
+                </a>
+
+                <a href="messages.html" class="header-link">
+                    メッセージ
+                </a>
+
+                <a href="profile.html" class="header-link">
+                    マイアカウント
+                </a>
+
+            </nav>
+
+        </div>
+
+    </header>
+
+
+    <div class="community-layout">
+
+        <!-- Homeと同じ左メニュー -->
+        <aside class="side-menu" aria-label="メインメニュー">
+            <div class="side-background" aria-hidden="true">
+                <img src="../../../images/okinawa-sidebar.png" alt="沖縄の海の風景">
+            </div>
+
+            <nav class="side-navigation">
+                <a href="../home.html" class="side-link">
+                    <span class="side-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-6h5v6"/></svg>
+                    </span>
+                    <span class="side-label">ホーム</span>
+                </a>
+
+                <a href="search.html" class="side-link">
+                    <span class="side-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.7"/><path d="m16 16 4.5 4.5"/></svg>
+                    </span>
+                    <span class="side-label">検索</span>
+                </a>
+
+                <a href="community.html" class="side-link active" aria-current="page">
+                    <span class="active-line" aria-hidden="true"></span>
+                    <span class="side-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3.5 19c.2-4 2.2-6 5.5-6s5.3 2 5.5 6"/><path d="M14.5 14c3.4-.7 5.7 1 6 4.5"/></svg>
+                    </span>
+                    <span class="side-label">コミュニティ</span>
+                </a>
+
+                <a href="../home.html#mapSection" class="side-link">
+                    <span class="side-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M12 21s6-5.1 6-11a6 6 0 1 0-12 0c0 5.9 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg>
+                    </span>
+                    <span class="side-label">追加（ピン）</span>
+                </a>
+
+                <a href="messages.html" class="side-link">
+                    <span class="side-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>
+                    </span>
+                    <span class="side-label">メッセージ</span>
+                </a>
+
+                <a href="profile.html" class="side-link">
+                    <span class="side-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20c.4-4.3 3-6.5 7.5-6.5s7.1 2.2 7.5 6.5"/></svg>
+                    </span>
+                    <span class="side-label">マイアカウント</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main class="community-page">
+
+        <section class="community-hero">
+            <p>OKINAWA COMMUNITY</p>
+
+            <h1>
+                好きな沖縄でつながろう
+            </h1>
+
+            <a
+                href="community/community_create.html"
+                id="openCommunityForm"
+                class="button"
+            >
+                コミュニティを作成
+            </a>
+        </section>
+
+        <form
+            id="communityForm"
+            class="community-form"
+            hidden
+        >
+            <label>
+                コミュニティ名
+
+                <input
+                    id="communityName"
+                    maxlength="60"
+                    required
+                >
+            </label>
+
+            <label>
+                説明
+
+                <textarea
+                    id="communityDescription"
+                    maxlength="300"
+                ></textarea>
+            </label>
+
+            <div>
+                <button
+                    class="button"
+                    type="submit"
+                >
+                    作成する
+                </button>
+
+                <button
+                    type="button"
+                    id="cancelCommunityForm"
                 >
                     キャンセル
                 </button>
-
-                <button
-                    type="button"
-                    id="confirmJoinButton"
-                    class="modal-join-button"
-                >
-                    参加する
-                </button>
-
             </div>
+        </form>
 
-        </div>
+        <section>
+            <h2>コミュニティ一覧</h2>
+
+            <div
+                id="communityList"
+                class="community-grid"
+            ></div>
+
+            <p id="communityEmpty">
+                まだコミュニティがありません。最初のコミュニティを作ってみましょう。
+            </p>
+        </section>
+
+        </main>
 
     </div>
-
-
-    <!-- =====================================
-         トースト
-    ====================================== -->
-    <div
-        id="communitySearchToast"
-        class="community-toast"
-        role="status"
-        aria-live="polite"
-        hidden
-    >
-        メッセージ
-    </div>
-
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script type="module" src="../../js/pages/community.js"></script>
 
-  
-  <script type="module" src="../../js/common-header.js"></script>
+    <script
+        type="module"
+        src="../../js/pages/community.js"
+    ></script>
+
 </body>
 
 </html>

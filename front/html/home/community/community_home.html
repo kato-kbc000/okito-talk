@@ -27,10 +27,8 @@
     <!-- コミュニティホーム専用CSS -->
     <link
         rel="stylesheet"
-        href="../../../css/pages/community/community_home.css"
+        href="../../../css/pages/community/community_home.css?v=20260818-7"
     >
-    <link rel="stylesheet" href="../../../css/shell.css">
-    <link rel="stylesheet" href="../../../css/community-theme.css">
 </head>
 
 <body>
@@ -38,11 +36,67 @@
     <!-- =====================================
          共通ヘッダー
     ====================================== -->
-    <header class="site-header"></header>
+    <header class="site-header">
 
-    <div class="app-shell">
-    <aside class="side-menu" data-common-sidebar aria-label="メインメニュー"></aside>
-    <div class="app-content">
+        <div class="header-inner">
+
+            <!-- ロゴ -->
+            <a
+                href="../home.html"
+                class="site-logo"
+            >
+                <div class="pop-logo">
+
+                    <span class="c1">お</span>
+                    <span class="c2">き</span>
+                    <span class="c3">と</span>
+                    <span class="c4">ー</span>
+                    <span class="c4">ー</span>
+                    <span class="c4">ー</span>
+                    <span class="c4">ー</span>
+                    <span class="c5">く</span>
+
+                </div>
+            </a>
+
+
+            <!-- ヘッダーナビ -->
+            <nav class="header-nav">
+
+                <a
+                    href="../search.html"
+                    class="header-link"
+                >
+                    検索
+                </a>
+
+                <a
+                    href="../community.html"
+                    class="header-link active"
+                    aria-current="page"
+                >
+                    コミュニティ
+                </a>
+
+                <a
+                    href="../notification.html"
+                    class="header-link"
+                >
+                    通知
+                </a>
+
+                <a
+                    href="../profile.html"
+                    class="header-link"
+                >
+                    プロフィール
+                </a>
+
+            </nav>
+
+        </div>
+
+    </header>
 
 
     <!-- =====================================
@@ -140,53 +194,167 @@
     <!-- =====================================
          3カラムレイアウト
     ====================================== -->
-    <nav class="community-subnav" aria-label="コミュニティ内メニュー">
-            <a href="#communityTimeline" class="community-subnav-item active" aria-current="page">💬 コミュニティホーム</a>
-            <a href="#communityMapSection" class="community-subnav-item">🗺️ マップ</a>
-            <a href="community_members.html" id="memberPageLink" class="community-subnav-item">👥 メンバー</a>
-            <a href="community_settings.html" id="communitySettingsLink" class="community-subnav-item" hidden>⚙️ 設定</a>
-        </nav>
-
-        <main class="community-home-layout">
+    <main class="community-home-layout">
 
 
         <!-- =====================================
              左サイドバー
         ====================================== -->
-        
+        <aside class="community-left-sidebar">
+
+            <nav class="community-side-menu">
+
+                <!-- 通常ホーム -->
+                <a
+                    href="../../home.html"
+                    class="community-side-item"
+                >
+
+                    <span
+                        class="side-item-icon"
+                        aria-hidden="true"
+                    >
+                        🏠
+                    </span>
+
+                    <span class="side-item-text">
+
+                        <strong>
+                            ホーム
+                        </strong>
+
+                        <small>
+                            通常のホームへ戻る
+                        </small>
+
+                    </span>
+
+                </a>
+
+
+                <!-- コミュニティ一覧 -->
+                <a
+                    href="../community.html"
+                    class="community-side-item"
+                >
+
+                    <span
+                        class="side-item-icon"
+                        aria-hidden="true"
+                    >
+                        👥
+                    </span>
+
+                    <span class="side-item-text">
+
+                        <strong>
+                            コミュニティ一覧
+                        </strong>
+
+                        <small>
+                            参加中の一覧を見る
+                        </small>
+
+                    </span>
+
+                </a>
+
+
+                <!-- コミュニティホーム -->
+                <a
+                    href="#communityTimeline"
+                    class="community-side-item active"
+                    aria-current="page"
+                >
+
+                    <span
+                        class="side-item-icon"
+                        aria-hidden="true"
+                    >
+                        💬
+                    </span>
+
+                    <span class="side-item-text">
+
+                        <strong>
+                            コミュニティホーム
+                        </strong>
+
+                        <small>
+                            みんなの投稿を見る
+                        </small>
+
+                    </span>
+
+                </a>
+
+
+                <!-- メンバー -->
+                <a
+                    id="memberPageLink"
+                    href="community_members.html"
+                    class="community-side-item"
+                >
+
+                    <span
+                        class="side-item-icon"
+                        aria-hidden="true"
+                    >
+                        🙋
+                    </span>
+
+                    <span class="side-item-text">
+
+                        <strong>
+                            メンバー
+                        </strong>
+
+                        <small>
+                            参加メンバーを見る
+                        </small>
+
+                    </span>
+
+                </a>
+
+
+                <!-- 設定 -->
+                <a
+                    id="communitySettingsLink"
+                    href="community_settings.html"
+                    class="community-side-item"
+                >
+
+                    <span
+                        class="side-item-icon"
+                        aria-hidden="true"
+                    >
+                        ⚙️
+                    </span>
+
+                    <span class="side-item-text">
+
+                        <strong>
+                            コミュニティ設定
+                        </strong>
+
+                        <small>
+                            通知などを変更する
+                        </small>
+
+                    </span>
+
+                </a>
+
+            </nav>
+
+        </aside>
 
 
         <!-- =====================================
              中央カラム
         ====================================== -->
-        <div class="community-center">
-            <section id="communityMapSection" class="community-map-card" aria-labelledby="communityMapTitle">
-                <div class="community-map-head">
-                    <div>
-                        <span class="community-map-label">COMMUNITY MAP</span>
-                        <h2 id="communityMapTitle">コミュニティマップ</h2>
-                        <p>メンバーの現在地と、このコミュニティの投稿の場所が表示されます。</p>
-                    </div>
-                    <span id="locationShareStatus" class="location-status off">共有停止中</span>
-                </div>
-
-                <div id="communityMap" class="community-map" role="application" aria-label="コミュニティの地図"></div>
-
-                <div class="community-map-legend" aria-hidden="true">
-                    <span><i class="dot dot-me"></i>自分</span>
-                    <span><i class="dot dot-member"></i>メンバー</span>
-                    <span><i class="dot dot-post"></i>投稿の場所</span>
-                </div>
-
-                <div class="community-map-actions">
-                    <button type="button" id="locationShareToggle" class="location-share-button">📍 現在地を共有して追跡する</button>
-                    <button type="button" id="mapCenterMeButton" class="map-small-button" hidden>自分の位置へ</button>
-                    <button type="button" id="mapShowAllButton" class="map-small-button">全体を表示</button>
-                </div>
-                <p id="locationShareMessage" class="location-share-message" aria-live="polite">共有中は、あなたの現在地が自動で更新され、このコミュニティの参加者だけに表示されます。いつでも停止できます。</p>
-            </section>
-
-            <section
+        <section
             id="communityTimeline"
             class="community-main-content"
         >
@@ -268,7 +436,27 @@
 
 
                 <!-- 画像プレビュー -->
-                <div id="imagePreviewArea" class="image-preview-area" hidden></div>
+                <div
+                    id="imagePreviewArea"
+                    class="image-preview-area"
+                    hidden
+                >
+
+                    <img
+                        id="imagePreview"
+                        alt="投稿する画像のプレビュー"
+                    >
+
+                    <button
+                        type="button"
+                        id="removeImageButton"
+                        class="remove-image-button"
+                        aria-label="画像を削除"
+                    >
+                        ×
+                    </button>
+
+                </div>
 
 
                 <!-- 選択場所 -->
@@ -328,7 +516,6 @@
                             type="file"
                             id="postImageInput"
                             accept="image/jpeg,image/png,image/webp,image/gif"
-                            multiple
                             hidden
                         >
 
@@ -398,12 +585,10 @@
                         type="button"
                         id="addLocationButton"
                     >
-                        検索
+                        追加
                     </button>
 
                 </div>
-                <p class="location-hint">店名や地名で検索するか、上のコミュニティマップをクリックして場所を選べます。</p>
-                <div id="locationCandidates" class="location-candidates" hidden></div>
 
             </section>
 
@@ -480,8 +665,6 @@
 
         </section>
 
-
-        </div>
 
         <!-- =====================================
              右サイドバー
@@ -613,9 +796,6 @@
     </main>
 
 
-    </div>
-    </div>
-
     <!-- =====================================
          退出確認モーダル
     ====================================== -->
@@ -687,11 +867,9 @@
 
 
     <!-- コミュニティホーム専用JavaScript -->
-    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script type="module" src="../../../js/pages/community/community_home.js"></script>
+    <script type="module" src="../../../js/pages/community/community_home.js?v=20260818-7"></script>
 
-  <script type="module" src="../../../js/common-header.js"></script>
 </body>
 
 </html>
